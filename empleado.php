@@ -219,14 +219,14 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
                 </div>
                 <form action="solicitar_cambio.php" method="POST">
                     <input type="hidden" name="marcacion_id" id="form_id">
-                    <div class="form-group">
-                        <label for="nueva_entrada">Nueva Hora de Entrada:</label>
-                        <input type="time" name="nueva_entrada" id="form_entrada" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="nueva_salida">Nueva Hora de Salida:</label>
-                        <input type="time" name="nueva_salida" id="form_salida" required>
-                    </div>
+                        <div class="form-group">
+                            <label for="nueva_entrada">Nueva Hora de Entrada:</label>
+                            <input type="time" name="nueva_entrada" id="form_entrada" step="60" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nueva_salida">Nueva Hora de Salida:</label>
+                            <input type="time" name="nueva_salida" id="form_salida" step="60" required>
+                        </div>
                     <div class="form-group">
                         <label for="motivo">Motivo del Cambio:</label>
                         <textarea name="motivo" rows="4" placeholder="Escribe aquí el por qué de la solicitud..." required></textarea>
@@ -253,12 +253,12 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
     </div>
 
     <script>
-        function abrirSolicitud(id, entrada, salida) {
-            document.getElementById('form_id').value = id;
-            document.getElementById('form_entrada').value = entrada || '';
-            document.getElementById('form_salida').value = salida || '';
-            document.getElementById('modalCambio').style.display = 'block';
-        }
+function abrirSolicitud(id, entrada, salida) {
+    document.getElementById('form_id').value = id;
+    document.getElementById('form_entrada').value = entrada ? entrada.substring(0, 5) : '';
+    document.getElementById('form_salida').value = salida ? salida.substring(0, 5) : '';
+    document.getElementById('modalCambio').style.display = 'block';
+}
 
         function cerrarSolicitud() {
             document.getElementById('modalCambio').style.display = 'none';
