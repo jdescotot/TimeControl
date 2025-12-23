@@ -9,6 +9,10 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
 
 $hoy = date('Y-m-d');
 
+// Obtener número de solicitudes pendientes
+$stmt_pendientes = $pdo->query("SELECT COUNT(*) FROM solicitudes_cambio WHERE estado = 'pendiente'");
+$num_solicitudes = $stmt_pendientes->fetchColumn();
+
 // Obtener todos los empleados (excluyendo al dueño)
 $stmt = $pdo->prepare("SELECT id, username FROM usuarios WHERE rol = 'empleado' ORDER BY username");
 $stmt->execute();
@@ -72,6 +76,36 @@ $pendientes = $total_empleados - $entraron_hoy;
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Notificación de Solicitudes Pendientes -->
+            <?php if ($num_solicitudes > 0): ?>
+            <div class="card notification-card">
+                <div class="card-body">
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <?php if ($num_solicitudes > 0): ?>
+                            <span class="notification-badge"><?php echo $num_solicitudes; ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="notification-text">
+                            <strong>Solicitudes Pendientes</strong>
+                            <p>Tienes <?php echo $num_solicitudes; ?> <?php echo $num_solicitudes === 1 ? 'solicitud' : 'solicitudes'; ?> de cambio de horario pendiente<?php echo $num_solicitudes === 1 ? '' : 's'; ?> de revisión.</p>
+                        </div>
+                        <a href="gestionar_solicitudes.php" class="btn btn-notification">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                            Gestionar Solicitudes
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Resumen del día -->
             <div class="card">
                 <div class="card-header">

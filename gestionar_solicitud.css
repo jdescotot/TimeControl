@@ -1,0 +1,63 @@
+        /* Estilos específicos para la tabla de solicitudes */
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-aprobar {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(72, 187, 120, 0.3);
+        }
+        
+        .btn-aprobar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(72, 187, 120, 0.4);
+        }
+        
+        .btn-rechazar {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(229, 62, 62, 0.3);
+        }
+        
+        .btn-rechazar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(229, 62, 62, 0.4);
+        }
+        
+        .horario-highlight {
+            color: #3182ce;
+            font-weight: 600;
+        }
+        
+        .motivo-cell {
+            max-width: 300px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        @media (max-width: 768px) {
+            .actions-cell {
+                width: 100%;
+            }
+            
+            .btn-aprobar, .btn-rechazar {
+                flex: 1;
+            }
+        }

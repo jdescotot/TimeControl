@@ -450,19 +450,183 @@ body {
             gap: 10px;
             margin-top: 20px;
         }
-    .btn-request {
-        background-color: #edf2f7;
-        color: #4a5568;
-        border: 1px solid #cbd5e0;
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.8rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        transition: all 0.2s;
-    }
+        .btn-request {
+            background-color: #edf2f7;
+            color: #4a5568;
+            border: 1px solid #cbd5e0;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+            white-space: nowrap;
+        }
     .btn-request:hover { background-color: #e2e8f0; }
+    /* ==================== CARD DE NOTIFICACIONES ==================== */
+.notification-card {
+    border-left: 4px solid #ed8936;
+    background: linear-gradient(135deg, #fffaf0 0%, #fef5e7 100%);
+    animation: slideInDown 0.5s ease-out;
+}
 
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-card .card-body {
+    padding: 20px 32px;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Icono de notificación con badge */
+.notification-icon {
+    position: relative;
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    color: #ffffff;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+    animation: pulse-notification 2s ease-in-out infinite;
+}
+
+@keyframes pulse-notification {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(237, 137, 54, 0.4);
+    }
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #e53e3e;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #fffaf0;
+    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.4);
+}
+
+/* Texto de notificación */
+.notification-text {
+    flex: 1;
+    min-width: 250px;
+}
+
+.notification-text strong {
+    display: block;
+    color: #2d3748;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.notification-text p {
+    color: #4a5568;
+    font-size: 15px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Botón de notificación */
+.btn-notification {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(237, 137, 54, 0.2);
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-notification:hover {
+    background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(237, 137, 54, 0.3);
+}
+
+.btn-notification:active {
+    transform: translateY(0);
+}
+
+.btn-notification svg {
+    flex-shrink: 0;
+}
+
+/* ==================== RESPONSIVE PARA NOTIFICACIONES ==================== */
+    @media (max-width: 768px) {
+        .notification-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .notification-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        .notification-text {
+            min-width: auto;
+        }
+
+        .notification-text strong {
+            font-size: 16px;
+        }
+
+        .notification-text p {
+            font-size: 14px;
+        }
+
+        .btn-notification {
+            width: 100%;
+            justify-content: center;
+            padding: 12px 20px;
+        }
+
+        .notification-card .card-body {
+            padding: 20px;
+        }
+    }
 }
