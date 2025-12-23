@@ -9,9 +9,15 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
 
 $hoy = date('Y-m-d');
 
-// Obtener número de solicitudes pendientes
-$stmt_pendientes = $pdo->query("SELECT COUNT(*) FROM solicitudes_cambio WHERE estado = 'pendiente'");
-$num_solicitudes = $stmt_pendientes->fetchColumn();
+// Obtener número de solicitudes pendientes con manejo de errores robusto
+try {
+    $stmt_pendientes = $pdo->query("SELECT COUNT(*) as total FROM solicitudes_cambio WHERE estado = 'pendiente'");
+    $resultado = $stmt_pendientes->fetch(PDO::FETCH_ASSOC);
+    $num_solicitudes = (int)($resultado['total'] ?? 0);
+} catch (Exception $e) {
+    $num_solicitudes = 0;
+    error_log("Error al obtener solicitudes: " . $e->getMessage());
+}
 
 // Obtener todos los empleados (excluyendo al dueño)
 $stmt = $pdo->prepare("SELECT id, username FROM usuarios WHERE rol = 'empleado' ORDER BY username");
@@ -86,9 +92,7 @@ $pendientes = $total_empleados - $entraron_hoy;
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                             </svg>
-                            <?php if ($num_solicitudes > 0): ?>
                             <span class="notification-badge"><?php echo $num_solicitudes; ?></span>
-                            <?php endif; ?>
                         </div>
                         <div class="notification-text">
                             <strong>Solicitudes Pendientes</strong>
@@ -138,6 +142,15 @@ $pendientes = $total_empleados - $entraron_hoy;
             <div class="card">
                 <div class="card-header">
                     <h2>Empleados</h2>
+                    <button onclick="abrirModalEmpleado()" class="btn" style="padding:10px 20px; font-size:15px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; border:none; cursor:pointer; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                        Agregar Empleado
+                    </button>
                 </div>
                 <div class="card-body">
                     <div class="table-container">
