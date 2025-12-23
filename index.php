@@ -8,15 +8,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
 
+    // AQUÍ VA LA CONSULTA ACTUALIZADA - con el campo requiere_cambio_password
     $stmt = $pdo->prepare("SELECT id, username, password, rol, requiere_cambio_password FROM usuarios WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($get_user = $user && password_verify($password, $user['password'])) {
+    if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['rol'] = $user['rol'];
 
+        // Si requiere cambio de contraseña, redirigir a cambiar_password.php
+        if ($user['requiere_cambio_password'] == 1) {
+            header('Location: cambiar_password.php');
+            exit;
+        }
+
+        // Si no requiere cambio, ir a su panel normal
         if ($user['rol'] === 'dueño') {
             header('Location: dueño.php');
             exit;
