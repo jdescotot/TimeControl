@@ -91,7 +91,7 @@
         </form>
 
         <div class="login-footer">
-            <p>Sistema de Control Horario para Hostelería</p>
+            <p>Sistema de Control Horario</p>
         </div>
     </div>
 </body>
