@@ -2,8 +2,8 @@
 session_start();
 require_once 'config.php';
 
-// Solo empleados autenticados pueden acceder
-if (!isset($_SESSION['user_id']) || $_SESSION['rol'] !== 'empleado') {
+// MODIFICACIÓN: Permitir acceso a dueños y empleados
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['rol'], ['empleado', 'dueño'])) {
     header('Location: index.php');
     exit;
 }
@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($user && password_verify($password_actual, $user['password'])) {
                 // Actualizar la contraseña y quitar el flag de cambio obligatorio
+                // Esta consulta ya actualiza el valor a 0, tal como solicitaste
                 $password_hash = password_hash($password_nueva, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("
                     UPDATE usuarios 
@@ -45,8 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $mensaje_exito = 'Contraseña actualizada exitosamente';
                 
-                // Esperar 2 segundos y redirigir
-                header("refresh:2;url=empleado.php");
+                // MODIFICACIÓN: Redirección dinámica según el rol
+                $redirect_page = ($_SESSION['rol'] === 'dueño') ? 'dueño.php' : 'empleado.php';
+                header("refresh:2;url=$redirect_page");
             } else {
                 $mensaje_error = 'La contraseña actual es incorrecta';
             }
@@ -98,7 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container password-container">
-        <!-- Header -->
         <header class="header">
             <div class="header-content">
                 <div class="logo">
@@ -115,7 +116,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="card">
                 <div class="card-header">
@@ -193,7 +193,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </main>
 
-        <!-- Footer -->
         <footer class="footer">
             <a href="logout.php" class="logout-link">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -5,12 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso - Control Horario</title>
     <link rel="stylesheet" href="login.css">
-    <!-- Si prefieres CSS interno temporalmente, descomenta el siguiente bloque y elimina el link de arriba -->
-    <!--
-    <style>
-        
-    </style>
-    -->
 </head>
 <body>
     <div class="login-container">
@@ -30,8 +24,8 @@
             $username = $_POST['username'] ?? '';
             $password = $_POST['password'] ?? '';
 
-            // Previene inyección SQL usando prepared statements
-            $stmt = $pdo->prepare("SELECT id, username, password, rol FROM usuarios WHERE username = ?");
+            // MODIFICACIÓN: Añadimos requiere_cambio_password a la consulta
+            $stmt = $pdo->prepare("SELECT id, username, password, rol, requiere_cambio_password FROM usuarios WHERE username = ?");
             $stmt->execute([$username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -39,6 +33,12 @@
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['rol'] = $user['rol'];
+
+                // MODIFICACIÓN: Verificamos si requiere cambio de contraseña antes de redirigir al panel
+                if ($user['requiere_cambio_password'] == 1) {
+                    header('Location: cambiar_password.php');
+                    exit;
+                }
 
                 if ($user['rol'] === 'dueño') {
                     header('Location: dueño.php');
