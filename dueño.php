@@ -13,7 +13,7 @@ $hoy = date('Y-m-d');
 try {
     $stmt_pendientes = $pdo->query("SELECT COUNT(*) as total FROM solicitudes_cambio WHERE estado = 'pendiente'");
     $resultado = $stmt_pendientes->fetch(PDO::FETCH_ASSOC);
-    $num_solicitudes = (int)($resultado['total'] ?? 0);
+    $num_solicitudes = (int) ($resultado['total'] ?? 0);
 } catch (Exception $e) {
     $num_solicitudes = 0;
     error_log("Error al obtener solicitudes: " . $e->getMessage());
@@ -68,6 +68,7 @@ $pendientes = $total_empleados - $entraron_hoy;
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -75,6 +76,7 @@ $pendientes = $total_empleados - $entraron_hoy;
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="solicitudes_cambio.css">
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -88,8 +90,23 @@ $pendientes = $total_empleados - $entraron_hoy;
                     <span>Control Horario</span>
                 </div>
                 <div class="user-info">
-                    <span class="welcome-text">Bienvenido,</span>
-                    <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <a href="horario_semanal.php" class="btn"
+                            style="padding:8px 16px; font-size:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            Horario Semanal
+                        </a>
+                        <div style="text-align: right;">
+                            <span class="welcome-text">Bienvenido,</span>
+                            <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -98,53 +115,59 @@ $pendientes = $total_empleados - $entraron_hoy;
         <main class="main-content">
             <!-- Mensaje de éxito al crear empleado -->
             <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'empleado_creado'): ?>
-            <div class="status-message success" style="margin-bottom: 20px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>Empleado "<?php echo htmlspecialchars($_GET['username'] ?? 'nuevo empleado'); ?>" creado exitosamente</span>
-            </div>
+                <div class="status-message success" style="margin-bottom: 20px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>Empleado "<?php echo htmlspecialchars($_GET['username'] ?? 'nuevo empleado'); ?>" creado
+                        exitosamente</span>
+                </div>
             <?php endif; ?>
 
             <!-- Mensaje de error al crear empleado -->
             <?php if (isset($_GET['error'])): ?>
-            <div class="status-message" style="background-color: #fed7d7; color: #c53030; border-left-color: #e53e3e; margin-bottom: 20px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                <span><?php echo htmlspecialchars($_GET['error']); ?></span>
-            </div>
+                <div class="status-message"
+                    style="background-color: #fed7d7; color: #c53030; border-left-color: #e53e3e; margin-bottom: 20px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span><?php echo htmlspecialchars($_GET['error']); ?></span>
+                </div>
             <?php endif; ?>
 
             <!-- Notificación de Solicitudes Pendientes -->
             <?php if ($num_solicitudes > 0): ?>
-            <div class="card notification-card">
-                <div class="card-body">
-                    <div class="notification-content">
-                        <div class="notification-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                            </svg>
-                            <span class="notification-badge"><?php echo $num_solicitudes; ?></span>
+                <div class="card notification-card">
+                    <div class="card-body">
+                        <div class="notification-content">
+                            <div class="notification-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                                <span class="notification-badge"><?php echo $num_solicitudes; ?></span>
+                            </div>
+                            <div class="notification-text">
+                                <strong>Solicitudes Pendientes</strong>
+                                <p>Tienes <?php echo $num_solicitudes; ?>
+                                    <?php echo $num_solicitudes === 1 ? 'solicitud' : 'solicitudes'; ?> de cambio de horario
+                                    pendiente<?php echo $num_solicitudes === 1 ? '' : 's'; ?> de revisión.</p>
+                            </div>
+                            <a href="gestionar_solicitudes.php" class="btn btn-notification">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M9 11l3 3L22 4"></path>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                </svg>
+                                Gestionar Solicitudes
+                            </a>
                         </div>
-                        <div class="notification-text">
-                            <strong>Solicitudes Pendientes</strong>
-                            <p>Tienes <?php echo $num_solicitudes; ?> <?php echo $num_solicitudes === 1 ? 'solicitud' : 'solicitudes'; ?> de cambio de horario pendiente<?php echo $num_solicitudes === 1 ? '' : 's'; ?> de revisión.</p>
-                        </div>
-                        <a href="gestionar_solicitudes.php" class="btn btn-notification">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 11l3 3L22 4"></path>
-                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                            </svg>
-                            Gestionar Solicitudes
-                        </a>
                     </div>
                 </div>
-            </div>
             <?php endif; ?>
 
             <!-- Resumen del día -->
@@ -179,8 +202,10 @@ $pendientes = $total_empleados - $entraron_hoy;
             <div class="card">
                 <div class="card-header">
                     <h2>Empleados</h2>
-                    <button onclick="abrirModalEmpleado()" class="btn" style="padding:10px 20px; font-size:15px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; border:none; cursor:pointer; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button onclick="abrirModalEmpleado()" class="btn"
+                        style="padding:10px 20px; font-size:15px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; border:none; cursor:pointer; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                             <circle cx="8.5" cy="7" r="4"></circle>
                             <line x1="20" y1="8" x2="20" y2="14"></line>
@@ -204,7 +229,8 @@ $pendientes = $total_empleados - $entraron_hoy;
                                 <?php if (empty($empleados)): ?>
                                     <tr>
                                         <td colspan="4" class="empty-state">
-                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <circle cx="12" cy="12" r="10"></circle>
                                                 <line x1="12" y1="8" x2="12" y2="12"></line>
                                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -223,14 +249,16 @@ $pendientes = $total_empleados - $entraron_hoy;
                                                 <?php if (!$emp['hora_entrada']): ?>
                                                     <span style="color:#e53e3e;">Sin marcar</span>
                                                 <?php elseif ($emp['hora_entrada'] && !$emp['hora_salida']): ?>
-                                                    <span style="color:#ed8936;">En jornada (desde <?php echo $emp['hora_entrada']; ?>)</span>
+                                                    <span style="color:#ed8936;">En jornada (desde
+                                                        <?php echo $emp['hora_entrada']; ?>)</span>
                                                 <?php else: ?>
                                                     <span style="color:#38a169;">Completado</span><br>
-                                                    <small>Entrada: <?php echo $emp['hora_entrada']; ?> | Salida: <?php echo $emp['hora_salida']; ?></small>
+                                                    <small>Entrada: <?php echo $emp['hora_entrada']; ?> | Salida:
+                                                        <?php echo $emp['hora_salida']; ?></small>
                                                 <?php endif; ?>
                                             </td>
                                             <td data-label="Horas">
-                                                <?php 
+                                                <?php
                                                 if ($emp['hora_entrada'] && $emp['hora_salida']) {
                                                     try {
                                                         $inicio = new DateTime($hoy . ' ' . $emp['hora_entrada']);
@@ -246,7 +274,8 @@ $pendientes = $total_empleados - $entraron_hoy;
                                                 ?>
                                             </td>
                                             <td data-label="Acción">
-                                                <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn" style="padding:6px 12px; font-size:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; text-decoration:none; display:inline-block;">
+                                                <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn"
+                                                    style="padding:6px 12px; font-size:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; text-decoration:none; display:inline-block;">
                                                     Ver Historial
                                                 </a>
                                             </td>
@@ -269,51 +298,29 @@ $pendientes = $total_empleados - $entraron_hoy;
                 <form action="crear_empleado.php" method="POST">
                     <div class="form-group">
                         <label for="username">Nombre de Usuario:</label>
-                        <input 
-                            type="text" 
-                            name="username" 
-                            id="username" 
-                            required 
-                            minlength="3"
-                            maxlength="50"
-                            pattern="[a-zA-Z0-9._-]+"
-                            placeholder="Ej: juan.perez"
-                            autocomplete="off"
-                        >
+                        <input type="text" name="username" id="username" required minlength="3" maxlength="50"
+                            pattern="[a-zA-Z0-9._-]+" placeholder="Ej: juan.perez" autocomplete="off">
                         <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
                             Solo letras, números, puntos, guiones y guiones bajos (mínimo 3 caracteres)
                         </small>
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña Temporal:</label>
-                        <input 
-                            type="password" 
-                            name="password" 
-                            id="password" 
-                            required 
-                            minlength="6"
-                            placeholder="Mínimo 6 caracteres"
-                            autocomplete="new-password"
-                        >
+                        <input type="password" name="password" id="password" required minlength="6"
+                            placeholder="Mínimo 6 caracteres" autocomplete="new-password">
                         <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
                             El empleado deberá cambiarla en su primer inicio de sesión
                         </small>
                     </div>
                     <div class="form-group">
                         <label for="confirmar_password">Confirmar Contraseña:</label>
-                        <input 
-                            type="password" 
-                            name="confirmar_password" 
-                            id="confirmar_password" 
-                            required 
-                            minlength="6"
-                            placeholder="Repite la contraseña"
-                            autocomplete="new-password"
-                        >
+                        <input type="password" name="confirmar_password" id="confirmar_password" required minlength="6"
+                            placeholder="Repite la contraseña" autocomplete="new-password">
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary" style="flex: 1;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="8.5" cy="7" r="4"></circle>
                                 <line x1="20" y1="8" x2="20" y2="14"></line>
@@ -321,7 +328,8 @@ $pendientes = $total_empleados - $entraron_hoy;
                             </svg>
                             Crear Empleado
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="cerrarModalEmpleado()" style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModalEmpleado()"
+                            style="flex: 1;">
                             Cancelar
                         </button>
                     </div>
@@ -356,7 +364,7 @@ $pendientes = $total_empleados - $entraron_hoy;
         }
 
         // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             let modal = document.getElementById('modalEmpleado');
             if (event.target == modal) {
                 cerrarModalEmpleado();
@@ -364,10 +372,10 @@ $pendientes = $total_empleados - $entraron_hoy;
         }
 
         // Validación de contraseñas coincidentes
-        document.getElementById('confirmar_password')?.addEventListener('input', function() {
+        document.getElementById('confirmar_password')?.addEventListener('input', function () {
             const password = document.getElementById('password').value;
             const confirmar = this.value;
-            
+
             if (confirmar && password !== confirmar) {
                 this.setCustomValidity('Las contraseñas no coinciden');
             } else {
@@ -376,4 +384,5 @@ $pendientes = $total_empleados - $entraron_hoy;
         });
     </script>
 </body>
+
 </html>
