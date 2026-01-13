@@ -19,6 +19,13 @@ if (!$empleado_id || !$fecha_descanso || !$semana || !$año) {
     exit;
 }
 
+// Validar que la fecha de descanso esté dentro de la semana y año especificados
+$fecha = DateTime::createFromFormat('Y-m-d', $fecha_descanso);
+if (!$fecha || (int) $fecha->format('W') != $semana || (int) $fecha->format('Y') != $año) {
+    echo json_encode(['success' => false, 'error' => 'Fecha fuera de rango de la semana']);
+    exit;
+}
+
 try {
     // Usar INSERT ... ON DUPLICATE KEY UPDATE para manejar la restricción única
     $stmt = $pdo->prepare("

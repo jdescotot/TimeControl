@@ -159,7 +159,7 @@ foreach ($ausencias_raw as $a) {
                                                        name="rest_<?php echo $emp['id']; ?>" 
                                                        value="<?php echo $fecha_dia; ?>"
                                                        <?php echo $es_descanso ? 'checked' : ''; ?>
-                                                       onchange="guardarDescanso(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>')">
+                                                       onchange="guardarDescanso(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', <?php echo $semana; ?>, <?php echo $año; ?>)">
                                                 <span class="rest-day-label">Descanso</span>
                                             </div>
 
@@ -201,13 +201,20 @@ foreach ($ausencias_raw as $a) {
             }, 2000);
         }
 
-        function guardarDescanso(empleadoId, fecha) {
+        function guardarDescanso(empleadoId, fecha, semana, año) {
+            // Validar que la fecha esté dentro del rango de la semana actual
+            const fechasSemana = <?php echo json_encode(array_values($fechas_semana)); ?>;
+            if (!fechasSemana.includes(fecha)) {
+                showStatus('Fecha inválida', 'error');
+                return;
+            }
+
             showStatus('Guardando...', '');
             const formData = new FormData();
             formData.append('empleado_id', empleadoId);
             formData.append('fecha_descanso', fecha);
-            formData.append('semana', <?php echo $semana; ?>);
-            formData.append('año', <?php echo $año; ?>);
+            formData.append('semana', semana);
+            formData.append('año', año);
 
             fetch('guardar_horario.php', {
                 method: 'POST',
