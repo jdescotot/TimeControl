@@ -47,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensaje_exito = 'Contraseña actualizada exitosamente';
                 
                 // MODIFICACIÓN: Redirección dinámica según el rol
-                $redirect_page = ($_SESSION['rol'] === 'dueño') ? 'dueño.php' : 'empleado.php';
-                header("refresh:2;url=$redirect_page");
+                //$redirect_page = ($_SESSION['rol'] === 'dueño') ? 'dueño.php' : 'empleado.php';
+                header("refresh:2;url=politica_datos.php");
             } else {
                 $mensaje_error = 'La contraseña actual es incorrecta';
             }

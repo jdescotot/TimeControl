@@ -67,12 +67,12 @@ try {
 
     // Crear el nuevo empleado
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
-    
+    $dueño_actual_id = $_SESSION['user_id'];
     $stmt = $pdo->prepare("
-        INSERT INTO usuarios (username, password, rol, requiere_cambio_password) 
-        VALUES (?, ?, 'empleado', 1)
+        INSERT INTO usuarios (username, password, rol, requiere_cambio_password, propietario_id) 
+        VALUES (?, ?, 'empleado', 1, ?)
     ");
-    $stmt->execute([$username, $password_hash]);
+    $stmt->execute([$username, $password_hash, $dueño_actual_id]);
 
     // Redirigir con éxito
     header('Location: dueño.php?mensaje=empleado_creado&username=' . urlencode($username));

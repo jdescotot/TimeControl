@@ -1,4 +1,4 @@
 <?php
-// config.php - Almacena la clave de la API de forma segura
-define('MIMO_API_KEY', 'TU_LLAVE_API_AQUI');
+define('MIMO_API_KEY', 'sk-eraavbs2l6i781vapcq2r297x852w42zachfv4jwngl9h6o2');
+define('MIMO_API_URL', 'https://api.xiaomimimo.com/v1/chat/completions');
 ?>

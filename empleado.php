@@ -2,7 +2,7 @@
 session_start();
 require_once 'config.php';
 if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
-    header('Location: index.html');
+    header('Location: index.php');
     exit;
 }
 $empleado_id = $_SESSION['user_id'];

@@ -16,7 +16,6 @@
         <?php
         session_start();
         require_once 'config.php';
-
         $showError = false;
         $errorMessage = '';
 
@@ -58,7 +57,7 @@
                 <?php echo htmlspecialchars($errorMessage); ?>
             </div>
             <div class="back-link">
-                <a href="index.html">← Volver al inicio</a>
+                <a href="index.php">← Volver al inicio</a>
             </div>
         <?php endif; ?>
 

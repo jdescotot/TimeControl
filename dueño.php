@@ -20,8 +20,15 @@ try {
 }
 
 // Obtener todos los empleados (excluyendo al dueño) - con mejor manejo de charset
-$stmt_empleados = $pdo->prepare("SELECT id, username FROM usuarios WHERE rol = 'empleado' ORDER BY username");
-$stmt_empleados->execute();
+$dueño_id = $_SESSION['user_id'];
+$stmt_empleados = $pdo->prepare("
+    SELECT id, username 
+    FROM usuarios 
+    WHERE rol = 'empleado' 
+    AND propietario_id = ? 
+    ORDER BY username
+");
+$stmt_empleados->execute([$dueño_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
 // DEBUG: Descomentar para verificar cuántos empleados se obtienen
