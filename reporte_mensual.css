@@ -1,0 +1,347 @@
+/* ==================== ESTILOS ESPECÍFICOS DEL REPORTE MENSUAL ==================== */
+
+/* Selector de Mes */
+.month-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 16px;
+}
+
+.btn-nav-month {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.btn-nav-month:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.month-display {
+    text-align: center;
+    flex: 1;
+}
+
+.month-display h2 {
+    font-size: 28px;
+    color: #2d3748;
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Grid de Resumen General */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 16px 0;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #f7fafc;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.summary-item:hover {
+    background: #edf2f7;
+    transform: translateY(-2px);
+}
+
+.summary-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2d3748;
+    flex-shrink: 0;
+}
+
+.summary-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: #718096;
+    font-weight: 500;
+}
+
+.summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+/* Tabla de Reporte */
+.reporte-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reporte-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.reporte-table th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.reporte-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.reporte-table tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+.reporte-table td {
+    padding: 14px 12px;
+    font-size: 14px;
+}
+
+.empleado-name {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 45px;
+}
+
+.badge-blue {
+    background-color: #bee3f8;
+    color: #2c5aa0;
+}
+
+.badge-green {
+    background-color: #c6f6d5;
+    color: #22543d;
+}
+
+.badge-yellow {
+    background-color: #feebc8;
+    color: #7c2d12;
+}
+
+.badge-orange {
+    background-color: #fed7d7;
+    color: #7c2d12;
+}
+
+.badge-purple {
+    background-color: #e9d8fd;
+    color: #6b46c1;
+}
+
+.badge-red {
+    background-color: #fed7d7;
+    color: #c53030;
+}
+
+/* Barra de Progreso */
+.progress-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 12px;
+}
+
+.progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Resumen de Ausencias */
+.absence-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    padding: 8px 0;
+}
+
+.absence-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #f7fafc;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.absence-item:hover {
+    background: #edf2f7;
+    transform: translateY(-2px);
+}
+
+.absence-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2d3748;
+    flex-shrink: 0;
+}
+
+.absence-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.absence-label {
+    font-size: 13px;
+    color: #718096;
+    font-weight: 500;
+}
+
+.absence-count {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .reporte-table {
+        font-size: 12px;
+    }
+
+    .reporte-table th,
+    .reporte-table td {
+        padding: 10px 8px;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .absence-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .month-selector {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .month-display h2 {
+        font-size: 20px;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-item {
+        padding: 12px;
+    }
+
+    .absence-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .absence-item {
+        padding: 12px;
+    }
+
+    .reporte-table {
+        font-size: 11px;
+    }
+
+    .reporte-table th,
+    .reporte-table td {
+        padding: 8px 4px;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .empleado-name {
+        font-size: 13px;
+    }
+
+    /* Mostrar las etiquetas de columna en móvil */
+    .table-container {
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .month-selector {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-nav-month {
+        width: 100%;
+    }
+
+    .summary-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .absence-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .reporte-table {
+        font-size: 10px;
+    }
+
+    .reporte-table th,
+    .reporte-table td {
+        padding: 6px 2px;
+    }
+}
