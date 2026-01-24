@@ -50,11 +50,27 @@ try {
                 VALUES (?, ?, ?, ?)
             ");
             $stmt->execute([$empleado_id, $fecha_descanso, $semana, $año]);
+        } else {
+            // Ya existe, considerarlo como éxito
+            echo json_encode(['success' => true, 'message' => 'Ya existe']);
+            exit;
         }
     }
 
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    // Log detallado del error
+    error_log("Error en horarios_semanales: " . $e->getMessage());
+    echo json_encode([
+        'success' => false, 
+        'error' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'debug' => [
+            'empleado_id' => $empleado_id,
+            'fecha_descanso' => $fecha_descanso,
+            'semana' => $semana,
+            'año' => $año
+        ]
+    ]);
 }
 ?>

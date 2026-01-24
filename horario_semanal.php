@@ -236,8 +236,13 @@ foreach ($ausencias_raw as $a) {
                         cell.classList.remove('is-rest-day');
                     }
                 } else {
-                    showStatus('Error', 'error');
+                    showStatus('Error: ' + (data.error || 'Desconocido'), 'error');
+                    console.error('Error completo:', data);
                 }
+            })
+            .catch(error => {
+                showStatus('Error de conexión', 'error');
+                console.error('Error:', error);
             });
         }
 
