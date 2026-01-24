@@ -2,10 +2,10 @@
 session_start();
 require_once 'config.php';
 
-// Sin seguridad - acceso directo
-$_SESSION['rol'] = 'hacienda';
-$_SESSION['username'] = 'Hacienda';
-$_SESSION['user_id'] = 0;
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'hacienda') {
+    header('Location: index.php');
+    exit;
+}
 
 // Obtener filtros
 $busqueda = $_GET['busqueda'] ?? '';

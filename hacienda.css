@@ -3,171 +3,259 @@
 .hacienda-header {
     text-align: center;
     margin-bottom: 40px;
-    padding: 30px 20px;
+    padding: 40px 30px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
+    border-radius: 20px;
     color: white;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.hacienda-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 15s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
 }
 
 .hacienda-header h1 {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 700;
-    margin: 0 0 10px 0;
+    margin: 0 0 12px 0;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .hacienda-header p {
-    font-size: 16px;
-    opacity: 0.9;
+    font-size: 17px;
+    opacity: 0.95;
     margin: 0;
+    position: relative;
+    z-index: 1;
 }
 
 /* Filters */
 .filters-card {
     margin-bottom: 30px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.filters-card .card-body {
+    padding: 24px;
 }
 
 .filters-form {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr auto;
-    gap: 16px;
+    gap: 20px;
     align-items: end;
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .filter-group label {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: #4a5568;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+}
+
+.filter-group label svg {
+    color: #667eea;
 }
 
 .filter-group input,
 .filter-group select {
-    padding: 10px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
     font-family: inherit;
-    transition: all 0.2s;
+    transition: all 0.3s;
+    background: white;
+}
+
+.filter-group input:hover,
+.filter-group select:hover {
+    border-color: #cbd5e0;
 }
 
 .filter-group input:focus,
 .filter-group select:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
 .btn-filter {
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 600;
+    font-size: 15px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: transform 0.2s;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .btn-filter:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-filter:active {
+    transform: translateY(0);
 }
 
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
 }
 
 .stat-card {
     background: white;
-    padding: 24px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 28px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     display: flex;
     align-items: center;
-    gap: 16px;
-    transition: transform 0.2s;
+    gap: 20px;
+    transition: all 0.3s;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
 }
 
 .stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-6px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .stat-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .stat-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
 .stat-label {
-    font-size: 13px;
+    font-size: 14px;
     color: #718096;
-    font-weight: 500;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-value {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
     color: #2d3748;
+    line-height: 1;
 }
 
 /* Dueño Cards */
 .dueno-card {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     transition: all 0.3s ease;
     overflow: hidden;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.dueno-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .dueno-card.expanded {
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 6px 24px rgba(102, 126, 234, 0.25);
+    border-color: #667eea;
 }
 
 .dueno-header {
+    padding: 24px;
+    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
-    cursor: pointer;
-    transition: background 0.2s;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    transition: all 0.3s;
+}
+
+.dueno-card.expanded .dueno-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
 }
 
 .dueno-header:hover {
-    background: #f7fafc;
+    background: linear-gradient(135deg, #e6fffa 0%, #e0e7ff 100%);
+}
+
+.dueno-card.expanded .dueno-header:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
 
 .dueno-info h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 0 0 8px 0;
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    color: #2d3748;
+}
+
+.dueno-card.expanded .dueno-info h3 {
+    color: white;
 }
 
 .dueno-stats {
@@ -178,8 +266,13 @@
 }
 
 .date-info {
-    font-size: 12px;
+    font-size: 13px;
     color: #718096;
+    font-weight: 500;
+}
+
+.dueno-card.expanded .date-info {
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .dueno-actions {
@@ -189,144 +282,204 @@
 }
 
 .btn-action {
-    padding: 8px 16px;
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    padding: 10px 18px;
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-action:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.dueno-card.expanded .btn-action {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: white;
+}
+
+.dueno-card.expanded .btn-action:hover {
+    background: white;
+    transform: translateY(-2px);
+}
+
+.toggle-icon {
+    transition: transform 0.3s;
+    color: #667eea;
+}
+
+.dueno-card.expanded .toggle-icon {
+    transform: rotate(180deg);
+    color: white;
+}
+
+.dueno-content {
+    padding: 0;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Empleados Table */
+.empleados-table {
+    padding: 24px;
+    background: #f8fafc;
+}
+
+.empleados-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.empleados-table thead {
+    background: white;
+}
+
+.empleados-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.empleados-table tbody tr {
+    background: white;
+    transition: all 0.3s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.empleados-table tbody tr:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.empleados-table td {
+    padding: 16px;
+    font-size: 14px;
+    color: #2d3748;
+}
+
+.empleados-table td:first-child {
+    border-radius: 10px 0 0 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.empleados-table td:last-child {
+    border-radius: 0 10px 10px 0;
+}
+
+.btn-action-small {
+    padding: 8px 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     text-decoration: none;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
-
-.btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
-}
-
-.toggle-icon {
-    transition: transform 0.3s;
-    color: #4a5568;
-}
-
-.dueno-card.expanded .toggle-icon {
-    transform: rotate(180deg);
-}
-
-/* Dueño Content */
-.dueno-content {
-    padding: 0 20px 20px 20px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.empleados-table {
-    margin-top: 16px;
-    overflow-x: auto;
-}
-
-.empleados-table table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.empleados-table th {
-    background: #f7fafc;
-    padding: 12px;
-    text-align: left;
-    font-size: 13px;
-    font-weight: 600;
-    color: #4a5568;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.empleados-table td {
-    padding: 12px;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 14px;
-}
-
-.empleados-table tr:hover {
-    background: #f7fafc;
-}
-
-.btn-action-small {
-    padding: 6px 12px;
-    background: #667eea;
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    transition: all 0.2s;
+    gap: 6px;
+    transition: all 0.3s;
 }
 
 .btn-action-small:hover {
-    background: #5568d3;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state-small {
+    padding: 40px;
+    text-align: center;
+    color: #718096;
+}
+
+.empty-state-small p {
+    margin: 0;
+    font-size: 15px;
 }
 
 /* Badges */
 .badge {
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
     font-weight: 600;
     display: inline-block;
+    letter-spacing: 0.3px;
 }
 
 .badge-blue {
-    background: #bee3f8;
+    background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
     color: #2c5282;
+    box-shadow: 0 2px 4px rgba(66, 153, 225, 0.2);
 }
 
 .badge-green {
-    background: #c6f6d5;
+    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
     color: #22543d;
+    box-shadow: 0 2px 4px rgba(72, 187, 120, 0.2);
 }
 
 .badge-purple {
-    background: #e9d8fd;
+    background: linear-gradient(135deg, #e9d8fd 0%, #d6bcfa 100%);
     color: #553c9a;
+    box-shadow: 0 2px 4px rgba(159, 122, 234, 0.2);
 }
 
 /* Empty States */
 .empty-state {
     text-align: center;
-    padding: 60px 20px;
+    padding: 80px 20px;
     color: #718096;
 }
 
 .empty-state svg {
-    margin-bottom: 16px;
-    opacity: 0.5;
+    margin-bottom: 20px;
+    opacity: 0.4;
+    color: #cbd5e0;
 }
 
 .empty-state p {
-    font-size: 16px;
+    font-size: 17px;
     margin: 0;
-}
-
-.empty-state-small {
-    text-align: center;
-    padding: 30px 20px;
-    color: #a0aec0;
-}
-
-.empty-state-small p {
-    margin: 0;
-    font-size: 14px;
+    font-weight: 500;
 }
 
 /* Responsive */
 @media (max-width: 1024px) {
     .filters-form {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .btn-filter {
+        grid-column: 1 / -1;
     }
 
     .stats-grid {
@@ -334,6 +487,34 @@
     }
 
     .dueno-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .dueno-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 640px) {
+    .hacienda-header h1 {
+        font-size: 28px;
+    }
+    
+    .filters-form {
+        grid-template-columns: 1fr;
+    }
+    
+    .dueno-info h3 {
+        font-size: 18px;
+    }
+    
+    .empleados-table {
+        overflow-x: scroll;
+    }
+}
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;

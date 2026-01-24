@@ -2,10 +2,10 @@
 session_start();
 require_once 'config.php';
 
-// Sin seguridad - acceso directo
-$_SESSION['rol'] = 'hacienda';
-$_SESSION['username'] = 'Hacienda';
-$_SESSION['user_id'] = 0;
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'hacienda') {
+    header('Location: index.php');
+    exit;
+}
 
 $dueno_id = $_GET['dueno_id'] ?? 0;
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
