@@ -47,9 +47,11 @@ $stmt_empleados = $pdo->prepare("SELECT id, username FROM usuarios WHERE rol = '
 $stmt_empleados->execute([$dueño_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener horarios de descanso de la semana
-$stmt_horarios = $pdo->prepare("SELECT empleado_id, fecha_descanso FROM horarios_semanales WHERE semana_año = ? AND año = ?");
-$stmt_horarios->execute([$semana, $año]);
+// Obtener horarios de descanso de la semana (filtrar por rango de fechas en lugar de semana)
+$inicio_f = $fechas_semana[1];
+$fin_f = $fechas_semana[7];
+$stmt_horarios = $pdo->prepare("SELECT empleado_id, fecha_descanso FROM horarios_semanales WHERE fecha_descanso BETWEEN ? AND ?");
+$stmt_horarios->execute([$inicio_f, $fin_f]);
 $descansos_raw = $stmt_horarios->fetchAll(PDO::FETCH_ASSOC);
 $descansos = [];
 foreach ($descansos_raw as $d) {
@@ -60,8 +62,6 @@ foreach ($descansos_raw as $d) {
 }
 
 // Obtener ausencias y observaciones de la semana
-$inicio_f = $fechas_semana[1];
-$fin_f = $fechas_semana[7];
 $stmt_ausencias = $pdo->prepare("SELECT * FROM ausencias_empleados WHERE fecha BETWEEN ? AND ?");
 $stmt_ausencias->execute([$inicio_f, $fin_f]);
 $ausencias_raw = $stmt_ausencias->fetchAll(PDO::FETCH_ASSOC);
@@ -109,12 +109,6 @@ foreach ($ausencias_raw as $a) {
 
         <main class="main-content">
             <div class="schedule-container">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0;">
-                        📅 Panel de Días Libres
-                    </h1>
-                    <p style="color: #718096; font-size: 14px; margin-top: 8px;">Gestiona los días de descanso y ausencias de tus empleados</p>
-                </div>
                 <div class="week-navigation">
                     <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana-1; ?>, <?php echo $año; ?>)">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -208,7 +202,7 @@ foreach ($ausencias_raw as $a) {
             setTimeout(() => {
                 status.className = 'save-status';
             }, 1000);
-        }}
+        }
 
         function guardarDescanso(empleadoId, fecha, semana, año, isChecked) {
             // Validar que la fecha esté dentro del rango de la semana actual

@@ -78,6 +78,23 @@ foreach ($stmt_ausencias->fetchAll(PDO::FETCH_ASSOC) as $a) {
     $ausencias_data[$a['empleado_id']][$a['tipo_ausencia']] = $a['cantidad'];
 }
 
+// Obtener días de descanso del mes (para excluirlos del cálculo de asistencia)
+$stmt_descansos = $pdo->prepare("
+    SELECT 
+        empleado_id,
+        COUNT(*) as dias_descanso
+    FROM horarios_semanales 
+    WHERE fecha_descanso BETWEEN ? AND ? AND empleado_id IN (
+        SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
+    )
+    GROUP BY empleado_id
+");
+$stmt_descansos->execute([$primer_dia, $ultimo_dia, $dueño_id]);
+$descansos_data = [];
+foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
+    $descansos_data[$d['empleado_id']] = $d['dias_descanso'];
+}
+
 // Obtener total de horas trabajadas por empleado
 $stmt_horas = $pdo->prepare("
     SELECT 
@@ -287,6 +304,7 @@ if ($mes_siguiente > 12) {
                                         $marcaciones = $marcaciones_data[$emp['id']] ?? ['dias_trabajados' => 0];
                                         $ausencias = $ausencias_data[$emp['id']] ?? [];
                                         $horas_totales = $horas_data[$emp['id']] ?? '00:00:00';
+                                        $dias_descanso = $descansos_data[$emp['id']] ?? 0;
                                         
                                         // Calcular porcentaje de asistencia
                                         $dias_registrados = $marcaciones['dias_trabajados'];
@@ -295,7 +313,8 @@ if ($mes_siguiente > 12) {
                                         $falta_just = $ausencias['Falta Justificada'] ?? 0;
                                         $falta_injust = $ausencias['Falta Injustificada'] ?? 0;
                                         
-                                        $dias_esperados = $dias_mes - $vacaciones;
+                                        // Restar días de descanso y vacaciones del total esperado
+                                        $dias_esperados = $dias_mes - $vacaciones - $dias_descanso;
                                         $asistencia = $dias_esperados > 0 ? ($dias_registrados / $dias_esperados * 100) : 0;
                                     ?>
                                     <tr>
@@ -399,7 +418,11 @@ if ($mes_siguiente > 12) {
                         
                         $total_ausencias = $total_vacaciones + $total_enfermedad + $total_falta_just + $total_falta_injust;
                         ?>
-                        <div class="absence-item">
+                        <a href="detalle_ausencias.php?tipo=Vacación&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                           class="absence-item" 
+                           style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)';">
                             <div class="absence-badge" style="background-color: #feebc8;">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
@@ -410,43 +433,55 @@ if ($mes_siguiente > 12) {
                                 <span class="absence-label">Vacaciones</span>
                                 <span class="absence-count"><?php echo $total_vacaciones; ?> días</span>
                             </div>
-                        </div>
-                        <div class="absence-item">
-                            <div class="absence-badge" style="background-color: #c6f6d5;">
+                        </a>
+                        <a href="detalle_ausencias.php?tipo=Enfermedad&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                           class="absence-item" 
+                           style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)';">
+                            <div class="absence-badge" style="background-color: #fed7d7;">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path>
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
                                 </svg>
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Enfermedad</span>
                                 <span class="absence-count"><?php echo $total_enfermedad; ?> días</span>
                             </div>
-                        </div>
-                        <div class="absence-item">
+                        </a>
+                        <a href="detalle_ausencias.php?tipo=Falta Justificada&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                           class="absence-item" 
+                           style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)';">
                             <div class="absence-badge" style="background-color: #bee3f8;">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="23 6 13.5 15.5 8 10 1 17"></polyline>
-                                    <polyline points="17 6 23 6 23 12"></polyline>
+                                    <polyline points="9 11 12 14 22 4"></polyline>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                                 </svg>
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Falta Justificada</span>
                                 <span class="absence-count"><?php echo $total_falta_just; ?> días</span>
                             </div>
-                        </div>
-                        <div class="absence-item">
-                            <div class="absence-badge" style="background-color: #fed7d7;">
+                        </a>
+                        <a href="detalle_ausencias.php?tipo=Falta Injustificada&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                           class="absence-item" 
+                           style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)';">
+                            <div class="absence-badge" style="background-color: #fbb6ce;">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
                                 </svg>
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Falta Injustificada</span>
                                 <span class="absence-count"><?php echo $total_falta_injust; ?> días</span>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>

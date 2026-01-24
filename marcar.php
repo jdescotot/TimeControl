@@ -16,6 +16,14 @@ if (!in_array($accion, ['entrada', 'salida'])) {
     die('Acción inválida');
 }
 
+// Verificar si hoy es día de descanso programado
+$stmt_descanso = $pdo->prepare("SELECT id FROM horarios_semanales WHERE empleado_id = ? AND fecha_descanso = ?");
+$stmt_descanso->execute([$empleado_id, $hoy]);
+
+if ($stmt_descanso->fetch()) {
+    die('No puedes marcar en un día programado como descanso.');
+}
+
 try {
     if ($accion === 'entrada') {
         // Verificar que no haya ya una entrada hoy

@@ -20,10 +20,10 @@ if (!$empleado_id || !$fecha_descanso || !$semana || !$año) {
     exit;
 }
 
-// Validar que la fecha de descanso esté dentro de la semana y año especificados
+// Validar formato de fecha
 $fecha = DateTime::createFromFormat('Y-m-d', $fecha_descanso);
-if (!$fecha || (int) $fecha->format('W') != $semana || (int) $fecha->format('Y') != $año) {
-    echo json_encode(['success' => false, 'error' => 'Fecha fuera de rango de la semana']);
+if (!$fecha) {
+    echo json_encode(['success' => false, 'error' => 'Formato de fecha inválido']);
     exit;
 }
 
@@ -32,16 +32,16 @@ try {
         // Eliminar el día de descanso
         $stmt = $pdo->prepare("
             DELETE FROM horarios_semanales 
-            WHERE empleado_id = ? AND fecha_descanso = ? AND semana_año = ? AND año = ?
+            WHERE empleado_id = ? AND fecha_descanso = ?
         ");
-        $stmt->execute([$empleado_id, $fecha_descanso, $semana, $año]);
+        $stmt->execute([$empleado_id, $fecha_descanso]);
     } else {
-        // Verificar si ya existe antes de insertar
+        // Verificar si ya existe antes de insertar (solo por empleado y fecha)
         $stmt_check = $pdo->prepare("
             SELECT id FROM horarios_semanales 
-            WHERE empleado_id = ? AND fecha_descanso = ? AND semana_año = ? AND año = ?
+            WHERE empleado_id = ? AND fecha_descanso = ?
         ");
-        $stmt_check->execute([$empleado_id, $fecha_descanso, $semana, $año]);
+        $stmt_check->execute([$empleado_id, $fecha_descanso]);
         
         if (!$stmt_check->fetch()) {
             // Solo insertar si no existe

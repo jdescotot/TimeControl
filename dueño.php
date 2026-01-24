@@ -39,9 +39,20 @@ $total_empleados = count($empleados);
 $entraron_hoy = 0;
 $en_jornada = 0;
 
+// Obtener días de descanso para hoy
+$stmt_descansos = $pdo->prepare("SELECT empleado_id FROM horarios_semanales WHERE fecha_descanso = ?");
+$stmt_descansos->execute([$hoy]);
+$empleados_con_descanso = [];
+foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
+    $empleados_con_descanso[] = $d['empleado_id'];
+}
+
 // Para cada empleado, verificar su estado hoy
 if (!empty($empleados)) {
     foreach ($empleados as $key => $emp) {
+        // Verificar si tiene día de descanso
+        $empleados[$key]['tiene_descanso'] = in_array($emp['id'], $empleados_con_descanso);
+        
         $stmt_marcacion = $pdo->prepare("
             SELECT m.hora_entrada, m.hora_salida,
                    sc.nueva_hora_entrada, sc.nueva_hora_salida
@@ -69,7 +80,8 @@ if (!empty($empleados)) {
     }
 }
 
-$pendientes = $total_empleados - $entraron_hoy;
+// Restar empleados con descanso del total de pendientes
+$pendientes = $total_empleados - $entraron_hoy - count($empleados_con_descanso);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -265,7 +277,17 @@ $pendientes = $total_empleados - $entraron_hoy;
                                                 <!-- DEBUG: ID = <?php echo $emp['id']; ?> -->
                                             </td>
                                             <td data-label="Estado">
-                                                <?php if (!$emp['hora_entrada']): ?>
+                                                <?php if ($emp['tiene_descanso']): ?>
+                                                    <span style="color:#48bb78; font-weight: 500;">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                                        </svg>
+                                                        Día Libre
+                                                    </span>
+                                                <?php elseif (!$emp['hora_entrada']): ?>
                                                     <span style="color:#e53e3e;">Sin marcar</span>
                                                 <?php elseif ($emp['hora_entrada'] && !$emp['hora_salida']): ?>
                                                     <?php if ($emp['tiene_ajuste']): ?>
