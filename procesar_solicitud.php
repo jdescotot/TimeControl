@@ -14,26 +14,15 @@ $accion = $_POST['accion'] ?? '';
 try {
     $pdo->beginTransaction();
 
-    // Obtener los detalles de la solicitud para saber qué marcación actualizar
+    // Obtener los detalles de la solicitud
     $stmt = $pdo->prepare("SELECT * FROM solicitudes_cambio WHERE id = ?");
     $stmt->execute([$id_solicitud]);
     $solicitud = $stmt->fetch();
 
     if ($solicitud) {
         if ($accion === 'aprobar') {
-            // 1. Actualizar la tabla de marcaciones con las horas solicitadas
-            $update_marcacion = $pdo->prepare("
-                UPDATE marcaciones 
-                SET hora_entrada = ?, hora_salida = ? 
-                WHERE id = ?
-            ");
-            $update_marcacion->execute([
-                $solicitud['nueva_hora_entrada'], 
-                $solicitud['nueva_hora_salida'], 
-                $solicitud['marcacion_id']
-            ]);
-
-            // 2. Marcar la solicitud como aprobada
+            // Marcar la solicitud como aprobada (SIN modificar la tabla marcaciones)
+            // Las horas originales se preservan, solo se marca la solicitud como aprobada
             $update_estado = $pdo->prepare("UPDATE solicitudes_cambio SET estado = 'aprobado' WHERE id = ?");
             $update_estado->execute([$id_solicitud]);
         } elseif ($accion === 'rechazar') {

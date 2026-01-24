@@ -148,10 +148,12 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
                             <tbody>
                                 <?php
                                 $stmt = $pdo->prepare("
-                                    SELECT id, fecha, hora_entrada, hora_salida 
-                                    FROM marcaciones 
-                                    WHERE empleado_id = ? 
-                                    ORDER BY fecha DESC, hora_entrada DESC
+                                    SELECT m.id, m.fecha, m.hora_entrada, m.hora_salida,
+                                           sc.nueva_hora_entrada, sc.nueva_hora_salida, sc.motivo
+                                    FROM marcaciones m
+                                    LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
+                                    WHERE m.empleado_id = ? 
+                                    ORDER BY m.fecha DESC, m.hora_entrada DESC
                                 ");
                                 $stmt->execute([$empleado_id]);
                                 $marcaciones = $stmt->fetchAll();
@@ -161,18 +163,42 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
                                     foreach ($marcaciones as $fila):
                                         $entrada = $fila['hora_entrada'];
                                         $salida = $fila['hora_salida'];
+                                        $entrada_ajustada = $fila['nueva_hora_entrada'];
+                                        $salida_ajustada = $fila['nueva_hora_salida'];
+                                        $tiene_ajuste = !empty($entrada_ajustada);
+                                        
+                                        // Usar horas ajustadas si existen
+                                        $entrada_calcular = $entrada_ajustada ?? $entrada;
+                                        $salida_calcular = $salida_ajustada ?? $salida;
+                                        
                                         $horas = '—';
-                                        if ($entrada && $salida) {
-                                            $inicio = new DateTime($fila['fecha'] . ' ' . $entrada);
-                                            $fin = new DateTime($fila['fecha'] . ' ' . $salida);
+                                        if ($entrada_calcular && $salida_calcular) {
+                                            $inicio = new DateTime($fila['fecha'] . ' ' . $entrada_calcular);
+                                            $fin = new DateTime($fila['fecha'] . ' ' . $salida_calcular);
                                             $intervalo = $inicio->diff($fin);
                                             $horas = $intervalo->format('%h horas %i minutos');
                                         }
                                 ?>
                                     <tr>
                                         <td data-label="Fecha"><?= htmlspecialchars($fila['fecha']) ?></td>
-                                        <td data-label="Entrada"><?= $entrada ?: '—' ?></td>
-                                        <td data-label="Salida"><?= $salida ?: '—' ?></td>
+                                        <td data-label="Entrada">
+                                            <?php if ($tiene_ajuste): ?>
+                                                <span style="text-decoration: line-through; opacity: 0.6; font-size: 12px;"><?= $entrada ? substr($entrada, 0, 5) : '—' ?></span><br>
+                                                <strong style="color: #667eea;"><?= substr($entrada_ajustada, 0, 5) ?></strong>
+                                                <span style="background: #667eea; color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 3px;" title="<?= htmlspecialchars($fila['motivo']) ?>">Ajustado</span>
+                                            <?php else: ?>
+                                                <?= $entrada ? substr($entrada, 0, 5) : '—' ?>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td data-label="Salida">
+                                            <?php if ($tiene_ajuste): ?>
+                                                <span style="text-decoration: line-through; opacity: 0.6; font-size: 12px;"><?= $salida ? substr($salida, 0, 5) : '—' ?></span><br>
+                                                <strong style="color: #667eea;"><?= substr($salida_ajustada, 0, 5) ?></strong>
+                                                <span style="background: #667eea; color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 3px;" title="<?= htmlspecialchars($fila['motivo']) ?>">Ajustado</span>
+                                            <?php else: ?>
+                                                <?= $salida ? substr($salida, 0, 5) : '—' ?>
+                                            <?php endif; ?>
+                                        </td>
                                         <td data-label="Horas"><?= $horas ?></td>
                                         <td data-label="Acción">
                                             <?php if ($es_ultimo): ?>

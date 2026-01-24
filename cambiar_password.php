@@ -156,25 +156,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <form method="POST" action="">
                         <div class="form-group">
                             <label for="password_actual">Contraseña Actual:</label>
-                            <input type="password" name="password_actual" id="password_actual" required 
-                                   placeholder="Tu contraseña temporal actual"
-                                   autocomplete="current-password">
+                            <div style="position: relative;">
+                                <input type="password" name="password_actual" id="password_actual" required 
+                                       placeholder="Tu contraseña temporal actual"
+                                       autocomplete="current-password"
+                                       style="padding-right: 45px;">
+                                <button type="button" onclick="togglePassword('password_actual', this)" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
+                                    aria-label="Mostrar contraseña">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label for="password_nueva">Nueva Contraseña:</label>
-                            <input type="password" name="password_nueva" id="password_nueva" required 
-                                   placeholder="Mínimo 6 caracteres"
-                                   minlength="6"
-                                   autocomplete="new-password">
+                            <div style="position: relative;">
+                                <input type="password" name="password_nueva" id="password_nueva" required 
+                                       placeholder="Mínimo 6 caracteres"
+                                       minlength="6"
+                                       autocomplete="new-password"
+                                       style="padding-right: 45px;">
+                                <button type="button" onclick="togglePassword('password_nueva', this)" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
+                                    aria-label="Mostrar contraseña">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label for="password_confirmar">Confirmar Nueva Contraseña:</label>
-                            <input type="password" name="password_confirmar" id="password_confirmar" required 
-                                   placeholder="Repite la nueva contraseña"
-                                   minlength="6"
-                                   autocomplete="new-password">
+                            <div style="position: relative;">
+                                <input type="password" name="password_confirmar" id="password_confirmar" required 
+                                       placeholder="Repite la nueva contraseña"
+                                       minlength="6"
+                                       autocomplete="new-password"
+                                       style="padding-right: 45px;">
+                                <button type="button" onclick="togglePassword('password_confirmar', this)" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
+                                    aria-label="Mostrar contraseña">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div style="display: flex; gap: 12px; margin-top: 24px;">
@@ -204,5 +237,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </a>
         </footer>
     </div>
+
+    <script>
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        const svg = button.querySelector('svg');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+        } else {
+            input.type = 'password';
+            svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        }
+    }
+    </script>
 </body>
 </html>

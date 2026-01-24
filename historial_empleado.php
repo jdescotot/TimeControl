@@ -20,12 +20,14 @@ if (!$empleado) {
 
 $username = $empleado['username'];
 
-// Obtener marcaciones del empleado
+// Obtener marcaciones del empleado con ajustes aprobados
 $stmt = $pdo->prepare("
-    SELECT fecha, hora_entrada, hora_salida 
-    FROM marcaciones 
-    WHERE empleado_id = ? 
-    ORDER BY fecha DESC, hora_entrada DESC
+    SELECT m.fecha, m.hora_entrada, m.hora_salida,
+           sc.nueva_hora_entrada, sc.nueva_hora_salida, sc.motivo
+    FROM marcaciones m
+    LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
+    WHERE m.empleado_id = ? 
+    ORDER BY m.fecha DESC, m.hora_entrada DESC
 ");
 $stmt->execute([$empleado_id]);
 $marcaciones = $stmt->fetchAll();
@@ -51,23 +53,26 @@ $marcaciones = $stmt->fetchAll();
                     <span>Control Horario</span>
                 </div>
                 <div class="user-info">
-                    <span class="welcome-text">Dueño</span>
-                    <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                    <?php 
+                    $mes_param = $_GET['mes'] ?? null;
+                    $año_param = $_GET['año'] ?? null;
+                    $back_url = ($mes_param && $año_param) ? "reporte_mensual.php?mes=$mes_param&año=$año_param" : "dueño.php";
+                    $back_text = ($mes_param && $año_param) ? "Volver al Reporte" : "Volver al Panel";
+                    ?>
+                    <span class="welcome-text">Historial de <?php echo htmlspecialchars($username); ?></span>
+                    <a href="<?php echo $back_url; ?>" class="btn-back">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5"></path>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        <span><?php echo $back_text; ?></span>
+                    </a>
                 </div>
             </div>
         </header>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Botón de regreso destacado -->
-            <a href="dueño.php" class="back-button">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5"></path>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                <span>Volver al Panel de Control</span>
-            </a>
-
             <!-- Card de historial -->
             <div class="card historial-card">
                 <div class="card-header">
@@ -95,18 +100,54 @@ $marcaciones = $stmt->fetchAll();
                                     <?php foreach ($marcaciones as $fila):
                                         $entrada = $fila['hora_entrada'];
                                         $salida = $fila['hora_salida'];
+                                        $entrada_ajustada = $fila['nueva_hora_entrada'];
+                                        $salida_ajustada = $fila['nueva_hora_salida'];
+                                        $tiene_ajuste = !empty($entrada_ajustada);
+                                        
+                                        // Usar horas ajustadas para cálculos si existen
+                                        $entrada_calcular = $entrada_ajustada ?? $entrada;
+                                        $salida_calcular = $salida_ajustada ?? $salida;
+                                        
                                         $horas = '—';
-                                        if ($entrada && $salida) {
-                                            $inicio = new DateTime($fila['fecha'] . ' ' . $entrada);
-                                            $fin = new DateTime($fila['fecha'] . ' ' . $salida);
+                                        if ($entrada_calcular && $salida_calcular) {
+                                            $inicio = new DateTime($fila['fecha'] . ' ' . $entrada_calcular_calcular);
+                                            $fin = new DateTime($fila['fecha'] . ' ' . $salida_calcular);
                                             $intervalo = $inicio->diff($fin);
                                             $horas = $intervalo->format('%h horas %i minutos');
                                         }
                                     ?>
                                         <tr>
                                             <td data-label="Fecha"><?= htmlspecialchars($fila['fecha']) ?></td>
-                                            <td data-label="Entrada"><?= $entrada ?: '—' ?></td>
-                                            <td data-label="Salida"><?= $salida ?: '—' ?></td>
+                                            <td data-label="Entrada">
+                                                <?php if ($tiene_ajuste): ?>
+                                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                                        <span style="text-decoration: line-through; opacity: 0.5; font-size: 12px;">
+                                                            <?= $entrada ? substr($entrada, 0, 5) : '—' ?>
+                                                        </span>
+                                                        <div>
+                                                            <strong style="color: #667eea; font-size: 15px;"><?= substr($entrada_ajustada, 0, 5) ?></strong>
+                                                            <span style="background: #667eea; color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px; margin-left: 5px;" title="Motivo: <?= htmlspecialchars($fila['motivo']) ?>">Ajustado</span>
+                                                        </div>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <?= $entrada ? substr($entrada, 0, 5) : '—' ?>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td data-label="Salida">
+                                                <?php if ($tiene_ajuste): ?>
+                                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                                        <span style="text-decoration: line-through; opacity: 0.5; font-size: 12px;">
+                                                            <?= $salida ? substr($salida, 0, 5) : '—' ?>
+                                                        </span>
+                                                        <div>
+                                                            <strong style="color: #667eea; font-size: 15px;"><?= substr($salida_ajustada, 0, 5) ?></strong>
+                                                            <span style="background: #667eea; color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px; margin-left: 5px;" title="Motivo: <?= htmlspecialchars($fila['motivo']) ?>">Ajustado</span>
+                                                        </div>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <?= $salida ? substr($salida, 0, 5) : '—' ?>
+                                                <?php endif; ?>
+                                            </td>
                                             <td data-label="Horas"><?= $horas ?></td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -128,18 +169,6 @@ $marcaciones = $stmt->fetchAll();
                 </div>
             </div>
         </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <a href="logout.php" class="logout-link">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                Cerrar Sesión
-            </a>
-        </footer>
     </div>
 </body>
 </html>

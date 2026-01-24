@@ -168,15 +168,34 @@
 }
 
 .save-status {
-    font-size: 12px;
-    margin-left: 10px;
+    display: inline-block;
+    font-size: 13px;
+    margin-left: 15px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
     opacity: 0;
-    transition: opacity 0.3s;
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .save-status.visible {
     opacity: 1;
+    transform: translateY(0);
 }
 
-.save-status.success { color: #38a169; }
-.save-status.error { color: #e53e3e; }
+.save-status.success { 
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+}
+
+.save-status.error { 
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+    color: white;
+}
+
+.save-status:not(.visible) {
+    background: #e2e8f0;
+    color: #718096;
+}

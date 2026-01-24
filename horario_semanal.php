@@ -53,7 +53,10 @@ $stmt_horarios->execute([$semana, $año]);
 $descansos_raw = $stmt_horarios->fetchAll(PDO::FETCH_ASSOC);
 $descansos = [];
 foreach ($descansos_raw as $d) {
-    $descansos[$d['empleado_id']] = $d['fecha_descanso'];
+    if (!isset($descansos[$d['empleado_id']])) {
+        $descansos[$d['empleado_id']] = [];
+    }
+    $descansos[$d['empleado_id']][] = $d['fecha_descanso'];
 }
 
 // Obtener ausencias y observaciones de la semana
@@ -92,13 +95,13 @@ foreach ($ausencias_raw as $a) {
                     <span>Control Horario</span>
                 </div>
                 <div class="user-info">
-                    <span class="welcome-text">Gestión de Horarios</span>
-                    <a href="dueño.php" class="btn-nav" style="margin-top: 8px; text-decoration: none;">
+                    <span class="welcome-text">Horario Semanal</span>
+                    <a href="dueño.php" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            <path d="M19 12H5"></path>
+                            <polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
-                        Volver al Panel
+                        <span>Volver al Panel</span>
                     </a>
                 </div>
             </div>
@@ -106,6 +109,12 @@ foreach ($ausencias_raw as $a) {
 
         <main class="main-content">
             <div class="schedule-container">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0;">
+                        📅 Panel de Días Libres
+                    </h1>
+                    <p style="color: #718096; font-size: 14px; margin-top: 8px;">Gestiona los días de descanso y ausencias de tus empleados</p>
+                </div>
                 <div class="week-navigation">
                     <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana-1; ?>, <?php echo $año; ?>)">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -144,7 +153,7 @@ foreach ($ausencias_raw as $a) {
                                     <td class="employee-cell"><?php echo htmlspecialchars($emp['username']); ?></td>
                                     <?php foreach ($dias_semana as $num => $nombre): 
                                         $fecha_dia = $fechas_semana[$num];
-                                        $es_descanso = ($descansos[$emp['id']] ?? '') === $fecha_dia;
+                                        $es_descanso = in_array($fecha_dia, $descansos[$emp['id']] ?? []);
                                         $ausencia = $ausencias[$emp['id']][$fecha_dia] ?? null;
                                         $tipo_ausencia = $ausencia['tipo'] ?? 'observacion';
                                         $obs = $ausencia['obs'] ?? '';
@@ -155,11 +164,11 @@ foreach ($ausencias_raw as $a) {
                                     ?>
                                         <td class="day-cell <?php echo $cell_class; ?>" id="cell-<?php echo $emp['id']; ?>-<?php echo $fecha_dia; ?>">
                                             <div class="rest-day-toggle">
-                                                <input type="radio" 
-                                                       name="rest_<?php echo $emp['id']; ?>" 
+                                                <input type="checkbox" 
+                                                       name="rest_<?php echo $emp['id']; ?>_<?php echo $fecha_dia; ?>" 
                                                        value="<?php echo $fecha_dia; ?>"
                                                        <?php echo $es_descanso ? 'checked' : ''; ?>
-                                                       onchange="guardarDescanso(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', <?php echo $semana; ?>, <?php echo $año; ?>)">
+                                                       onchange="guardarDescanso(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', <?php echo $semana; ?>, <?php echo $año; ?>, this.checked)">
                                                 <span class="rest-day-label">Descanso</span>
                                             </div>
 
@@ -198,10 +207,10 @@ foreach ($ausencias_raw as $a) {
             status.className = 'save-status visible ' + type;
             setTimeout(() => {
                 status.className = 'save-status';
-            }, 2000);
-        }
+            }, 1000);
+        }}
 
-        function guardarDescanso(empleadoId, fecha, semana, año) {
+        function guardarDescanso(empleadoId, fecha, semana, año, isChecked) {
             // Validar que la fecha esté dentro del rango de la semana actual
             const fechasSemana = <?php echo json_encode(array_values($fechas_semana)); ?>;
             if (!fechasSemana.includes(fecha)) {
@@ -215,6 +224,7 @@ foreach ($ausencias_raw as $a) {
             formData.append('fecha_descanso', fecha);
             formData.append('semana', semana);
             formData.append('año', año);
+            formData.append('accion', isChecked ? 'agregar' : 'eliminar');
 
             fetch('guardar_horario.php', {
                 method: 'POST',
@@ -225,11 +235,12 @@ foreach ($ausencias_raw as $a) {
                 if (data.success) {
                     showStatus('Guardado', 'success');
                     // Actualizar clases visuales
-                    document.querySelectorAll(`[name="rest_${empleadoId}"]`).forEach(input => {
-                        const cell = document.getElementById(`cell-${empleadoId}-${input.value}`);
-                        if (input.checked) cell.classList.add('is-rest-day');
-                        else cell.classList.remove('is-rest-day');
-                    });
+                    const cell = document.getElementById(`cell-${empleadoId}-${fecha}`);
+                    if (isChecked) {
+                        cell.classList.add('is-rest-day');
+                    } else {
+                        cell.classList.remove('is-rest-day');
+                    }
                 } else {
                     showStatus('Error', 'error');
                 }

@@ -152,13 +152,13 @@ if ($mes_siguiente > 12) {
                     <span>Control Horario</span>
                 </div>
                 <div class="user-info">
-                    <span class="welcome-text">Reporte Mensual de Empleados</span>
-                    <a href="dueño.php" class="btn-nav" style="margin-top: 8px; text-decoration: none;">
+                    <span class="welcome-text">Reporte Mensual</span>
+                    <a href="dueño.php" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            <path d="M19 12H5"></path>
+                            <polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
-                        Volver al Panel
+                        <span>Volver al Panel</span>
                     </a>
                 </div>
             </div>
@@ -300,25 +300,67 @@ if ($mes_siguiente > 12) {
                                     ?>
                                     <tr>
                                         <td data-label="Empleado">
-                                            <span class="empleado-name"><?php echo htmlspecialchars($emp['username']); ?></span>
+                                            <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                               class="empleado-name"
+                                               style="color: #667eea; text-decoration: none; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                                               onmouseover="this.style.color='#764ba2'; this.style.textDecoration='underline';"
+                                               onmouseout="this.style.color='#667eea'; this.style.textDecoration='none';">
+                                                <?php echo htmlspecialchars($emp['username']); ?>
+                                            </a>
                                         </td>
                                         <td data-label="Días Trabajados">
-                                            <span class="badge badge-blue"><?php echo $dias_registrados; ?></span>
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                               class="badge badge-blue" 
+                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
+                                               onmouseover="this.style.transform='scale(1.1)'"
+                                               onmouseout="this.style.transform='scale(1)'">
+                                                <?php echo $dias_registrados; ?>
+                                            </a>
                                         </td>
                                         <td data-label="Horas Totales">
-                                            <span class="badge badge-green"><?php echo substr($horas_totales, 0, 5); ?></span>
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                               class="badge badge-green" 
+                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
+                                               onmouseover="this.style.transform='scale(1.1)'"
+                                               onmouseout="this.style.transform='scale(1)'">
+                                                <?php echo substr($horas_totales, 0, 5); ?>
+                                            </a>
                                         </td>
                                         <td data-label="Vacaciones">
-                                            <span class="badge badge-yellow"><?php echo $vacaciones; ?></span>
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                               class="badge badge-yellow" 
+                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
+                                               onmouseover="this.style.transform='scale(1.1)'"
+                                               onmouseout="this.style.transform='scale(1)'">
+                                                <?php echo $vacaciones; ?>
+                                            </a>
                                         </td>
                                         <td data-label="Enfermedad">
-                                            <span class="badge badge-orange"><?php echo $enfermedad; ?></span>
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                               class="badge badge-orange" 
+                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
+                                               onmouseover="this.style.transform='scale(1.1)'"
+                                               onmouseout="this.style.transform='scale(1)'">
+                                                <?php echo $enfermedad; ?>
+                                            </a>
                                         </td>
                                         <td data-label="Falta Justificada">
-                                            <span class="badge badge-purple"><?php echo $falta_just; ?></span>
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                               class="badge badge-purple" 
+                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
+                                               onmouseover="this.style.transform='scale(1.1)'"
+                                               onmouseout="this.style.transform='scale(1)'">
+                                                <?php echo $falta_just; ?>
+                                            </a>
                                         </td>
                                         <td data-label="Falta Injustificada">
-                                            <span class="badge badge-red"><?php echo $falta_injust; ?></span>
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                               class="badge badge-red" 
+                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
+                                               onmouseover="this.style.transform='scale(1.1)'"
+                                               onmouseout="this.style.transform='scale(1)'">
+                                                <?php echo $falta_injust; ?>
+                                            </a>
                                         </td>
                                         <td data-label="Asistencia %">
                                             <div class="progress-bar">
