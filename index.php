@@ -1,11 +1,15 @@
 <?php
 session_start();
 
+$rawUsername = '';
+
 // Solo procesamos si es POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once 'config.php';
     
-    $username = strtolower(trim($_POST['username'] ?? ''));
+    $rawUsername = trim($_POST['username'] ?? '');
+    // Normalizamos: sin espacios y en minúsculas para el login
+    $username = strtolower(preg_replace('/\s+/', '', $rawUsername));
     $password = $_POST['password'] ?? '';
 
     // Validación: contraseña no debe tener espacios
@@ -52,7 +56,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso - Control Horario</title>
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="index.css">
+    <style>
+        .password-wrapper { position: relative; display: block; }
+        .password-wrapper input { width: 100%; padding-right: 48px; box-sizing: border-box; }
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            color: #718096;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
@@ -80,13 +101,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     required 
                     autocomplete="username"
                     placeholder="Ingresa tu usuario"
-                    value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
+                    value="<?php echo htmlspecialchars($rawUsername ?? ''); ?>"
                 >
             </div>
 
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <div style="position: relative;">
+                <div class="password-wrapper">
                     <input 
                         type="password" 
                         id="password" 
@@ -94,11 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         required 
                         autocomplete="current-password"
                         placeholder="Ingresa tu contraseña"
-                        style="padding-right: 45px;"
                     >
-                    <button type="button" onclick="togglePassword('password', this)" 
-                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
-                        aria-label="Mostrar contraseña">
+                    <button type="button" class="toggle-password" onclick="togglePassword('password', this)" aria-label="Mostrar contraseña">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
