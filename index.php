@@ -5,38 +5,43 @@ session_start();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once 'config.php';
     
-    $username = $_POST['username'] ?? '';
+    $username = strtolower(trim($_POST['username'] ?? ''));
     $password = $_POST['password'] ?? '';
 
-    // AQUÍ VA LA CONSULTA ACTUALIZADA - con el campo requiere_cambio_password
-    $stmt = $pdo->prepare("SELECT id, username, password, rol, requiere_cambio_password FROM usuarios WHERE username = ?");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['rol'] = $user['rol'];
-
-        // Si requiere cambio de contraseña, redirigir a cambiar_password.php
-        if ($user['requiere_cambio_password'] == 1) {
-            header('Location: cambiar_password.php');
-            exit;
-        }
-
-        // Si no requiere cambio, ir a su panel normal según el rol
-        if ($user['rol'] === 'dueño') {
-            header('Location: dueño.php');
-            exit;
-        } elseif ($user['rol'] === 'hacienda') {
-            header('Location: hacienda.php');
-            exit;
-        } else {
-            header('Location: empleado.php');
-            exit;
-        }
+    // Validación: contraseña no debe tener espacios
+    if (strpos($password, ' ') !== false) {
+        $error = 'La contraseña no puede contener espacios';
     } else {
-        $error = 'Usuario o contraseña incorrectos';
+        // Búsqueda case-insensitive de usuario
+        $stmt = $pdo->prepare("SELECT id, username, password, rol, requiere_cambio_password FROM usuarios WHERE LOWER(username) = ?");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['rol'] = $user['rol'];
+
+            // Si requiere cambio de contraseña, redirigir a cambiar_password.php
+            if ($user['requiere_cambio_password'] == 1) {
+                header('Location: cambiar_password.php');
+                exit;
+            }
+
+            // Si no requiere cambio, ir a su panel normal según el rol
+            if ($user['rol'] === 'dueño') {
+                header('Location: dueño.php');
+                exit;
+            } elseif ($user['rol'] === 'hacienda') {
+                header('Location: hacienda.php');
+                exit;
+            } else {
+                header('Location: empleado.php');
+                exit;
+            }
+        } else {
+            $error = 'Usuario o contraseña incorrectos';
+        }
     }
 }
 ?>

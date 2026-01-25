@@ -10,7 +10,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
 $empleado_id = $_GET['id'] ?? 0;
 
 // Validar que el empleado exista y sea realmente un empleado
-$stmt = $pdo->prepare("SELECT username FROM usuarios WHERE id = ? AND rol = 'empleado'");
+$stmt = $pdo->prepare("SELECT username, created_at FROM usuarios WHERE id = ? AND rol = 'empleado'");
 $stmt->execute([$empleado_id]);
 $empleado = $stmt->fetch();
 
@@ -19,6 +19,25 @@ if (!$empleado) {
 }
 
 $username = $empleado['username'];
+
+// Calcular antigüedad
+$antiguedad_texto = '';
+if (!empty($empleado['created_at'])) {
+    $fecha_inicio = new DateTime($empleado['created_at']);
+    $fecha_actual = new DateTime();
+    $diferencia = $fecha_inicio->diff($fecha_actual);
+    
+    $años = $diferencia->y;
+    $meses = $diferencia->m;
+    
+    if ($años > 0 && $meses > 0) {
+        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
+    } elseif ($años > 0) {
+        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '');
+    } else {
+        $antiguedad_texto = $meses . ' mes' . ($meses > 1 ? 'es' : '');
+    }
+}
 
 // Obtener marcaciones del empleado con ajustes aprobados
 $stmt = $pdo->prepare("
@@ -59,7 +78,14 @@ $marcaciones = $stmt->fetchAll();
                     $back_url = ($mes_param && $año_param) ? "reporte_mensual.php?mes=$mes_param&año=$año_param" : "dueño.php";
                     $back_text = ($mes_param && $año_param) ? "Volver al Reporte" : "Volver al Panel";
                     ?>
-                    <span class="welcome-text">Historial de <?php echo htmlspecialchars($username); ?></span>
+                    <span class="welcome-text">
+                        Historial de <?php echo htmlspecialchars($username); ?>
+                        <?php if ($antiguedad_texto): ?>
+                            <span style="color: #667eea; font-weight: 600; margin-left: 12px; font-size: 14px;">
+                                • Trabaja aquí: <?php echo $antiguedad_texto; ?>
+                            </span>
+                        <?php endif; ?>
+                    </span>
                     <a href="<?php echo $back_url; ?>" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5"></path>

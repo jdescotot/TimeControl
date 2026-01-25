@@ -363,18 +363,26 @@ $pendientes = $total_empleados - $entraron_hoy - count($empleados_con_descanso);
                 </div>
                 <form action="crear_empleado.php" method="POST">
                     <div class="form-group">
-                        <label for="username">Nombre de Usuario:</label>
+                        <label for="username">Nombre y Apellido:</label>
                         <input type="text" name="username" id="username" required minlength="3" maxlength="50"
-                            pattern="[a-zA-Z0-9._-]+" placeholder="Ej: juan.perez" autocomplete="off">
+                            placeholder="Ej: Jorge Escoto" autocomplete="off">
                         <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
-                            Solo letras, números, puntos, guiones y guiones bajos (mínimo 3 caracteres)
+                            Se convertirá automáticamente a minúsculas sin espacios (Jorge Escoto → jorgeescoto)
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label for="fecha_inicio">Fecha de Inicio:</label>
+                        <input type="date" name="fecha_inicio" id="fecha_inicio" required
+                            value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
+                        <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
+                            Fecha en que el empleado comenzó a trabajar
                         </small>
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña Temporal:</label>
                         <div style="position: relative;">
                             <input type="password" name="password" id="password" required minlength="6"
-                                placeholder="Mínimo 6 caracteres" autocomplete="new-password"
+                                placeholder="Mínimo 6 caracteres sin espacios" autocomplete="new-password"
                                 style="padding-right: 45px;">
                             <button type="button" onclick="togglePassword('password', this)" 
                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
@@ -386,7 +394,7 @@ $pendientes = $total_empleados - $entraron_hoy - count($empleados_con_descanso);
                             </button>
                         </div>
                         <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
-                            El empleado deberá cambiarla en su primer inicio de sesión
+                            No se permiten espacios. El empleado deberá cambiarla en su primer inicio de sesión
                         </small>
                     </div>
                     <div class="form-group">
@@ -452,12 +460,77 @@ $pendientes = $total_empleados - $entraron_hoy - count($empleados_con_descanso);
             }
         }
 
+        // Sugerencia llamativa para formatear el usuario sin espacios ni mayúsculas
+        function sanitizeUsername(value) {
+            return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        function showUsernamePopup(original, sanitized) {
+            const overlay = document.createElement('div');
+            overlay.style = 'position:fixed; inset:0; background:rgba(45,55,72,0.6); display:flex; align-items:center; justify-content:center; z-index:9999; padding:16px;';
+
+            const modal = document.createElement('div');
+            modal.style = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:24px; border-radius:14px; max-width:420px; width:100%; box-shadow:0 12px 32px rgba(0,0,0,0.25);';
+            modal.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                    </svg>
+                    <div>
+                        <div style="font-weight:700; font-size:18px;">No se permiten espacios ni mayúsculas</div>
+                        <div style="opacity:0.9; font-size:14px;">Ingresaste: <strong>${original}</strong></div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.15); padding:12px 14px; border-radius:10px; margin-bottom:14px; font-size:14px;">
+                    Podemos usar esta versión: <strong>${sanitized}</strong>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button id="useSanitized" style="flex:1; background:white; color:#5a67d8; border:none; padding:12px; border-radius:10px; font-weight:700; cursor:pointer;">Usar ${sanitized}</button>
+                    <button id="keepOriginal" style="flex:1; background:rgba(255,255,255,0.16); color:white; border:1px solid rgba(255,255,255,0.4); padding:12px; border-radius:10px; font-weight:600; cursor:pointer;">Corregir manualmente</button>
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            const usernameInput = document.getElementById('username');
+            const pass1 = document.getElementById('password');
+            const pass2 = document.getElementById('confirmar_password');
+
+            overlay.querySelector('#useSanitized').onclick = () => {
+                usernameInput.value = sanitized;
+                if (pass1) pass1.value = '';
+                if (pass2) pass2.value = '';
+                document.body.removeChild(overlay);
+                pass1?.focus();
+            };
+
+            overlay.querySelector('#keepOriginal').onclick = () => {
+                document.body.removeChild(overlay);
+                usernameInput.focus();
+            };
+        }
+
+        function sugerirUsername() {
+            const input = document.getElementById('username');
+            if (!input) return;
+
+            const raw = input.value.trim();
+            if (!raw) return;
+
+            const sanitized = sanitizeUsername(raw);
+            if (!sanitized || sanitized === raw) return;
+
+            showUsernamePopup(raw, sanitized);
+        }
+
         function abrirModalEmpleado() {
             document.getElementById('modalEmpleado').style.display = 'block';
             // Limpiar el formulario
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             document.getElementById('confirmar_password').value = '';
+            document.getElementById('fecha_inicio').value = '<?php echo date('Y-m-d'); ?>';
         }
 
         function cerrarModalEmpleado() {
@@ -483,6 +556,9 @@ $pendientes = $total_empleados - $entraron_hoy - count($empleados_con_descanso);
                 this.setCustomValidity('');
             }
         });
+
+        // Disparar sugerencia cuando el usuario salga del campo
+        document.getElementById('username')?.addEventListener('blur', sugerirUsername);
     </script>
 </body>
 

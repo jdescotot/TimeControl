@@ -8,9 +8,13 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño' || $_SERVER['REQUE
     exit;
 }
 
-$username = trim($_POST['username'] ?? '');
+$nombre_completo = trim($_POST['username'] ?? '');
 $password = $_POST['password'] ?? '';
 $confirmar_password = $_POST['confirmar_password'] ?? '';
+$fecha_inicio = $_POST['fecha_inicio'] ?? date('Y-m-d');
+
+// Procesar username: convertir a minúsculas y quitar espacios
+$username = strtolower(str_replace(' ', '', $nombre_completo));
 
 // Validaciones
 $errores = [];
@@ -33,14 +37,19 @@ if (strlen($username) > 50) {
     $errores[] = "El nombre de usuario no puede exceder 50 caracteres";
 }
 
-// Validar formato del username (solo letras, números, puntos, guiones y guiones bajos)
-if (!preg_match('/^[a-zA-Z0-9._-]+$/', $username)) {
-    $errores[] = "El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos";
+// Validar formato del username (solo letras y números después de procesar)
+if (!preg_match('/^[a-z0-9]+$/', $username)) {
+    $errores[] = "El nombre de usuario solo puede contener letras y números";
 }
 
 // Validar longitud de contraseña
 if (strlen($password) < 6) {
     $errores[] = "La contraseña debe tener al menos 6 caracteres";
+}
+
+// Validar que la contraseña NO tenga espacios
+if (strpos($password, ' ') !== false) {
+    $errores[] = "La contraseña no puede contener espacios";
 }
 
 // Validar que las contraseñas coincidan
@@ -69,10 +78,10 @@ try {
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
     $dueño_actual_id = $_SESSION['user_id'];
     $stmt = $pdo->prepare("
-        INSERT INTO usuarios (username, password, rol, requiere_cambio_password, propietario_id) 
-        VALUES (?, ?, 'empleado', 1, ?)
+        INSERT INTO usuarios (username, password, rol, requiere_cambio_password, propietario_id, created_at) 
+        VALUES (?, ?, 'empleado', 1, ?, ?)
     ");
-    $stmt->execute([$username, $password_hash, $dueño_actual_id]);
+    $stmt->execute([$username, $password_hash, $dueño_actual_id, $fecha_inicio]);
 
     // Redirigir con éxito
     header('Location: dueño.php?mensaje=empleado_creado&username=' . urlencode($username));
