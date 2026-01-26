@@ -128,6 +128,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn-login">Iniciar Sesión</button>
         </form>
 
+        <div style="text-align: center; margin-top: 16px;">
+            <a href="recuperar_password.php" style="color: #667eea; text-decoration: none; font-size: 14px; transition: color 0.2s;">
+                ¿Olvidaste tu contraseña?
+            </a>
+        </div>
+
         <div class="login-footer">
             <p>Sistema de Control Horario</p>
         </div>

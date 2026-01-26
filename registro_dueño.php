@@ -49,9 +49,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     // Crear el nuevo usuario dueño
                     $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                    $fecha_actual = date('Y-m-d H:i:s');
                     
-                    $stmt = $pdo->prepare("INSERT INTO usuarios (username, password, rol, nombre_completo, email, requiere_cambio_password) VALUES (?, ?, 'dueño', ?, ?, 0)");
-                    $stmt->execute([$username, $password_hash, $nombre_completo, $email]);
+                    // Verificar qué columnas existen en la tabla
+                    $columnas_check = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'")->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    $tiene_nombre = in_array('nombre', $columnas_check);
+                    $tiene_nombre_completo = in_array('nombre_completo', $columnas_check);
+                    $tiene_correo = in_array('correo', $columnas_check);
+                    
+                    // Construir el INSERT dinámicamente
+                    if ($tiene_nombre) {
+                        // Guardar en columna 'nombre'
+                        $sql = "INSERT INTO usuarios (username, password, rol, nombre, " . ($tiene_correo ? "correo" : "email") . ", requiere_cambio_password, created_at) VALUES (?, ?, 'dueño', ?, ?, 1, ?)";
+                    } else {
+                        // Usar nombre_completo si existe
+                        $sql = "INSERT INTO usuarios (username, password, rol, nombre_completo, email, requiere_cambio_password, created_at) VALUES (?, ?, 'dueño', ?, ?, 1, ?)";
+                    }
+                    
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute([$username, $password_hash, $nombre_completo, $email, $fecha_actual]);
                     
                     $mensaje = 'Cuenta de dueño creada exitosamente. Ya puedes iniciar sesión.';
                     $tipo_mensaje = 'success';

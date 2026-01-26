@@ -22,11 +22,11 @@ try {
 // Obtener todos los empleados (excluyendo al dueño) - con mejor manejo de charset
 $dueño_id = $_SESSION['user_id'];
 $stmt_empleados = $pdo->prepare("
-    SELECT id, username 
+    SELECT id, username, nombre
     FROM usuarios 
     WHERE rol = 'empleado' 
     AND propietario_id = ? 
-    ORDER BY username
+    ORDER BY nombre IS NULL OR nombre = '', nombre, username
 ");
 $stmt_empleados->execute([$dueño_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
@@ -272,7 +272,10 @@ $pendientes = $total_empleados - $entraron_hoy - count($empleados_con_descanso);
                                                    style="color: #667eea; text-decoration: none; font-weight: 500; cursor: pointer; transition: all 0.2s;"
                                                    onmouseover="this.style.color='#764ba2'; this.style.textDecoration='underline';"
                                                    onmouseout="this.style.color='#667eea'; this.style.textDecoration='none';">
-                                                    <?php echo htmlspecialchars($emp['username']); ?>
+                                                    <?php 
+                                                    $nombre_mostrar = !empty($emp['nombre']) ? $emp['nombre'] : $emp['username'];
+                                                    echo htmlspecialchars($nombre_mostrar); 
+                                                    ?>
                                                 </a>
                                                 <!-- DEBUG: ID = <?php echo $emp['id']; ?> -->
                                             </td>
