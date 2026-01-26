@@ -47,11 +47,25 @@ foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
     $empleados_con_descanso[] = $d['empleado_id'];
 }
 
+// Obtener ausencias marcadas hoy (solo empleados del dueño)
+$stmt_ausencias_hoy = $pdo->prepare("
+    SELECT ae.empleado_id, ae.tipo_ausencia
+    FROM ausencias_empleados ae
+    INNER JOIN usuarios u ON ae.empleado_id = u.id
+    WHERE u.propietario_id = ? AND ae.fecha = ?
+");
+$stmt_ausencias_hoy->execute([$dueño_id, $hoy]);
+$ausencias_hoy = [];
+foreach ($stmt_ausencias_hoy->fetchAll(PDO::FETCH_ASSOC) as $a) {
+    $ausencias_hoy[$a['empleado_id']] = $a['tipo_ausencia'];
+}
+
 // Para cada empleado, verificar su estado hoy
 if (!empty($empleados)) {
     foreach ($empleados as $key => $emp) {
         // Verificar si tiene día de descanso
         $empleados[$key]['tiene_descanso'] = in_array($emp['id'], $empleados_con_descanso);
+        $empleados[$key]['ausencia_hoy'] = $ausencias_hoy[$emp['id']] ?? null;
         
         $stmt_marcacion = $pdo->prepare("
             SELECT m.hora_entrada, m.hora_salida,
@@ -289,6 +303,25 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                             <line x1="3" y1="10" x2="21" y2="10"></line>
                                                         </svg>
                                                         Día Libre
+                                                    </span>
+                                                <?php elseif ($emp['ausencia_hoy']): ?>
+                                                    <?php
+                                                        $tipo = $emp['ausencia_hoy'];
+                                                        $map = [
+                                                            'vacaciones_ley' => ['color' => '#d69e2e', 'texto' => 'Vacaciones Ley'],
+                                                            'enfermedad' => ['color' => '#e53e3e', 'texto' => 'Enfermedad'],
+                                                            'emergencia_familiar' => ['color' => '#6b46c1', 'texto' => 'Falta Justificada (Emerg. Fam.)'],
+                                                            'fuerza_mayor' => ['color' => '#6b46c1', 'texto' => 'Falta Justificada (Fuerza Mayor)'],
+                                                        ];
+                                                        $info = $map[$tipo] ?? ['color' => '#e53e3e', 'texto' => 'Ausencia'];
+                                                    ?>
+                                                    <span style="color:<?php echo $info['color']; ?>; font-weight: 600;">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                                            <circle cx="12" cy="12" r="10"></circle>
+                                                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                                        </svg>
+                                                        <?php echo htmlspecialchars($info['texto']); ?>
                                                     </span>
                                                 <?php elseif (!$emp['hora_entrada']): ?>
                                                     <span style="color:#e53e3e;">Sin marcar</span>

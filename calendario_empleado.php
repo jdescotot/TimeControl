@@ -108,12 +108,12 @@ if ($mes_siguiente > 12) {
     <style>
         :root {
             --color-trabajado: linear-gradient(135deg, #4299e1, #3182ce);
-            --color-vacacion: linear-gradient(135deg, #f6ad55, #ed8936);
-            --color-enfermedad: linear-gradient(135deg, #68d391, #38b2ac);
-            --color-falta-just: linear-gradient(135deg, #fc8181, #f56565);
+            --color-vacacion: linear-gradient(135deg, #f6ad55, #ecc94b);
+            --color-enfermedad: linear-gradient(135deg, #ef4444, #dc2626);
+            --color-falta-just: linear-gradient(135deg, #7c3aed, #6d28d9);
             --color-falta-injust: linear-gradient(135deg, #ef4444, #dc2626);
-            --color-incompleto: linear-gradient(135deg, #cbd5e0, #a0aec0);
-            --color-descanso: linear-gradient(135deg, #9f7aea, #805ad5);
+            --color-incompleto: linear-gradient(135deg, #ef4444, #dc2626);
+            --color-descanso: linear-gradient(135deg, #48bb78, #38a169);
             --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
             --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
             --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
@@ -430,10 +430,10 @@ if ($mes_siguiente > 12) {
                 $total_horas = 0;
 
                 foreach ($ausencias as $tipo) {
-                    if ($tipo === 'Vacación') $total_vacaciones++;
-                    elseif ($tipo === 'Enfermedad') $total_enfermedad++;
-                    elseif ($tipo === 'Falta Justificada') $total_falta_just++;
-                    elseif ($tipo === 'Falta Injustificada') $total_falta_injust++;
+                    if ($tipo === 'vacaciones_ley') $total_vacaciones++;
+                    elseif ($tipo === 'enfermedad') $total_enfermedad++;
+                    elseif ($tipo === 'emergencia_familiar' || $tipo === 'fuerza_mayor') $total_falta_just++;
+                    else $total_falta_injust++;
                 }
 
                 foreach ($marcaciones as $m) {
@@ -448,9 +448,9 @@ if ($mes_siguiente > 12) {
                     ['label' => 'Días Trabajados', 'value' => $total_trabajados, 'color' => '#4299e1', 'icon' => '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>'],
                     ['label' => 'Días Libres', 'value' => $total_descanso, 'color' => '#9f7aea', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>'],
                     ['label' => 'Vacaciones', 'value' => $total_vacaciones, 'color' => '#f6ad55', 'icon' => '<path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>'],
-                    ['label' => 'Enfermedad', 'value' => $total_enfermedad, 'color' => '#68d391', 'icon' => '<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>'],
-                    ['label' => 'Faltas Justificadas', 'value' => $total_falta_just, 'color' => '#fc8181', 'icon' => '<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>'],
-                    ['label' => 'Faltas Injustificadas', 'value' => $total_falta_injust, 'color' => '#ef4444', 'icon' => '<path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'],
+                    ['label' => 'Enfermedad', 'value' => $total_enfermedad, 'color' => '#ef4444', 'icon' => '<path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'],
+                    ['label' => 'Faltas Justificadas', 'value' => $total_falta_just, 'color' => '#7c3aed', 'icon' => '<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>'],
+                    ['label' => 'Faltas Injustificadas / Otros', 'value' => $total_falta_injust, 'color' => '#ef4444', 'icon' => '<path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'],
                     ['label' => 'Total Horas', 'value' => number_format($total_horas, 1), 'color' => '#667eea', 'icon' => '<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>']
                 ];
 
@@ -519,15 +519,15 @@ if ($mes_siguiente > 12) {
                             echo '<div class="day-indicator indicator-descanso">Día Libre</div>';
                         } elseif ($tiene_ausencia) {
                             $tipo = $ausencias[$fecha];
-                            // Mapeo DRY de tipos de ausencia
+                            // Mapeo de tipos de ausencia a clases y textos actuales
                             $tipos_ausencia = [
-                                'Vacación' => ['clase' => 'indicator-vacacion', 'texto' => 'Vacaciones'],
-                                'Enfermedad' => ['clase' => 'indicator-enfermedad', 'texto' => 'Enfermedad'],
-                                'Falta Justificada' => ['clase' => 'indicator-falta-justificada', 'texto' => 'Falta Just.'],
-                                'Falta Injustificada' => ['clase' => 'indicator-falta-injustificada', 'texto' => 'Falta Inj.']
+                                'vacaciones_ley' => ['clase' => 'indicator-vacacion', 'texto' => 'Vacaciones'],
+                                'enfermedad' => ['clase' => 'indicator-enfermedad', 'texto' => 'Enfermedad'],
+                                'emergencia_familiar' => ['clase' => 'indicator-falta-justificada', 'texto' => 'Justificada'],
+                                'fuerza_mayor' => ['clase' => 'indicator-falta-justificada', 'texto' => 'Justificada']
                             ];
                             
-                            $info = $tipos_ausencia[$tipo] ?? ['clase' => 'indicator-incompleto', 'texto' => $tipo];
+                            $info = $tipos_ausencia[$tipo] ?? ['clase' => 'indicator-falta-injustificada', 'texto' => 'Otro'];
                             echo '<div class="day-indicator ' . $info['clase'] . '">' . $info['texto'] . '</div>';
                         } elseif ($tiene_marcacion) {
                             $m = $marcaciones[$fecha];
@@ -559,12 +559,12 @@ if ($mes_siguiente > 12) {
                     // Array DRY para la leyenda
                     $leyenda_items = [
                         ['color' => 'linear-gradient(135deg, #4299e1, #3182ce)', 'texto' => 'Día Trabajado (tamaño según horas)'],
-                        ['color' => 'linear-gradient(135deg, #9f7aea, #805ad5)', 'texto' => 'Día Libre (Programado)'],
-                        ['color' => 'linear-gradient(135deg, #f6ad55, #ed8936)', 'texto' => 'Vacaciones'],
-                        ['color' => 'linear-gradient(135deg, #68d391, #38b2ac)', 'texto' => 'Enfermedad'],
-                        ['color' => 'linear-gradient(135deg, #fc8181, #f56565)', 'texto' => 'Falta Justificada'],
-                        ['color' => 'linear-gradient(135deg, #ef4444, #dc2626)', 'texto' => 'Falta Injustificada'],
-                        ['color' => 'linear-gradient(135deg, #cbd5e0, #a0aec0)', 'texto' => 'Registro Incompleto']
+                        ['color' => 'linear-gradient(135deg, #48bb78, #38a169)', 'texto' => 'Día Libre (Programado)'],
+                        ['color' => 'linear-gradient(135deg, #f6ad55, #ecc94b)', 'texto' => 'Vacaciones'],
+                        ['color' => 'linear-gradient(135deg, #ef4444, #dc2626)', 'texto' => 'Enfermedad'],
+                        ['color' => 'linear-gradient(135deg, #7c3aed, #6d28d9)', 'texto' => 'Falta Justificada (Emerg. / Fuerza Mayor)'],
+                        ['color' => 'linear-gradient(135deg, #ef4444, #dc2626)', 'texto' => 'Falta Injustificada / Otros'],
+                        ['color' => 'linear-gradient(135deg, #ef4444, #dc2626)', 'texto' => 'Registro Incompleto']
                     ];
 
                     foreach ($leyenda_items as $item): ?>

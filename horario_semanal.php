@@ -7,6 +7,8 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
     exit;
 }
 
+$hoy = date('Y-m-d');
+
 // Configurar locale para español si es posible, o usar mapeo manual
 $dias_semana = [
     1 => 'Lunes',
@@ -160,6 +162,8 @@ foreach ($ausencias_raw as $a) {
                                         $ausencia = $ausencias[$emp['id']][$fecha_dia] ?? null;
                                         $tipo_ausencia = $ausencia['tipo'] ?? 'observacion';
                                         $obs = $ausencia['obs'] ?? '';
+                                        $es_pasado_o_hoy = $fecha_dia <= $hoy;
+                                        $bloquear_descanso = $es_pasado_o_hoy || ($es_descanso && $fecha_dia >= $hoy);
                                         
                                         $cell_class = $es_descanso ? 'is-rest-day' : '';
                                         if ($ausencia && $tipo_ausencia !== 'observacion') $cell_class .= ' has-absence';
@@ -171,11 +175,13 @@ foreach ($ausencias_raw as $a) {
                                                        name="rest_<?php echo $emp['id']; ?>_<?php echo $fecha_dia; ?>" 
                                                        value="<?php echo $fecha_dia; ?>"
                                                        <?php echo $es_descanso ? 'checked' : ''; ?>
+                                                       <?php echo $bloquear_descanso ? 'disabled' : ''; ?>
+                                                       title="<?php echo $bloquear_descanso ? 'No editable (fecha pasada/hoy o descanso ya asignado)' : 'Marcar descanso'; ?>"
                                                        onchange="guardarDescanso(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', <?php echo $semana; ?>, <?php echo $año; ?>, this.checked)">
                                                 <span class="rest-day-label">Descanso</span>
                                             </div>
 
-                                            <select class="absence-select" 
+                                                <select class="absence-select" 
                                                     onchange="guardarAusencia(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', this.value, document.getElementById('obs-<?php echo $emp['id']; ?>-<?php echo $fecha_dia; ?>').value)">
                                                 <option value="observacion" <?php echo $tipo_ausencia === 'observacion' ? 'selected' : ''; ?>>Asistente / Obs.</option>
                                                 <option value="enfermedad" <?php echo $tipo_ausencia === 'enfermedad' ? 'selected' : ''; ?>>Enfermedad</option>

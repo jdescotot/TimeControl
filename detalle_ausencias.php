@@ -13,11 +13,20 @@ $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
 $año = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
 
 // Validar tipo de ausencia
-$tipos_validos = ['Vacación', 'Enfermedad', 'Falta Justificada', 'Falta Injustificada'];
+$tipos_validos = ['vacaciones_ley', 'enfermedad', 'emergencia_familiar', 'fuerza_mayor'];
 if (!in_array($tipo, $tipos_validos)) {
     header('Location: reporte_mensual.php');
     exit;
 }
+
+$tipo_labels = [
+    'vacaciones_ley' => 'Vacaciones Ley',
+    'enfermedad' => 'Enfermedad',
+    'emergencia_familiar' => 'Emergencia Familiar',
+    'fuerza_mayor' => 'Fuerza Mayor'
+];
+
+$tipo_legible = $tipo_labels[$tipo];
 
 // Obtener el ID del dueño
 $dueño_id = $_SESSION['user_id'];
@@ -76,25 +85,25 @@ $meses = [
 
 // Configuración por tipo de ausencia
 $config_tipo = [
-    'Vacación' => [
+    'vacaciones_ley' => [
         'color' => '#feebc8',
         'icon_color' => '#dd6b20',
         'badge_class' => 'badge-yellow',
         'icono' => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>'
     ],
-    'Enfermedad' => [
+    'enfermedad' => [
         'color' => '#fed7d7',
         'icon_color' => '#c53030',
         'badge_class' => 'badge-orange',
         'icono' => '<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>'
     ],
-    'Falta Justificada' => [
+    'emergencia_familiar' => [
         'color' => '#bee3f8',
         'icon_color' => '#2c5282',
         'badge_class' => 'badge-purple',
         'icono' => '<polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>'
     ],
-    'Falta Injustificada' => [
+    'fuerza_mayor' => [
         'color' => '#fbb6ce',
         'icon_color' => '#97266d',
         'badge_class' => 'badge-red',
@@ -146,7 +155,7 @@ function agruparFechas($fechas) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle de <?php echo htmlspecialchars($tipo); ?> - Control Horario</title>
+    <title>Detalle de <?php echo htmlspecialchars($tipo_legible); ?> - Control Horario</title>
     <link rel="stylesheet" href="empleado.css">
     <style>
         .detalle-header {
@@ -360,7 +369,7 @@ function agruparFechas($fechas) {
                         </svg>
                     </div>
                     <div class="detalle-info">
-                        <h1><?php echo htmlspecialchars($tipo); ?></h1>
+                        <h1><?php echo htmlspecialchars($tipo_legible); ?></h1>
                         <p><?php echo $meses[$mes]; ?> <?php echo $año; ?></p>
                     </div>
                 </div>
@@ -399,7 +408,7 @@ function agruparFechas($fechas) {
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
                             </svg>
                             <h3>No hay registros</h3>
-                            <p>No se encontraron ausencias de tipo "<?php echo htmlspecialchars($tipo); ?>" en <?php echo $meses[$mes]; ?> <?php echo $año; ?></p>
+                            <p>No se encontraron ausencias de tipo "<?php echo htmlspecialchars($tipo_legible); ?>" en <?php echo $meses[$mes]; ?> <?php echo $año; ?></p>
                         </div>
                     </div>
                 </div>

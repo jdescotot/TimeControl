@@ -278,10 +278,9 @@ if ($mes_siguiente > 12) {
                                     <th>Empleado</th>
                                     <th>Días Trabajados</th>
                                     <th>Horas Totales</th>
-                                    <th>Vacaciones</th>
+                                    <th>Vacaciones Ley</th>
                                     <th>Enfermedad</th>
-                                    <th>Falta Justificada</th>
-                                    <th>Falta Injustificada</th>
+                                    <th>Faltas Justificadas</th>
                                     <th>Asistencia %</th>
                                 </tr>
                             </thead>
@@ -308,10 +307,11 @@ if ($mes_siguiente > 12) {
                                         
                                         // Calcular porcentaje de asistencia
                                         $dias_registrados = $marcaciones['dias_trabajados'];
-                                        $vacaciones = $ausencias['Vacación'] ?? 0;
-                                        $enfermedad = $ausencias['Enfermedad'] ?? 0;
-                                        $falta_just = $ausencias['Falta Justificada'] ?? 0;
-                                        $falta_injust = $ausencias['Falta Injustificada'] ?? 0;
+                                        $vacaciones = $ausencias['vacaciones_ley'] ?? 0;
+                                        $enfermedad = $ausencias['enfermedad'] ?? 0;
+                                        $emergencia = $ausencias['emergencia_familiar'] ?? 0;
+                                        $fuerza_mayor = $ausencias['fuerza_mayor'] ?? 0;
+                                        $faltas_justificadas = $emergencia + $fuerza_mayor;
                                         
                                         // Restar días de descanso y vacaciones del total esperado
                                         $dias_esperados = $dias_mes - $vacaciones - $dias_descanso;
@@ -345,7 +345,7 @@ if ($mes_siguiente > 12) {
                                                 <?php echo substr($horas_totales, 0, 5); ?>
                                             </a>
                                         </td>
-                                        <td data-label="Vacaciones">
+                                        <td data-label="Vacaciones Ley">
                                             <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
                                                class="badge badge-yellow" 
                                                style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
@@ -363,22 +363,13 @@ if ($mes_siguiente > 12) {
                                                 <?php echo $enfermedad; ?>
                                             </a>
                                         </td>
-                                        <td data-label="Falta Justificada">
+                                        <td data-label="Faltas Justificadas">
                                             <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
                                                class="badge badge-purple" 
                                                style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
                                                onmouseover="this.style.transform='scale(1.1)'"
                                                onmouseout="this.style.transform='scale(1)'">
-                                                <?php echo $falta_just; ?>
-                                            </a>
-                                        </td>
-                                        <td data-label="Falta Injustificada">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
-                                               class="badge badge-red" 
-                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
-                                               onmouseover="this.style.transform='scale(1.1)'"
-                                               onmouseout="this.style.transform='scale(1)'">
-                                                <?php echo $falta_injust; ?>
+                                                <?php echo $faltas_justificadas; ?>
                                             </a>
                                         </td>
                                         <td data-label="Asistencia %">
@@ -406,19 +397,35 @@ if ($mes_siguiente > 12) {
                         <?php
                         $total_vacaciones = 0;
                         $total_enfermedad = 0;
-                        $total_falta_just = 0;
-                        $total_falta_injust = 0;
+                        $total_emergencia = 0;
+                        $total_fuerza_mayor = 0;
+                        $total_faltas_justificadas = 0;
                         
                         foreach ($ausencias_data as $ausencias) {
-                            $total_vacaciones += $ausencias['Vacación'] ?? 0;
-                            $total_enfermedad += $ausencias['Enfermedad'] ?? 0;
-                            $total_falta_just += $ausencias['Falta Justificada'] ?? 0;
-                            $total_falta_injust += $ausencias['Falta Injustificada'] ?? 0;
+                            $total_vacaciones += $ausencias['vacaciones_ley'] ?? 0;
+                            $total_enfermedad += $ausencias['enfermedad'] ?? 0;
+                            $total_emergencia += $ausencias['emergencia_familiar'] ?? 0;
+                            $total_fuerza_mayor += $ausencias['fuerza_mayor'] ?? 0;
+                            $total_faltas_justificadas += ($ausencias['emergencia_familiar'] ?? 0) + ($ausencias['fuerza_mayor'] ?? 0);
                         }
                         
-                        $total_ausencias = $total_vacaciones + $total_enfermedad + $total_falta_just + $total_falta_injust;
+                        $total_ausencias = $total_vacaciones + $total_enfermedad + $total_emergencia + $total_fuerza_mayor;
                         ?>
-                        <a href="detalle_ausencias.php?tipo=Vacación&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                        <div class="absence-item" 
+                           style="text-decoration: none; color: inherit; cursor: default;">
+                            <div class="absence-badge" style="background-color: #e9d8fd;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 11 12 14 22 4"></polyline>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                </svg>
+                            </div>
+                            <div class="absence-content">
+                                <span class="absence-label">Faltas Justificadas</span>
+                                <span class="absence-count"><?php echo $total_faltas_justificadas; ?> días</span>
+                                <small style="color: #718096; display: block;">Incluye emergencia familiar y fuerza mayor</small>
+                            </div>
+                        </div>
+                        <a href="detalle_ausencias.php?tipo=vacaciones_ley&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
                            class="absence-item" 
                            style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
@@ -430,11 +437,11 @@ if ($mes_siguiente > 12) {
                                 </svg>
                             </div>
                             <div class="absence-content">
-                                <span class="absence-label">Vacaciones</span>
+                                <span class="absence-label">Vacaciones Ley</span>
                                 <span class="absence-count"><?php echo $total_vacaciones; ?> días</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=Enfermedad&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                        <a href="detalle_ausencias.php?tipo=enfermedad&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
                            class="absence-item" 
                            style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
@@ -449,7 +456,7 @@ if ($mes_siguiente > 12) {
                                 <span class="absence-count"><?php echo $total_enfermedad; ?> días</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=Falta Justificada&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                        <a href="detalle_ausencias.php?tipo=emergencia_familiar&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
                            class="absence-item" 
                            style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
@@ -461,11 +468,11 @@ if ($mes_siguiente > 12) {
                                 </svg>
                             </div>
                             <div class="absence-content">
-                                <span class="absence-label">Falta Justificada</span>
-                                <span class="absence-count"><?php echo $total_falta_just; ?> días</span>
+                                <span class="absence-label">Emergencia Familiar</span>
+                                <span class="absence-count"><?php echo $total_emergencia; ?> días</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=Falta Injustificada&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                        <a href="detalle_ausencias.php?tipo=fuerza_mayor&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
                            class="absence-item" 
                            style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
@@ -478,8 +485,8 @@ if ($mes_siguiente > 12) {
                                 </svg>
                             </div>
                             <div class="absence-content">
-                                <span class="absence-label">Falta Injustificada</span>
-                                <span class="absence-count"><?php echo $total_falta_injust; ?> días</span>
+                                <span class="absence-label">Fuerza Mayor</span>
+                                <span class="absence-count"><?php echo $total_fuerza_mayor; ?> días</span>
                             </div>
                         </a>
                     </div>
