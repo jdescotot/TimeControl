@@ -136,7 +136,7 @@ $marcaciones = $stmt->fetchAll();
                                         
                                         $horas = '—';
                                         if ($entrada_calcular && $salida_calcular) {
-                                            $inicio = new DateTime($fila['fecha'] . ' ' . $entrada_calcular_calcular);
+                                            $inicio = new DateTime($fila['fecha'] . ' ' . $entrada_calcular);
                                             $fin = new DateTime($fila['fecha'] . ' ' . $salida_calcular);
                                             $intervalo = $inicio->diff($fin);
                                             $horas = $intervalo->format('%h horas %i minutos');

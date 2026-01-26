@@ -2,6 +2,48 @@
 session_start();
 require_once 'config.php';
 
+function columnas_perfil_usuario(PDO $pdo): array {
+    $stmt = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'");
+    $cols = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $perfil = [];
+    foreach (['nombre', 'apellido', 'telefono', 'correo'] as $col) {
+        if (in_array($col, $cols, true)) {
+            $perfil[] = $col;
+        }
+    }
+
+    if (!in_array('correo', $perfil, true) && in_array('email', $cols, true)) {
+        $perfil[] = 'email';
+    }
+
+    return $perfil;
+}
+
+function perfil_incompleto(PDO $pdo, int $usuario_id): bool {
+    $cols = columnas_perfil_usuario($pdo);
+    if (empty($cols)) {
+        return false;
+    }
+
+    $sql = 'SELECT ' . implode(', ', $cols) . ' FROM usuarios WHERE id = ?';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$usuario_id]);
+    $datos = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$datos) {
+        return true;
+    }
+
+    foreach ($cols as $col) {
+        if ($datos[$col] === null || $datos[$col] === '') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // MODIFICACIÓN: Permitir acceso a dueños y empleados
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['rol'], ['empleado', 'dueño'])) {
     header('Location: index.php');
@@ -45,10 +87,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$password_hash, $_SESSION['user_id']]);
 
                 $mensaje_exito = 'Contraseña actualizada exitosamente';
-                
-                // MODIFICACIÓN: Redirección dinámica según el rol
-                //$redirect_page = ($_SESSION['rol'] === 'dueño') ? 'dueño.php' : 'empleado.php';
-                header("refresh:2;url=politica_datos.php");
+
+                $destino = 'politica_datos.php';
+
+                if ($_SESSION['rol'] === 'empleado') {
+                    $destino = perfil_incompleto($pdo, (int)$_SESSION['user_id'])
+                        ? 'completar_perfil.php'
+                        : 'empleado.php';
+                } elseif ($_SESSION['rol'] === 'dueño') {
+                    $destino = 'dueño.php';
+                } elseif ($_SESSION['rol'] === 'hacienda') {
+                    $destino = 'hacienda.php';
+                }
+
+                header("refresh:2;url={$destino}");
             } else {
                 $mensaje_error = 'La contraseña actual es incorrecta';
             }

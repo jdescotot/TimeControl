@@ -6,6 +6,62 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
     exit;
 }
 $empleado_id = $_SESSION['user_id'];
+
+function columnas_perfil_usuario(PDO $pdo): array {
+    $stmt = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'");
+    $cols = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $perfil = [];
+    foreach (['nombre', 'apellido', 'telefono', 'correo'] as $col) {
+        if (in_array($col, $cols, true)) {
+            $perfil[] = $col;
+        }
+    }
+
+    if (!in_array('correo', $perfil, true) && in_array('email', $cols, true)) {
+        $perfil[] = 'email';
+    }
+
+    return $perfil;
+}
+
+function perfil_incompleto(PDO $pdo, int $usuario_id): bool {
+    $cols = columnas_perfil_usuario($pdo);
+    if (empty($cols)) {
+        return false;
+    }
+
+    $sql = 'SELECT ' . implode(', ', $cols) . ' FROM usuarios WHERE id = ?';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$usuario_id]);
+    $datos = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$datos) {
+        return true;
+    }
+
+    foreach ($cols as $col) {
+        if ($datos[$col] === null || $datos[$col] === '') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+$flag_stmt = $pdo->prepare("SELECT requiere_cambio_password FROM usuarios WHERE id = ?");
+$flag_stmt->execute([$empleado_id]);
+$flag = $flag_stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($flag && (int)$flag['requiere_cambio_password'] === 1) {
+    header('Location: cambiar_password.php');
+    exit;
+}
+
+if (perfil_incompleto($pdo, $empleado_id)) {
+    header('Location: completar_perfil.php');
+    exit;
+}
 $hoy = date('Y-m-d');
 // Verificar si ya marcó entrada hoy (y si ya salió)
 $stmt = $pdo->prepare("
@@ -50,6 +106,16 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
 
         <!-- Main Content -->
         <main class="main-content">
+            <?php if (isset($_GET['perfil_actualizado'])): ?>
+                <div class="status-message success" style="margin-bottom: 15px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>Datos de seguridad actualizados.</span>
+                </div>
+            <?php endif; ?>
+
             <!-- Card de marcación -->
             <div class="card marcacion-card">
                 <div class="card-header">
