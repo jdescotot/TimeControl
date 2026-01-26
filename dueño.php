@@ -80,8 +80,8 @@ if (!empty($empleados)) {
     }
 }
 
-// Restar empleados con descanso del total de pendientes
-$pendientes = $total_empleados - $entraron_hoy - count($empleados_con_descanso);
+// Restar empleados con descanso del total de pendientes y evitar números negativos
+$pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_descanso));
 ?>
 <!DOCTYPE html>
 <html lang="es">

@@ -10,7 +10,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
 $empleado_id = $_GET['id'] ?? 0;
 
 // Validar que el empleado exista y sea realmente un empleado
-$stmt = $pdo->prepare("SELECT username, created_at FROM usuarios WHERE id = ? AND rol = 'empleado'");
+$stmt = $pdo->prepare("SELECT username, nombre, created_at FROM usuarios WHERE id = ? AND rol = 'empleado'");
 $stmt->execute([$empleado_id]);
 $empleado = $stmt->fetch();
 
@@ -19,6 +19,7 @@ if (!$empleado) {
 }
 
 $username = $empleado['username'];
+$nombre_mostrar = !empty($empleado['nombre']) ? $empleado['nombre'] : $empleado['username'];
 
 // Calcular antigüedad
 $antiguedad_texto = '';
@@ -56,8 +57,9 @@ $marcaciones = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial - <?php echo htmlspecialchars($username); ?></title>
-    <link rel="stylesheet" href="historial_empleado.css">
+    <title>Historial - <?php echo htmlspecialchars($nombre_mostrar); ?></title>
+    <link rel="stylesheet" href="empleado.css">
+    <link rel="stylesheet" href="historial_emplelado.css">
 </head>
 <body>
     <div class="container">
@@ -79,7 +81,7 @@ $marcaciones = $stmt->fetchAll();
                     $back_text = ($mes_param && $año_param) ? "Volver al Reporte" : "Volver al Panel";
                     ?>
                     <span class="welcome-text">
-                        Historial de <?php echo htmlspecialchars($username); ?>
+                        Historial de <?php echo htmlspecialchars($nombre_mostrar); ?>
                         <?php if ($antiguedad_texto): ?>
                             <span style="color: #667eea; font-weight: 600; margin-left: 12px; font-size: 14px;">
                                 • Trabaja aquí: <?php echo $antiguedad_texto; ?>
@@ -107,7 +109,7 @@ $marcaciones = $stmt->fetchAll();
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
-                        <h2>Historial de <?php echo htmlspecialchars($username); ?></h2>
+                        <h2>Historial de <?php echo htmlspecialchars($nombre_mostrar); ?></h2>
                     </div>
                 </div>
                 <div class="card-body">
