@@ -43,7 +43,13 @@ for ($i = 0; $i < 7; $i++) {
 
 // Obtener empleados
 $dueño_id = $_SESSION['user_id'];
-$stmt_empleados = $pdo->prepare("SELECT id, username FROM usuarios WHERE rol = 'empleado' AND propietario_id = ? ORDER BY username");
+$stmt_empleados = $pdo->prepare("
+    SELECT id, username, nombre
+    FROM usuarios 
+    WHERE rol = 'empleado' 
+    AND propietario_id = ? 
+    ORDER BY nombre IS NULL OR nombre = '', nombre, username
+");
 $stmt_empleados->execute([$dueño_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
@@ -144,7 +150,10 @@ foreach ($ausencias_raw as $a) {
                         <tbody>
                             <?php foreach ($empleados as $emp): ?>
                                 <tr>
-                                    <td class="employee-cell"><?php echo htmlspecialchars($emp['username']); ?></td>
+                                    <td class="employee-cell"><?php 
+                                        $nombre_mostrar = !empty($emp['nombre']) ? $emp['nombre'] : $emp['username'];
+                                        echo htmlspecialchars($nombre_mostrar); 
+                                    ?></td>
                                     <?php foreach ($dias_semana as $num => $nombre): 
                                         $fecha_dia = $fechas_semana[$num];
                                         $es_descanso = in_array($fecha_dia, $descansos[$emp['id']] ?? []);
