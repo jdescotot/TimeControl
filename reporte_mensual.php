@@ -200,6 +200,14 @@ if ($mes_siguiente > 12) {
                                 <polyline points="9 18 15 12 9 6"></polyline>
                             </svg>
                         </a>
+                        <a href="export_reporte_mensual.php?mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="btn"
+                           style="margin-left: 12px; padding:8px 14px; font-size:14px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14"></path>
+                                <path d="M5 12h14"></path>
+                            </svg>
+                            Generar CSV del Mes
+                        </a>
                     </div>
                 </div>
             </div>
@@ -264,7 +272,6 @@ if ($mes_siguiente > 12) {
                     </div>
                 </div>
             </div>
-
             <!-- Tabla de Empleados -->
             <div class="card">
                 <div class="card-header">
@@ -325,6 +332,11 @@ if ($mes_siguiente > 12) {
                                                onmouseover="this.style.color='#764ba2'; this.style.textDecoration='underline';"
                                                onmouseout="this.style.color='#667eea'; this.style.textDecoration='none';">
                                                 <?php echo htmlspecialchars($emp['username']); ?>
+                                            </a>
+                                            <a href="export_reporte_mensual.php?empleado_id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                               class="btn"
+                                               style="margin-left:8px; padding:4px 8px; font-size:12px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:6px; text-decoration:none;">
+                                                CSV
                                             </a>
                                         </td>
                                         <td data-label="Días Trabajados">

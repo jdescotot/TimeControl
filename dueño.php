@@ -60,25 +60,44 @@ foreach ($stmt_ausencias_hoy->fetchAll(PDO::FETCH_ASSOC) as $a) {
     $ausencias_hoy[$a['empleado_id']] = $a['tipo_ausencia'];
 }
 
-// Para cada empleado, verificar su estado hoy
+// Obtener todas las marcaciones de hoy para todos los empleados en UNA sola query
+$empleado_ids = array_column($empleados, 'id');
+$marcaciones_por_emp = [];
+
+if (!empty($empleado_ids)) {
+    // Crear placeholders dinámicos para la consulta IN
+    $placeholders = implode(',', array_fill(0, count($empleado_ids), '?'));
+    
+    $stmt_marcaciones = $pdo->prepare("
+        SELECT m.empleado_id, m.hora_entrada, m.hora_salida,
+               sc.nueva_hora_entrada, sc.nueva_hora_salida,
+               ROW_NUMBER() OVER (PARTITION BY m.empleado_id ORDER BY m.id DESC) as rn
+        FROM marcaciones m
+        LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
+        WHERE m.empleado_id IN ($placeholders) AND m.fecha = ?
+    ");
+    
+    // Ejecutar la query una sola vez con todos los IDs
+    $stmt_marcaciones->execute([...$empleado_ids, $hoy]);
+    
+    // Guardar resultado en array keyed por empleado_id (solo el primer registro por empleado)
+    foreach ($stmt_marcaciones->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        if ($row['rn'] == 1 && !isset($marcaciones_por_emp[$row['empleado_id']])) {
+            $marcaciones_por_emp[$row['empleado_id']] = $row;
+        }
+    }
+}
+
+// Para cada empleado, asignar datos obtenidos
 if (!empty($empleados)) {
     foreach ($empleados as $key => $emp) {
         // Verificar si tiene día de descanso
         $empleados[$key]['tiene_descanso'] = in_array($emp['id'], $empleados_con_descanso);
         $empleados[$key]['ausencia_hoy'] = $ausencias_hoy[$emp['id']] ?? null;
         
-        $stmt_marcacion = $pdo->prepare("
-            SELECT m.hora_entrada, m.hora_salida,
-                   sc.nueva_hora_entrada, sc.nueva_hora_salida
-            FROM marcaciones m
-            LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
-            WHERE m.empleado_id = ? AND m.fecha = ?
-            ORDER BY m.id DESC 
-            LIMIT 1
-        ");
-        $stmt_marcacion->execute([$emp['id'], $hoy]);
-        $registro = $stmt_marcacion->fetch(PDO::FETCH_ASSOC);
-
+        // Usar datos obtenidos en la query única
+        $registro = $marcaciones_por_emp[$emp['id']] ?? null;
+        
         $empleados[$key]['hora_entrada'] = $registro['hora_entrada'] ?? null;
         $empleados[$key]['hora_salida'] = $registro['hora_salida'] ?? null;
         $empleados[$key]['hora_entrada_ajustada'] = $registro['nueva_hora_entrada'] ?? null;
