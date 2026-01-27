@@ -1,1 +1,7 @@
 plans/tax_bureau_implementation_plan.md
+# Ignorar archivos sensibles del mailer
+mail_config.php
+mail_uploads/
+mail_uploads/*
+worker_logs/
+config.php
