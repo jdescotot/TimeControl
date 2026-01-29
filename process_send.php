@@ -49,16 +49,36 @@ if (!empty($_FILES['attachments'])) {
 $insert_stmt = $pdo->prepare("INSERT INTO email_queue (recipient_email, recipient_name, subject, body, attachments, status, attempts, created_at) VALUES (?, ?, ?, ?, ?, 'queued', 0, NOW())");
 
 $enqueued = 0;
+$attachments_json = json_encode($attachments_saved);
 
 if ($recipients_source === 'csv' && isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
     $csv = fopen($_FILES['csv_file']['tmp_name'], 'r');
     while (($row = fgetcsv($csv)) !== false) {
         $email = trim($row[0] ?? '');
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
-        $insert_stmt->execute([$email, null, $subject, $body, json_encode($attachments_saved)]);
+        $insert_stmt->execute([$email, null, $subject, $body, $attachments_json]);
         $enqueued++;
     }
     fclose($csv);
+} elseif ($recipients_source === 'manual') {
+    $manual_raw = trim($_POST['manual_emails'] ?? '');
+    if ($manual_raw === '') {
+        die('Debes ingresar al menos un correo para la opción manual.');
+    }
+
+    $candidates = preg_split('/[\s,;]+/', $manual_raw);
+    foreach ($candidates as $candidate) {
+        $email = trim($candidate);
+        if ($email === '') continue;
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
+        $insert_stmt->execute([$email, null, $subject, $body, $attachments_json]);
+        $enqueued++;
+    }
+
+    if ($enqueued === 0) {
+        header('Location: enviar_correo.php?error=' . urlencode('No se encontraron correos válidos en la entrada manual.'));
+        exit;
+    }
 } else {
     // Tomar de la tabla tb_empleados
     $stmt = $pdo->query("SELECT email, nombre, apellidos FROM tb_empleados WHERE email IS NOT NULL AND email <> ''");
@@ -66,9 +86,14 @@ if ($recipients_source === 'csv' && isset($_FILES['csv_file']) && $_FILES['csv_f
         $email = trim($row['email']);
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
         $name = trim(($row['nombre'] ?? '') . ' ' . ($row['apellidos'] ?? ''));
-        $insert_stmt->execute([$email, $name, $subject, $body, json_encode($attachments_saved)]);
+        $insert_stmt->execute([$email, $name, $subject, $body, $attachments_json]);
         $enqueued++;
     }
+}
+
+if ($enqueued === 0) {
+    header('Location: enviar_correo.php?error=' . urlencode('No se encontraron destinatarios válidos.'));
+    exit;
 }
 
 header('Location: enviar_correo.php?enqueued=' . $enqueued);

@@ -12,6 +12,10 @@ if (file_exists(__DIR__ . '/mail_config.php')) {
     $mail_config = [];
 }
 
+// Capturar mensajes de éxito o error
+$enqueued = isset($_GET['enqueued']) ? (int)$_GET['enqueued'] : null;
+$error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
+
 ?>
 <!doctype html>
 <html lang="es">
@@ -25,6 +29,19 @@ if (file_exists(__DIR__ . '/mail_config.php')) {
     <div class="container">
         <h1>Enviar correo masivo</h1>
         <p class="subtitle">Selecciona destinatarios y escribe el mensaje. Los archivos PDF se pueden previsualizar antes de enviar.</p>
+
+        <?php if ($enqueued !== null): ?>
+        <div class="alert alert-success">
+            <strong>✓ Éxito:</strong> Se encolaron <?= $enqueued ?> correo(s) para envío.
+            <a href="estado_envios.php" class="link-status">Ver estado de envíos</a>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($error): ?>
+        <div class="alert alert-error">
+            <strong>✕ Error:</strong> <?= $error ?>
+        </div>
+        <?php endif; ?>
 
         <form action="process_send.php" method="post" enctype="multipart/form-data">
             <div class="form-group">
@@ -42,6 +59,7 @@ if (file_exists(__DIR__ . '/mail_config.php')) {
                 <select name="recipients_source" id="recipients_source">
                     <option value="all_employees">Todos los empleados (tabla tb_empleados)</option>
                     <option value="csv">Subir CSV con columna email</option>
+                    <option value="manual">Ingresar correos manualmente</option>
                 </select>
             </div>
 
@@ -49,6 +67,13 @@ if (file_exists(__DIR__ . '/mail_config.php')) {
                 <div class="form-group">
                     <label>Carga CSV <span>(columna email requerida)</span></label>
                     <input type="file" name="csv_file" accept="text/csv">
+                </div>
+            </div>
+
+            <div id="manual_input" class="hidden-group">
+                <div class="form-group">
+                    <label>Correos manuales <span>(separados por coma o salto de línea)</span></label>
+                    <textarea name="manual_emails" placeholder="ejemplo@correo.com&#10;otro@correo.com"></textarea>
                 </div>
             </div>
 
@@ -67,18 +92,34 @@ if (file_exists(__DIR__ . '/mail_config.php')) {
         <div class="operations">
             <h3>Operaciones</h3>
             <p>Ejecuta en terminal: <code>php worker_send.php</code> para enviar los correos en lotes automáticamente.</p>
+            <p style="margin-top: 15px;"><a href="estado_envios.php" class="btn-status">📊 Ver estado de todos los envíos</a></p>
         </div>
     </div>
 
     <script>
-        // Toggle CSV upload visibility
-        document.getElementById('recipients_source').addEventListener('change', function () {
-            const csvUpload = document.getElementById('csv_upload');
-            if (this.value === 'csv') {
-                csvUpload.classList.add('visible');
+        const recipientsSource = document.getElementById('recipients_source');
+        const csvUpload = document.getElementById('csv_upload');
+        const manualInput = document.getElementById('manual_input');
+        const manualEmails = document.querySelector('textarea[name="manual_emails"]');
+
+        function syncRecipientBlocks(value) {
+            const source = value || recipientsSource.value;
+            csvUpload.classList.toggle('visible', source === 'csv');
+            manualInput.classList.toggle('visible', source === 'manual');
+
+            if (!manualEmails) return;
+            if (source === 'manual') {
+                manualEmails.setAttribute('required', 'required');
             } else {
-                csvUpload.classList.remove('visible');
+                manualEmails.removeAttribute('required');
+                manualEmails.value = '';
+                const fg = manualEmails.closest('.form-group');
+                if (fg) fg.classList.remove('error', 'complete');
             }
+        }
+
+        recipientsSource.addEventListener('change', function () {
+            syncRecipientBlocks(this.value);
         });
 
         // Manejo de validación de formulario en tiempo real
@@ -151,6 +192,7 @@ if (file_exists(__DIR__ . '/mail_config.php')) {
 
         // Inicializar estado de campos al cargar
         window.addEventListener('load', function() {
+            syncRecipientBlocks();
             inputs.forEach(input => {
                 if (input.value.trim() !== '') {
                     updateFieldStatus(input);
