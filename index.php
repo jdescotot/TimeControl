@@ -10,7 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rawUsername = trim($_POST['username'] ?? '');
     // Normalizamos: sin espacios y en minúsculas para el login
     $username = strtolower(preg_replace('/\s+/', '', $rawUsername));
-    $password = $_POST['password'] ?? '';
+    // mostramos la versión normalizada en el formulario
+    $rawUsername = $username;
+    $password = $_POST['password'] ?? ''; 
 
     // Validación: contraseña no debe tener espacios
     if (strpos($password, ' ') !== false) {
@@ -23,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
+            $_SESSION['username'] = strtolower($user['username']);
             $_SESSION['rol'] = $user['rol'];
 
             // Si requiere cambio de contraseña, redirigir a cambiar_password.php
@@ -101,6 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     required 
                     autocomplete="username"
                     placeholder="Ingresa tu usuario"
+                    oninput="this.value = this.value.toLowerCase().replace(/\s+/g, '')"
+                    style="text-transform:lowercase"
                     value="<?php echo htmlspecialchars($rawUsername ?? ''); ?>"
                 >
             </div>

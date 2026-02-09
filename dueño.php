@@ -429,7 +429,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                             placeholder="Ej: Juan Pérez García" autocomplete="off">
                     </div>
                     <div class="form-group">
-                        <label for="username">Nie / Nif / Pasaporte:</label>
+                        <label for="username">DNI / NIE / NIF / Pasaporte:</label>
                         <input type="text" name="username" id="username" required minlength="3" maxlength="50"
                             placeholder="Ej: X1234567L" autocomplete="off">
                         <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
