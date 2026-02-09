@@ -26,11 +26,15 @@ if ($stmt_descanso->fetch()) {
 
 try {
     if ($accion === 'entrada') {
-        // Verificar que no haya ya una entrada hoy
-        $stmt = $pdo->prepare("SELECT id FROM marcaciones WHERE empleado_id = ? AND fecha = ? AND hora_entrada IS NOT NULL");
+        // Verificar que no exista una jornada abierta (entrada sin salida)
+        $stmt = $pdo->prepare("
+            SELECT id FROM marcaciones 
+            WHERE empleado_id = ? AND fecha = ? AND hora_entrada IS NOT NULL AND hora_salida IS NULL
+            ORDER BY id DESC LIMIT 1
+        ");
         $stmt->execute([$empleado_id, $hoy]);
         if ($stmt->fetch()) {
-            die('Ya marcaste entrada hoy.');
+            die('Ya tienes una jornada abierta. Marca salida antes de una nueva entrada.');
         }
 
         // Insertar nueva marca con entrada
@@ -48,7 +52,7 @@ try {
         $registro = $stmt->fetch();
 
         if (!$registro) {
-            die('No puedes marcar salida sin haber marcado entrada hoy.');
+            die('No puedes marcar salida sin tener una jornada abierta.');
         }
 
         // Actualizar salida

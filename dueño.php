@@ -9,9 +9,16 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
 
 $hoy = date('Y-m-d');
 
-// Obtener número de solicitudes pendientes con manejo de errores robusto
+// Obtener número de solicitudes pendientes solo de empleados del dueño actual
+$dueño_id = $_SESSION['user_id'];
 try {
-    $stmt_pendientes = $pdo->query("SELECT COUNT(*) as total FROM solicitudes_cambio WHERE estado = 'pendiente'");
+    $stmt_pendientes = $pdo->prepare("
+        SELECT COUNT(*) as total 
+        FROM solicitudes_cambio sc
+        INNER JOIN usuarios u ON sc.empleado_id = u.id
+        WHERE sc.estado = 'pendiente' AND u.propietario_id = ?
+    ");
+    $stmt_pendientes->execute([$dueño_id]);
     $resultado = $stmt_pendientes->fetch(PDO::FETCH_ASSOC);
     $num_solicitudes = (int) ($resultado['total'] ?? 0);
 } catch (Exception $e) {
@@ -20,7 +27,6 @@ try {
 }
 
 // Obtener todos los empleados (excluyendo al dueño) - con mejor manejo de charset
-$dueño_id = $_SESSION['user_id'];
 $stmt_empleados = $pdo->prepare("
     SELECT id, username, nombre
     FROM usuarios 
@@ -418,11 +424,16 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                 </div>
                 <form action="crear_empleado.php" method="POST">
                     <div class="form-group">
+                        <label for="nombre">Nombre del Empleado:</label>
+                        <input type="text" name="nombre" id="nombre" required minlength="2" maxlength="100"
+                            placeholder="Ej: Juan Pérez García" autocomplete="off">
+                    </div>
+                    <div class="form-group">
                         <label for="username">Nie / Nif / Pasaporte:</label>
                         <input type="text" name="username" id="username" required minlength="3" maxlength="50"
                             placeholder="Ej: X1234567L" autocomplete="off">
                         <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
-                            Se convertirá automáticamente a minúsculas sin espacios (Jorge Escoto → jorgeescoto)
+                            Se convertirá automáticamente a minúsculas sin espacios
                         </small>
                     </div>
                     <div class="form-group">
@@ -582,6 +593,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
         function abrirModalEmpleado() {
             document.getElementById('modalEmpleado').style.display = 'block';
             // Limpiar el formulario
+            document.getElementById('nombre').value = '';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             document.getElementById('confirmar_password').value = '';

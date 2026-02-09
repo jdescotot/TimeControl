@@ -12,9 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirmar_password = $_POST['confirmar_password'] ?? '';
     $nombre_completo = trim($_POST['nombre_completo'] ?? '');
     $email = trim($_POST['email'] ?? '');
+    $numero_fiscal = trim($_POST['numero_fiscal'] ?? '');
     
     // Validaciones
-    if (empty($username) || empty($password) || empty($nombre_completo) || empty($email)) {
+    if (empty($username) || empty($password) || empty($nombre_completo) || empty($email) || empty($numero_fiscal)) {
         $mensaje = 'Todos los campos son obligatorios';
         $tipo_mensaje = 'error';
     } elseif (strpos($password, ' ') !== false) {
@@ -51,24 +52,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $password_hash = password_hash($password, PASSWORD_DEFAULT);
                     $fecha_actual = date('Y-m-d H:i:s');
                     
-                    // Verificar qué columnas existen en la tabla
-                    $columnas_check = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'")->fetchAll(PDO::FETCH_COLUMN);
-                    
-                    $tiene_nombre = in_array('nombre', $columnas_check);
-                    $tiene_nombre_completo = in_array('nombre_completo', $columnas_check);
-                    $tiene_correo = in_array('correo', $columnas_check);
-                    
-                    // Construir el INSERT dinámicamente
-                    if ($tiene_nombre) {
-                        // Guardar en columna 'nombre'
-                        $sql = "INSERT INTO usuarios (username, password, rol, nombre, " . ($tiene_correo ? "correo" : "email") . ", requiere_cambio_password, created_at) VALUES (?, ?, 'dueño', ?, ?, 1, ?)";
-                    } else {
-                        // Usar nombre_completo si existe
-                        $sql = "INSERT INTO usuarios (username, password, rol, nombre_completo, email, requiere_cambio_password, created_at) VALUES (?, ?, 'dueño', ?, ?, 1, ?)";
-                    }
+                    // username = nombre de la empresa (obligatorio)
+                    // rol = 'dueño' (siempre)
+                    // nombre = nombre_completo (obligatorio)
+                    // email = email (obligatorio)
+                    // numero_fiscal = número fiscal (obligatorio)
+                    // requiere_cambio_password = 1 (siempre)
+                    $sql = "INSERT INTO usuarios (username, password, rol, nombre, email, numero_fiscal, requiere_cambio_password, created_at) VALUES (?, ?, 'dueño', ?, ?, ?, 1, ?)";
                     
                     $stmt = $pdo->prepare($sql);
-                    $stmt->execute([$username, $password_hash, $nombre_completo, $email, $fecha_actual]);
+                    $stmt->execute([$username, $password_hash, $nombre_completo, $email, $numero_fiscal, $fecha_actual]);
                     
                     $mensaje = 'Cuenta de dueño creada exitosamente. Ya puedes iniciar sesión.';
                     $tipo_mensaje = 'success';
@@ -77,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $rawUsername = '';
                     $nombre_completo = '';
                     $email = '';
+                    $numero_fiscal = '';
                 }
             }
         } catch (PDOException $e) {
@@ -153,6 +147,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     required
                     value="<?php echo htmlspecialchars($email ?? ''); ?>"
                     placeholder="correo@ejemplo.com"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="numero_fiscal">Número Fiscal</label>
+                <input 
+                    type="text" 
+                    id="numero_fiscal" 
+                    name="numero_fiscal" 
+                    required
+                    value="<?php echo htmlspecialchars($numero_fiscal ?? ''); ?>"
+                    placeholder="RUC o equivalente"
                 >
             </div>
 

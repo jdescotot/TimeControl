@@ -14,7 +14,8 @@ if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'procesado_ok') {
     $mensaje_exito = 'Solicitud procesada correctamente';
 }
 
-// Consulta para obtener solicitudes pendientes uniendo con usuarios y marcaciones
+// Consulta para obtener solicitudes pendientes solo de empleados del dueño actual
+$dueño_id = $_SESSION['user_id'];
 $query = "
     SELECT 
         s.id,
@@ -26,18 +27,20 @@ $query = "
         s.estado,
         s.fecha_solicitud,
         u.username,
+        u.nombre,
         m.fecha,
         m.hora_entrada as entrada_original,
         m.hora_salida as salida_original
     FROM solicitudes_cambio s
     JOIN usuarios u ON s.empleado_id = u.id
     JOIN marcaciones m ON s.marcacion_id = m.id
-    WHERE s.estado = 'pendiente'
+    WHERE s.estado = 'pendiente' AND u.propietario_id = ?
     ORDER BY s.fecha_solicitud DESC
 ";
 
 try {
-    $stmt = $pdo->query($query);
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$dueño_id]);
     $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     die("Error al obtener solicitudes: " . $e->getMessage());
@@ -117,7 +120,12 @@ try {
                                 <?php if (count($solicitudes) > 0): ?>
                                     <?php foreach ($solicitudes as $s): ?>
                                     <tr>
-                                        <td data-label="Empleado"><?php echo htmlspecialchars($s['username']); ?></td>
+                                        <td data-label="Empleado">
+                                            <?php 
+                                            $nombre_mostrar = !empty($s['nombre']) ? $s['nombre'] : $s['username'];
+                                            echo htmlspecialchars($nombre_mostrar); 
+                                            ?>
+                                        </td>
                                         <td data-label="Fecha"><?php echo date('d/m/Y', strtotime($s['fecha'])); ?></td>
                                         <td data-label="Horario Original">
                                             <small>

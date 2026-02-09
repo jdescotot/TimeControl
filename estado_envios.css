@@ -415,7 +415,83 @@ h1 {
     color: #6b7280;
 }
 
-@keyframes fadeIn {
+/* Panel de acciones para procesar cola */
+.action-panel {
+    background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+    border: 2px solid #ffa500;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.2);
+    animation: slideIn 0.4s ease-out;
+}
+
+.action-info {
+    flex: 1;
+}
+
+.action-info strong {
+    display: block;
+    color: #d97706;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+
+.action-info p {
+    color: #b8860b;
+    margin-top: 5px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.btn-process {
+    background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+    color: white;
+    padding: 11px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-process:hover {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff7700 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 140, 0, 0.4);
+}
+
+.btn-process-multi {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.btn-process-multi:hover {
+    background: linear-gradient(135deg, #ea580c 0%, #c4580c 100%);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
     from {
         opacity: 0;
         transform: translateY(20px);

@@ -8,18 +8,23 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño' || $_SERVER['REQUE
     exit;
 }
 
-$nombre_completo = trim($_POST['username'] ?? '');
+$username_raw = trim($_POST['username'] ?? '');
+$nombre = trim($_POST['nombre'] ?? '');
 $password = $_POST['password'] ?? '';
 $confirmar_password = $_POST['confirmar_password'] ?? '';
 $fecha_inicio = $_POST['fecha_inicio'] ?? date('Y-m-d');
 
 // Procesar username: convertir a minúsculas y quitar espacios
-$username = strtolower(str_replace(' ', '', $nombre_completo));
+$username = strtolower(str_replace(' ', '', $username_raw));
 
 // Validaciones
 $errores = [];
 
 // Validar que no estén vacíos
+if (empty($nombre)) {
+    $errores[] = "El nombre del empleado es obligatorio";
+}
+
 if (empty($username)) {
     $errores[] = "El nombre de usuario es obligatorio";
 }
@@ -78,10 +83,10 @@ try {
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
     $dueño_actual_id = $_SESSION['user_id'];
     $stmt = $pdo->prepare("
-        INSERT INTO usuarios (username, password, rol, requiere_cambio_password, propietario_id, created_at) 
-        VALUES (?, ?, 'empleado', 1, ?, ?)
+        INSERT INTO usuarios (username, password, rol, nombre, requiere_cambio_password, propietario_id, created_at) 
+        VALUES (?, ?, 'empleado', ?, 1, ?, ?)
     ");
-    $stmt->execute([$username, $password_hash, $dueño_actual_id, $fecha_inicio]);
+    $stmt->execute([$username, $password_hash, $nombre, $dueño_actual_id, $fecha_inicio]);
 
     // Redirigir con éxito
     header('Location: dueño.php?mensaje=empleado_creado&username=' . urlencode($username));

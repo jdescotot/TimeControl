@@ -13,7 +13,6 @@ function columnas_perfil_usuario(PDO $pdo): array {
 
     $mapa = [];
     foreach ([
-        'nombre' => 'Nombre',
         'apellido' => 'Apellido',
         'telefono' => 'Número de teléfono',
         'correo' => 'Correo electrónico'

@@ -28,7 +28,7 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
 <body>
     <div class="container">
         <h1>Enviar correo masivo</h1>
-        <p class="subtitle">Selecciona destinatarios y escribe el mensaje. Los archivos PDF se pueden previsualizar antes de enviar.</p>
+        <p class="subtitle">Selecciona destinatarios y escribe el mensaje. Los correos se encolarán y podrán procesarse en lotes seguros desde la página de estado.</p>
 
         <?php if ($enqueued !== null): ?>
         <div class="alert alert-success">
@@ -55,44 +55,44 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
             </div>
 
             <div class="form-group">
-                <label>Destinatarios</label>
-                <select name="recipients_source" id="recipients_source">
-                    <option value="all_employees">Todos los empleados (tabla tb_empleados)</option>
-                    <option value="csv">Subir CSV con columna email</option>
-                    <option value="manual">Ingresar correos manualmente</option>
+                <label for="recipients_source">Selecciona fuente de destinatarios:</label>
+                <select id="recipients_source" name="recipients_source">
+                    <option value="all_employees">📊 Todos los empleados (Base de datos)</option>
+                    <option value="manual">✋ Entrada manual (copiar/pegar emails)</option>
+                    <option value="csv">📄 Subir archivo CSV</option>
                 </select>
             </div>
 
-            <div id="csv_upload" class="hidden-group">
-                <div class="form-group">
-                    <label>Carga CSV <span>(columna email requerida)</span></label>
-                    <input type="file" name="csv_file" accept="text/csv">
-                </div>
+            <div class="form-group" id="csv_upload" style="display: none;">
+                <label for="csv_file">Archivo CSV:</label>
+                <input type="file" name="csv_file" id="csv_file" accept=".csv" />
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                    Formato: Primera columna = email, Segunda columna (opcional) = nombre
+                </p>
             </div>
 
-            <div id="manual_input" class="hidden-group">
-                <div class="form-group">
-                    <label>Correos manuales <span>(separados por coma o salto de línea)</span></label>
-                    <textarea name="manual_emails" placeholder="ejemplo@correo.com&#10;otro@correo.com"></textarea>
-                </div>
+            <div class="form-group" id="manual_input" style="display: none;">
+                <label for="manual_emails">Emails manuales:</label>
+                <textarea name="manual_emails" id="manual_emails" rows="5" placeholder="Ingresa un email por línea"></textarea>
             </div>
 
             <div class="form-group">
-                <label>Adjuntar archivos <span>(PDF, imágenes, otros - múltiples permitidos)</span></label>
+                <label for="attachments">Adjuntar archivos:</label>
                 <input type="file" name="attachments[]" id="attachments" multiple>
             </div>
 
             <div id="preview"></div>
 
-            <button type="submit">Encolar envíos</button>
+            <button type="submit" class="btn btn-primary">Enviar Correos</button>
         </form>
 
         <hr class="divider">
 
         <div class="operations">
-            <h3>Operaciones</h3>
-            <p>Ejecuta en terminal: <code>php worker_send.php</code> para enviar los correos en lotes automáticamente.</p>
-            <p style="margin-top: 15px;"><a href="estado_envios.php" class="btn-status">📊 Ver estado de todos los envíos</a></p>
+            <h3>Próximos pasos</h3>
+            <p>1. Completa el formulario arriba y haz clic en <strong>"Enviar Correos"</strong> para encolar los mensajes.</p>
+            <p>2. Los correos se almacenarán en la cola de envío para procesarse en lotes seguros.</p>
+            <p>3. Ve a <a href="estado_envios.php" style="font-weight: bold; color: #2196F3;">📊 Estado de envíos</a> para ver la cola y procesar los correos en lotes desde el navegador.</p>
         </div>
     </div>
 
@@ -100,21 +100,32 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
         const recipientsSource = document.getElementById('recipients_source');
         const csvUpload = document.getElementById('csv_upload');
         const manualInput = document.getElementById('manual_input');
-        const manualEmails = document.querySelector('textarea[name="manual_emails"]');
+        const manualEmails = document.getElementById('manual_emails');
+        const csvFile = document.getElementById('csv_file');
 
         function syncRecipientBlocks(value) {
             const source = value || recipientsSource.value;
-            csvUpload.classList.toggle('visible', source === 'csv');
-            manualInput.classList.toggle('visible', source === 'manual');
+            
+            // Mostrar/ocultar campos según opción
+            csvUpload.style.display = source === 'csv' ? 'block' : 'none';
+            manualInput.style.display = source === 'manual' ? 'block' : 'none';
 
-            if (!manualEmails) return;
+            // Base de datos: no requiere campo adicional
+            // CSV: requiere archivo
+            // Manual: requiere emails
+
             if (source === 'manual') {
                 manualEmails.setAttribute('required', 'required');
-            } else {
-                manualEmails.removeAttribute('required');
+                csvFile.removeAttribute('required');
                 manualEmails.value = '';
-                const fg = manualEmails.closest('.form-group');
-                if (fg) fg.classList.remove('error', 'complete');
+            } else if (source === 'csv') {
+                csvFile.setAttribute('required', 'required');
+                manualEmails.removeAttribute('required');
+                csvFile.value = '';
+            } else {
+                // all_employees (base de datos)
+                csvFile.removeAttribute('required');
+                manualEmails.removeAttribute('required');
             }
         }
 

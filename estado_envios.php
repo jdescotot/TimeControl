@@ -148,6 +148,20 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
             <a href="?filter=failed" class="filter-btn <?= $filter === 'failed' ? 'active' : '' ?>">Fallidos</a>
         </div>
 
+        <?php if ($queued > 0): ?>
+        <div class="action-panel">
+            <div class="action-info">
+                <strong>⏳ Hay <?= $queued ?> correo(s) en cola</strong> esperando ser enviados.
+                <p style="margin: 10px 0 0 0; font-size: 13px; color: #666;">Procesa los correos en lotes seguros para evitar problemas con los servidores SMTP.</p>
+            </div>
+            <div class="action-buttons">
+                <a href="procesar_cola.php?lotes=1" class="btn btn-process">▶ 1 Lote (<?= $mail_config['batch_size'] ?? 50 ?> correos)</a>
+                <a href="procesar_cola.php?lotes=3" class="btn btn-process btn-process-multi">▶ 3 Lotes</a>
+                <a href="procesar_cola.php?lotes=5" class="btn btn-process btn-process-multi">▶ 5 Lotes</a>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <?php if (count($emails) === 0): ?>
         <div class="empty-state">
             <div class="empty-icon">📭</div>

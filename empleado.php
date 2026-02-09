@@ -7,12 +7,18 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
 }
 $empleado_id = $_SESSION['user_id'];
 
+// Obtener el nombre del empleado si existe
+$stmt_nombre = $pdo->prepare("SELECT nombre FROM usuarios WHERE id = ?");
+$stmt_nombre->execute([$empleado_id]);
+$usuario_data = $stmt_nombre->fetch(PDO::FETCH_ASSOC);
+$nombre_mostrar = (!empty($usuario_data['nombre'])) ? $usuario_data['nombre'] : $_SESSION['username'];
+
 function columnas_perfil_usuario(PDO $pdo): array {
     $stmt = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'");
     $cols = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
     $perfil = [];
-    foreach (['nombre', 'apellido', 'telefono', 'correo'] as $col) {
+    foreach (['apellido', 'telefono', 'correo'] as $col) {
         if (in_array($col, $cols, true)) {
             $perfil[] = $col;
         }
@@ -73,8 +79,9 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$empleado_id, $hoy]);
 $registro_hoy = $stmt->fetch();
-$ya_entró = $registro_hoy && !empty($registro_hoy['hora_entrada']);
-$ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
+$tiene_registro_hoy = (bool)$registro_hoy;
+$jornada_abierta = $registro_hoy && !empty($registro_hoy['hora_entrada']) && empty($registro_hoy['hora_salida']);
+$ultimo_cerrado = $registro_hoy && !empty($registro_hoy['hora_salida']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -99,7 +106,7 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
                 </div>
                 <div class="user-info">
                     <span class="welcome-text">Bienvenido,</span>
-                    <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                    <span class="username"><?php echo htmlspecialchars($nombre_mostrar); ?></span>
                 </div>
             </div>
         </header>
@@ -133,7 +140,7 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
                         </div>
                     <?php endif; ?>
 
-                    <?php if (!$ya_entró): ?>
+                    <?php if (!$tiene_registro_hoy): ?>
                         <div class="status-message info">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
@@ -153,7 +160,7 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
                                 Marcar Entrada
                             </button>
                         </form>
-                    <?php elseif ($ya_entró && !$ya_salió): ?>
+                    <?php elseif ($jornada_abierta): ?>
                         <div class="status-message warning">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
@@ -178,7 +185,7 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
                             </svg>
-                            <span>Jornada completada - Buen trabajo!</span>
+                            <span>Última jornada completada</span>
                         </div>
                         <div class="jornada-info">
                             <div class="info-item">
@@ -190,6 +197,17 @@ $ya_salió = $registro_hoy && !empty($registro_hoy['hora_salida']);
                                 <span class="value"><?php echo $registro_hoy['hora_salida']; ?></span>
                             </div>
                         </div>
+                        <form action="marcar.php" method="POST" class="marcacion-form" style="margin-top: 12px;">
+                            <input type="hidden" name="accion" value="entrada">
+                            <button type="submit" class="btn btn-primary">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                    <polyline points="10 17 15 12 10 7"></polyline>
+                                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                                </svg>
+                                Marcar Nueva Entrada
+                            </button>
+                        </form>
                     <?php endif; ?>
                 </div>
             </div>
