@@ -267,8 +267,8 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
             <div class="card">
                 <div class="card-header">
                     <h2>Empleados</h2>
-                    <button onclick="abrirModalEmpleado()" class="btn"
-                        style="padding:10px 20px; font-size:15px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; border:none; cursor:pointer; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                    <a href="nuevo_empleado.php" class="btn"
+                        style="padding:10px 20px; font-size:15px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; border:none; cursor:pointer; border-radius:8px; display:inline-flex; align-items:center; gap:8px; text-decoration:none;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -277,7 +277,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                             <line x1="23" y1="11" x2="17" y2="11"></line>
                         </svg>
                         Agregar Empleado
-                    </button>
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="table-container">

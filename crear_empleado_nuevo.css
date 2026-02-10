@@ -1,0 +1,56 @@
+/* Página completa para crear empleado (modelo basado en modal) */
+
+body {
+    background: #f7fafc;
+}
+
+.page-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.page-card.modal-content {
+    margin: 0;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-card .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.page-card form {
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.page-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.page-actions .btn {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .page-shell {
+        padding: 0;
+    }
+
+    .page-card.modal-content {
+        max-width: 100%;
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+}

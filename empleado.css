@@ -466,7 +466,7 @@ body {
             white-space: nowrap;
         }
     .btn-request:hover { background-color: #e2e8f0; }
-    /* ==================== CARD DE NOTIFICACIONES ==================== */
+     /* ==================== CARD DE NOTIFICACIONES ==================== */
 .notification-card {
     border-left: 4px solid #ed8936;
     background: linear-gradient(135deg, #fffaf0 0%, #fef5e7 100%);
