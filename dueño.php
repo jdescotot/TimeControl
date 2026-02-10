@@ -75,12 +75,12 @@ if (!empty($empleado_ids)) {
     $placeholders = implode(',', array_fill(0, count($empleado_ids), '?'));
     
     $stmt_marcaciones = $pdo->prepare("
-        SELECT m.empleado_id, m.hora_entrada, m.hora_salida,
+        SELECT m.empleado_id, m.entrada, m.salida,
                sc.nueva_hora_entrada, sc.nueva_hora_salida,
-               ROW_NUMBER() OVER (PARTITION BY m.empleado_id ORDER BY m.id DESC) as rn
+               ROW_NUMBER() OVER (PARTITION BY m.empleado_id ORDER BY m.entrada DESC) as rn
         FROM marcaciones m
         LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
-        WHERE m.empleado_id IN ($placeholders) AND m.fecha = ?
+        WHERE m.empleado_id IN ($placeholders) AND DATE(m.entrada) = ?
     ");
     
     // Ejecutar la query una sola vez con todos los IDs
@@ -104,15 +104,17 @@ if (!empty($empleados)) {
         // Usar datos obtenidos en la query única
         $registro = $marcaciones_por_emp[$emp['id']] ?? null;
         
-        $empleados[$key]['hora_entrada'] = $registro['hora_entrada'] ?? null;
-        $empleados[$key]['hora_salida'] = $registro['hora_salida'] ?? null;
+        $empleados[$key]['entrada'] = $registro['entrada'] ?? null;
+        $empleados[$key]['salida'] = $registro['salida'] ?? null;
+        $empleados[$key]['entrada_hora'] = !empty($registro['entrada']) ? date('H:i', strtotime($registro['entrada'])) : null;
+        $empleados[$key]['salida_hora'] = !empty($registro['salida']) ? date('H:i', strtotime($registro['salida'])) : null;
         $empleados[$key]['hora_entrada_ajustada'] = $registro['nueva_hora_entrada'] ?? null;
         $empleados[$key]['hora_salida_ajustada'] = $registro['nueva_hora_salida'] ?? null;
         $empleados[$key]['tiene_ajuste'] = !empty($registro['nueva_hora_entrada']);
 
-        if ($empleados[$key]['hora_entrada']) {
+        if ($empleados[$key]['entrada']) {
             $entraron_hoy++;
-            if (!$empleados[$key]['hora_salida']) {
+            if (!$empleados[$key]['salida']) {
                 $en_jornada++;
             }
         }
@@ -348,46 +350,52 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                         </svg>
                                                         <?php echo htmlspecialchars($info['texto']); ?>
                                                     </span>
-                                                <?php elseif (!$emp['hora_entrada']): ?>
+                                                <?php elseif (!$emp['entrada']): ?>
                                                     <span style="color:#e53e3e;">Sin marcar</span>
-                                                <?php elseif ($emp['hora_entrada'] && !$emp['hora_salida']): ?>
+                                                <?php elseif ($emp['entrada'] && !$emp['salida']): ?>
                                                     <?php if ($emp['tiene_ajuste']): ?>
                                                         <span style="color:#ed8936;">En jornada (desde
-                                                            <span style="text-decoration: line-through; opacity: 0.6;"><?php echo substr($emp['hora_entrada'], 0, 5); ?></span>
+                                                            <span style="text-decoration: line-through; opacity: 0.6;"><?php echo $emp['entrada_hora'] ?? '—'; ?></span>
                                                             <strong style="color: #667eea;"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong>
                                                             <span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 4px;">Ajustado</span>)
                                                         </span>
                                                     <?php else: ?>
                                                         <span style="color:#ed8936;">En jornada (desde
-                                                            <?php echo substr($emp['hora_entrada'], 0, 5); ?>)</span>
+                                                            <?php echo $emp['entrada_hora'] ?? '—'; ?>)</span>
                                                     <?php endif; ?>
                                                 <?php else: ?>
                                                     <span style="color:#38a169;">Completado</span><br>
                                                     <?php if ($emp['tiene_ajuste']): ?>
                                                         <small>
-                                                            Entrada: <span style="text-decoration: line-through; opacity: 0.6;"><?php echo substr($emp['hora_entrada'], 0, 5); ?></span> 
+                                                            Entrada: <span style="text-decoration: line-through; opacity: 0.6;"><?php echo $emp['entrada_hora'] ?? '—'; ?></span> 
                                                             <strong style="color: #667eea;"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong> | 
-                                                            Salida: <span style="text-decoration: line-through; opacity: 0.6;"><?php echo substr($emp['hora_salida'], 0, 5); ?></span> 
+                                                            Salida: <span style="text-decoration: line-through; opacity: 0.6;"><?php echo $emp['salida_hora'] ?? '—'; ?></span> 
                                                             <strong style="color: #667eea;"><?php echo substr($emp['hora_salida_ajustada'], 0, 5); ?></strong>
                                                             <span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 4px;">Ajustado</span>
                                                         </small>
                                                     <?php else: ?>
-                                                        <small>Entrada: <?php echo substr($emp['hora_entrada'], 0, 5); ?> | Salida:
-                                                            <?php echo substr($emp['hora_salida'], 0, 5); ?></small>
+                                                        <small>Entrada: <?php echo $emp['entrada_hora'] ?? '—'; ?> | Salida:
+                                                            <?php echo $emp['salida_hora'] ?? '—'; ?></small>
                                                     <?php endif; ?>
                                                 <?php endif; ?>
                                             </td>
                                             <td data-label="Horas">
                                                 <?php
-                                                // Usar horas ajustadas si existen, de lo contrario usar originales
-                                                $entrada_usar = $emp['hora_entrada_ajustada'] ?? $emp['hora_entrada'];
-                                                $salida_usar = $emp['hora_salida_ajustada'] ?? $emp['hora_salida'];
-                                                
-                                                if ($entrada_usar && $salida_usar) {
+                                                // Usar horas ajustadas si existen, de lo contrario usar originales (día de inicio)
+                                                $fecha_base = $emp['entrada'] ? date('Y-m-d', strtotime($emp['entrada'])) : $hoy;
+                                                $entrada_usar_dt = $emp['hora_entrada_ajustada'] ? new DateTime($fecha_base . ' ' . $emp['hora_entrada_ajustada']) : ($emp['entrada'] ? new DateTime($emp['entrada']) : null);
+                                                if ($emp['hora_salida_ajustada']) {
+                                                    $salida_usar_dt = new DateTime($fecha_base . ' ' . $emp['hora_salida_ajustada']);
+                                                } else {
+                                                    $salida_usar_dt = $emp['salida'] ? new DateTime($emp['salida']) : null;
+                                                }
+
+                                                if ($entrada_usar_dt && $salida_usar_dt) {
                                                     try {
-                                                        $inicio = new DateTime($hoy . ' ' . $entrada_usar);
-                                                        $fin = new DateTime($hoy . ' ' . $salida_usar);
-                                                        $intervalo = $inicio->diff($fin);
+                                                        if ($salida_usar_dt < $entrada_usar_dt) {
+                                                            $salida_usar_dt->modify('+1 day');
+                                                        }
+                                                        $intervalo = $entrada_usar_dt->diff($salida_usar_dt);
                                                         echo $intervalo->format('%h:%i');
                                                         if ($emp['tiene_ajuste']) {
                                                             echo ' <span style="color: #667eea; font-size: 11px;">*</span>';

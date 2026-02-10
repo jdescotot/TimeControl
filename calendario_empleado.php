@@ -28,18 +28,24 @@ $ultimo_dia = date('Y-m-d', strtotime("$año-" . str_pad($mes, 2, '0', STR_PAD_L
 
 // Obtener todas las marcaciones del mes con ajustes aprobados
 $stmt_marcaciones = $pdo->prepare("
-    SELECT m.fecha, m.hora_entrada, m.hora_salida,
+    SELECT DATE(m.entrada) as fecha, m.entrada, m.salida,
            sc.nueva_hora_entrada, sc.nueva_hora_salida,
            CASE 
-               WHEN sc.nueva_hora_entrada IS NOT NULL THEN 
-                   TIME_TO_SEC(TIMEDIFF(sc.nueva_hora_salida, sc.nueva_hora_entrada)) / 3600
-               WHEN m.hora_entrada IS NOT NULL AND m.hora_salida IS NOT NULL THEN
-                   TIME_TO_SEC(TIMEDIFF(m.hora_salida, m.hora_entrada)) / 3600
+               WHEN sc.nueva_hora_entrada IS NOT NULL AND sc.nueva_hora_salida IS NOT NULL THEN 
+                   TIMESTAMPDIFF(SECOND,
+                       CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_entrada),
+                       CASE
+                           WHEN sc.nueva_hora_salida < sc.nueva_hora_entrada THEN DATE_ADD(CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_salida), INTERVAL 1 DAY)
+                           ELSE CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_salida)
+                       END
+                   ) / 3600
+               WHEN m.entrada IS NOT NULL AND m.salida IS NOT NULL THEN
+                   TIMESTAMPDIFF(SECOND, m.entrada, m.salida) / 3600
                ELSE 0
            END as horas_trabajadas
     FROM marcaciones m
     LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
-    WHERE m.empleado_id = ? AND m.fecha BETWEEN ? AND ?
+    WHERE m.empleado_id = ? AND DATE(m.entrada) BETWEEN ? AND ?
 ");
 $stmt_marcaciones->execute([$empleado_id, $primer_dia, $ultimo_dia]);
 $marcaciones = [];
@@ -437,7 +443,7 @@ if ($mes_siguiente > 12) {
                 }
 
                 foreach ($marcaciones as $m) {
-                    if ($m['hora_entrada'] && $m['hora_salida']) {
+                    if ($m['entrada'] && $m['salida']) {
                         $total_trabajados++;
                         $total_horas += $m['horas_trabajadas'];
                     }
@@ -531,7 +537,7 @@ if ($mes_siguiente > 12) {
                             echo '<div class="day-indicator ' . $info['clase'] . '">' . $info['texto'] . '</div>';
                         } elseif ($tiene_marcacion) {
                             $m = $marcaciones[$fecha];
-                            if ($m['hora_entrada'] && $m['hora_salida']) {
+                            if ($m['entrada'] && $m['salida']) {
                                 $horas = $m['horas_trabajadas'];
                                 $tamaño = 44 + min(($horas / 12) * 16, 16); // 44-60px
                                 echo '<div class="day-indicator indicator-trabajado" style="width: ' . $tamaño . 'px; height: ' . $tamaño . 'px;">';

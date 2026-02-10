@@ -46,12 +46,12 @@ foreach ($duenos as &$dueno) {
         SELECT 
             u.id,
             u.username,
-            COUNT(DISTINCT m.id) as dias_trabajados,
+            COUNT(DISTINCT DATE(m.entrada)) as dias_trabajados,
             COUNT(DISTINCT CASE WHEN sc.estado = 'aprobado' THEN sc.id END) as ajustes_aprobados
         FROM usuarios u
-        LEFT JOIN marcaciones m ON m.empleado_id = u.id AND m.fecha BETWEEN ? AND ?
+        LEFT JOIN marcaciones m ON m.empleado_id = u.id AND DATE(m.entrada) BETWEEN ? AND ?
         LEFT JOIN solicitudes_cambio sc ON sc.empleado_id = u.id AND sc.estado = 'aprobado'
-            AND sc.marcacion_id IN (SELECT id FROM marcaciones WHERE fecha BETWEEN ? AND ?)
+            AND sc.marcacion_id IN (SELECT id FROM marcaciones WHERE DATE(entrada) BETWEEN ? AND ?)
         WHERE u.rol = 'empleado' AND u.propietario_id = ?
         GROUP BY u.id
         ORDER BY u.username

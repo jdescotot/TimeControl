@@ -48,11 +48,11 @@ $ultimo_dia = date('Y-m-d', strtotime("$año-" . str_pad($mes, 2, '0', STR_PAD_L
 $stmt_marcaciones = $pdo->prepare("
     SELECT 
         empleado_id,
-        COUNT(*) as dias_trabajados,
-        SUM(CASE WHEN hora_entrada IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_entrada,
-        SUM(CASE WHEN hora_salida IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_salida
+        COUNT(DISTINCT DATE(entrada)) as dias_trabajados,
+        SUM(CASE WHEN entrada IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_entrada,
+        SUM(CASE WHEN salida IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_salida
     FROM marcaciones 
-    WHERE fecha BETWEEN ? AND ? AND empleado_id IN (
+    WHERE DATE(entrada) BETWEEN ? AND ? AND empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
     )
     GROUP BY empleado_id
@@ -67,15 +67,26 @@ foreach ($stmt_marcaciones->fetchAll(PDO::FETCH_ASSOC) as $m) {
 $stmt_horas = $pdo->prepare("
     SELECT 
         m.empleado_id,
-        SEC_TO_TIME(SUM(TIME_TO_SEC(TIMEDIFF(
-            COALESCE(sc.nueva_hora_salida, m.hora_salida),
-            COALESCE(sc.nueva_hora_entrada, m.hora_entrada)
-        )))) as total_horas
+        SEC_TO_TIME(SUM(
+            CASE
+                WHEN sc.nueva_hora_entrada IS NOT NULL AND sc.nueva_hora_salida IS NOT NULL THEN
+                    TIMESTAMPDIFF(SECOND,
+                        CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_entrada),
+                        CASE
+                            WHEN sc.nueva_hora_salida < sc.nueva_hora_entrada THEN DATE_ADD(CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_salida), INTERVAL 1 DAY)
+                            ELSE CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_salida)
+                        END
+                    )
+                ELSE TIMESTAMPDIFF(SECOND, m.entrada, m.salida)
+            END
+        )) as total_horas
     FROM marcaciones m
     LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
-    WHERE m.fecha BETWEEN ? AND ? 
-    AND COALESCE(sc.nueva_hora_entrada, m.hora_entrada) IS NOT NULL 
-    AND COALESCE(sc.nueva_hora_salida, m.hora_salida) IS NOT NULL
+    WHERE DATE(m.entrada) BETWEEN ? AND ? 
+    AND (
+        (sc.nueva_hora_entrada IS NOT NULL AND sc.nueva_hora_salida IS NOT NULL)
+        OR (m.entrada IS NOT NULL AND m.salida IS NOT NULL)
+    )
     AND m.empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
     )
@@ -93,7 +104,7 @@ $stmt_ajustes = $pdo->prepare("
     FROM solicitudes_cambio
     WHERE estado = 'aprobado'
     AND marcacion_id IN (
-        SELECT id FROM marcaciones WHERE fecha BETWEEN ? AND ?
+        SELECT id FROM marcaciones WHERE DATE(entrada) BETWEEN ? AND ?
     )
     AND empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?

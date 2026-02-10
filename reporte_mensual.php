@@ -42,11 +42,11 @@ $ultimo_dia = date('Y-m-d', strtotime("$año-" . str_pad($mes, 2, '0', STR_PAD_L
 $stmt_marcaciones = $pdo->prepare("
     SELECT 
         empleado_id,
-        COUNT(*) as dias_trabajados,
-        SUM(CASE WHEN hora_entrada IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_entrada,
-        SUM(CASE WHEN hora_salida IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_salida
+        COUNT(DISTINCT DATE(entrada)) as dias_trabajados,
+        SUM(CASE WHEN entrada IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_entrada,
+        SUM(CASE WHEN salida IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_salida
     FROM marcaciones 
-    WHERE fecha BETWEEN ? AND ? AND empleado_id IN (
+    WHERE DATE(entrada) BETWEEN ? AND ? AND empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
     )
     GROUP BY empleado_id
@@ -99,11 +99,11 @@ foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
 $stmt_horas = $pdo->prepare("
     SELECT 
         empleado_id,
-        SEC_TO_TIME(SUM(TIME_TO_SEC(TIMEDIFF(hora_salida, hora_entrada)))) as total_horas
+        SEC_TO_TIME(SUM(TIMESTAMPDIFF(SECOND, entrada, salida))) as total_horas
     FROM marcaciones 
-    WHERE fecha BETWEEN ? AND ? 
-    AND hora_entrada IS NOT NULL 
-    AND hora_salida IS NOT NULL
+    WHERE DATE(entrada) BETWEEN ? AND ? 
+    AND entrada IS NOT NULL 
+    AND salida IS NOT NULL
     AND empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
     )

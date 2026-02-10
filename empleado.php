@@ -71,17 +71,17 @@ if (perfil_incompleto($pdo, $empleado_id)) {
 $hoy = date('Y-m-d');
 // Verificar si ya marcó entrada hoy (y si ya salió)
 $stmt = $pdo->prepare("
-    SELECT id, hora_entrada, hora_salida 
+    SELECT id, entrada, salida
     FROM marcaciones 
-    WHERE empleado_id = ? AND fecha = ?
-    ORDER BY id DESC 
+    WHERE empleado_id = ?
+    ORDER BY entrada DESC 
     LIMIT 1
 ");
-$stmt->execute([$empleado_id, $hoy]);
+$stmt->execute([$empleado_id]);
 $registro_hoy = $stmt->fetch();
-$tiene_registro_hoy = (bool)$registro_hoy;
-$jornada_abierta = $registro_hoy && !empty($registro_hoy['hora_entrada']) && empty($registro_hoy['hora_salida']);
-$ultimo_cerrado = $registro_hoy && !empty($registro_hoy['hora_salida']);
+$tiene_registro_hoy = $registro_hoy && date('Y-m-d', strtotime($registro_hoy['entrada'])) === $hoy;
+$jornada_abierta = $registro_hoy && !empty($registro_hoy['entrada']) && empty($registro_hoy['salida']);
+$ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -140,7 +140,7 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['hora_salida']);
                         </div>
                     <?php endif; ?>
 
-                    <?php if (!$tiene_registro_hoy): ?>
+                    <?php if (!$tiene_registro_hoy && !$jornada_abierta): ?>
                         <div class="status-message info">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
@@ -166,7 +166,7 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['hora_salida']);
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            <span>Jornada en curso - Entrada marcada: <?php echo $registro_hoy['hora_entrada']; ?></span>
+                            <span>Jornada en curso - Entrada marcada: <?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
                         </div>
                         <form action="marcar.php" method="POST" class="marcacion-form">
                             <input type="hidden" name="accion" value="salida">
@@ -190,11 +190,11 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['hora_salida']);
                         <div class="jornada-info">
                             <div class="info-item">
                                 <span class="label">Entrada:</span>
-                                <span class="value"><?php echo $registro_hoy['hora_entrada']; ?></span>
+                                <span class="value"><?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
                             </div>
                             <div class="info-item">
                                 <span class="label">Salida:</span>
-                                <span class="value"><?php echo $registro_hoy['hora_salida']; ?></span>
+                                <span class="value"><?php echo $registro_hoy && $registro_hoy['salida'] ? date('H:i', strtotime($registro_hoy['salida'])) : '—'; ?></span>
                             </div>
                         </div>
                         <form action="marcar.php" method="POST" class="marcacion-form" style="margin-top: 12px;">
@@ -232,12 +232,12 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['hora_salida']);
                             <tbody>
                                 <?php
                                 $stmt = $pdo->prepare("
-                                    SELECT m.id, m.fecha, m.hora_entrada, m.hora_salida,
+                                    SELECT m.id, DATE(m.entrada) as fecha, m.entrada, m.salida,
                                            sc.nueva_hora_entrada, sc.nueva_hora_salida, sc.motivo
                                     FROM marcaciones m
                                     LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
                                     WHERE m.empleado_id = ? 
-                                    ORDER BY m.fecha DESC, m.hora_entrada DESC
+                                    ORDER BY m.entrada DESC
                                 ");
                                 $stmt->execute([$empleado_id]);
                                 $marcaciones = $stmt->fetchAll();
@@ -245,21 +245,29 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['hora_salida']);
                                 $es_ultimo = true; // Flag para detectar la última entrada
                                 if (count($marcaciones) > 0):
                                     foreach ($marcaciones as $fila):
-                                        $entrada = $fila['hora_entrada'];
-                                        $salida = $fila['hora_salida'];
+                                        $entrada_dt = $fila['entrada'] ? new DateTime($fila['entrada']) : null;
+                                        $salida_dt = $fila['salida'] ? new DateTime($fila['salida']) : null;
+                                        $entrada = $entrada_dt ? $entrada_dt->format('H:i') : null;
+                                        $salida = $salida_dt ? $salida_dt->format('H:i') : null;
                                         $entrada_ajustada = $fila['nueva_hora_entrada'];
                                         $salida_ajustada = $fila['nueva_hora_salida'];
                                         $tiene_ajuste = !empty($entrada_ajustada);
                                         
-                                        // Usar horas ajustadas si existen
-                                        $entrada_calcular = $entrada_ajustada ?? $entrada;
-                                        $salida_calcular = $salida_ajustada ?? $salida;
+                                        // Usar horas ajustadas si existen (con día de inicio)
+                                        $fecha_base = $fila['fecha'];
+                                        $entrada_calcular_dt = $entrada_ajustada ? new DateTime($fecha_base . ' ' . $entrada_ajustada) : $entrada_dt;
+                                        if ($salida_ajustada) {
+                                            $salida_calcular_dt = new DateTime($fecha_base . ' ' . $salida_ajustada);
+                                        } else {
+                                            $salida_calcular_dt = $salida_dt;
+                                        }
                                         
                                         $horas = '—';
-                                        if ($entrada_calcular && $salida_calcular) {
-                                            $inicio = new DateTime($fila['fecha'] . ' ' . $entrada_calcular);
-                                            $fin = new DateTime($fila['fecha'] . ' ' . $salida_calcular);
-                                            $intervalo = $inicio->diff($fin);
+                                        if ($entrada_calcular_dt && $salida_calcular_dt) {
+                                            if ($salida_calcular_dt < $entrada_calcular_dt) {
+                                                $salida_calcular_dt->modify('+1 day');
+                                            }
+                                            $intervalo = $entrada_calcular_dt->diff($salida_calcular_dt);
                                             $horas = $intervalo->format('%h horas %i minutos');
                                         }
                                 ?>
@@ -286,7 +294,7 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['hora_salida']);
                                         <td data-label="Horas"><?= $horas ?></td>
                                         <td data-label="Acción">
                                             <?php if ($es_ultimo): ?>
-                                                <button class="btn-request" onclick="abrirSolicitud(<?= $fila['id'] ?>, '<?= $fila['hora_entrada'] ?>', '<?= $fila['hora_salida'] ?>')">
+                                                <button class="btn-request" onclick="abrirSolicitud(<?= $fila['id'] ?>, '<?= $entrada ?? '' ?>', '<?= $salida ?? '' ?>')">
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>

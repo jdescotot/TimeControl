@@ -48,20 +48,27 @@ if ($empleado_id) {
     fputcsv($out, ['Fecha', 'Entrada', 'Salida', 'Nueva Entrada', 'Nueva Salida', 'Ajustado', 'Horas Día']);
 
     // Detalle diario con ajustes
-    $stmt = $pdo->prepare("\n        SELECT m.fecha, m.hora_entrada, m.hora_salida,\n               sc.nueva_hora_entrada, sc.nueva_hora_salida\n        FROM marcaciones m\n        LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'\n        WHERE m.empleado_id = ? AND m.fecha BETWEEN ? AND ?\n        ORDER BY m.fecha ASC, m.id ASC\n    ");
+    $stmt = $pdo->prepare("\n        SELECT DATE(m.entrada) as fecha, m.entrada, m.salida,\n               sc.nueva_hora_entrada, sc.nueva_hora_salida\n        FROM marcaciones m\n        LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'\n        WHERE m.empleado_id = ? AND DATE(m.entrada) BETWEEN ? AND ?\n        ORDER BY m.entrada ASC, m.id ASC\n    ");
     $stmt->execute([$empleado_id, $primer_dia, $ultimo_dia]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($rows as $r) {
-        $entrada_usar = $r['nueva_hora_entrada'] ?: $r['hora_entrada'];
-        $salida_usar  = $r['nueva_hora_salida'] ?: $r['hora_salida'];
+        $entrada_base_dt = $r['entrada'] ? new DateTime($r['entrada']) : null;
+        $salida_base_dt = $r['salida'] ? new DateTime($r['salida']) : null;
+        $fecha_base = $r['fecha'];
+
+        $entrada_usar_dt = $r['nueva_hora_entrada'] ? new DateTime($fecha_base . ' ' . $r['nueva_hora_entrada']) : $entrada_base_dt;
+        $salida_usar_dt  = $r['nueva_hora_salida'] ? new DateTime($fecha_base . ' ' . $r['nueva_hora_salida']) : $salida_base_dt;
         $ajustado = ($r['nueva_hora_entrada'] || $r['nueva_hora_salida']) ? 'Sí' : 'No';
 
         $horas_dia = '';
-        if ($entrada_usar && $salida_usar) {
+        if ($entrada_usar_dt && $salida_usar_dt) {
             try {
-                $inicio = new DateTime($r['fecha'] . ' ' . $entrada_usar);
-                $fin    = new DateTime($r['fecha'] . ' ' . $salida_usar);
+                if ($salida_usar_dt < $entrada_usar_dt) {
+                    $salida_usar_dt->modify('+1 day');
+                }
+                $inicio = $entrada_usar_dt;
+                $fin    = $salida_usar_dt;
                 $intervalo = $inicio->diff($fin);
                 $horas_dia = $intervalo->format('%H:%I');
             } catch (Exception $e) {
@@ -71,8 +78,8 @@ if ($empleado_id) {
 
         fputcsv($out, [
             $r['fecha'],
-            $r['hora_entrada'] ?: '',
-            $r['hora_salida'] ?: '',
+            $r['entrada'] ? date('H:i', strtotime($r['entrada'])) : '',
+            $r['salida'] ? date('H:i', strtotime($r['salida'])) : '',
             $r['nueva_hora_entrada'] ?: '',
             $r['nueva_hora_salida'] ?: '',
             $ajustado,
@@ -92,7 +99,7 @@ $stmt_empleados->execute([$dueño_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
 // Marcaciones del mes (días trabajados)
-$stmt_marc = $pdo->prepare("\n    SELECT empleado_id, COUNT(DISTINCT fecha) AS dias_trabajados\n    FROM marcaciones\n    WHERE fecha BETWEEN ? AND ?\n      AND empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n    GROUP BY empleado_id\n");
+$stmt_marc = $pdo->prepare("\n    SELECT empleado_id, COUNT(DISTINCT DATE(entrada)) AS dias_trabajados\n    FROM marcaciones\n    WHERE DATE(entrada) BETWEEN ? AND ?\n      AND empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n    GROUP BY empleado_id\n");
 $stmt_marc->execute([$primer_dia, $ultimo_dia, $dueño_id]);
 $marcaciones = [];
 foreach ($stmt_marc->fetchAll(PDO::FETCH_ASSOC) as $m) {
@@ -100,7 +107,7 @@ foreach ($stmt_marc->fetchAll(PDO::FETCH_ASSOC) as $m) {
 }
 
 // Total horas (originales)
-$stmt_horas = $pdo->prepare("\n    SELECT empleado_id, SEC_TO_TIME(SUM(TIME_TO_SEC(TIMEDIFF(hora_salida, hora_entrada)))) AS total_horas\n    FROM marcaciones\n    WHERE fecha BETWEEN ? AND ?\n      AND hora_entrada IS NOT NULL AND hora_salida IS NOT NULL\n      AND empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n    GROUP BY empleado_id\n");
+$stmt_horas = $pdo->prepare("\n    SELECT empleado_id, SEC_TO_TIME(SUM(TIMESTAMPDIFF(SECOND, entrada, salida))) AS total_horas\n    FROM marcaciones\n    WHERE DATE(entrada) BETWEEN ? AND ?\n      AND entrada IS NOT NULL AND salida IS NOT NULL\n      AND empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n    GROUP BY empleado_id\n");
 $stmt_horas->execute([$primer_dia, $ultimo_dia, $dueño_id]);
 $horas = [];
 foreach ($stmt_horas->fetchAll(PDO::FETCH_ASSOC) as $h) {
@@ -126,7 +133,7 @@ foreach ($stmt_aus->fetchAll(PDO::FETCH_ASSOC) as $a) {
 }
 
 // Ajustes aprobados en el mes
-$stmt_adj = $pdo->prepare("\n    SELECT sc.empleado_id, COUNT(*) AS ajustes\n    FROM solicitudes_cambio sc\n    INNER JOIN marcaciones m ON m.id = sc.marcacion_id\n    WHERE sc.estado = 'aprobado'\n      AND m.fecha BETWEEN ? AND ?\n      AND sc.empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n    GROUP BY sc.empleado_id\n");
+$stmt_adj = $pdo->prepare("\n    SELECT sc.empleado_id, COUNT(*) AS ajustes\n    FROM solicitudes_cambio sc\n    INNER JOIN marcaciones m ON m.id = sc.marcacion_id\n    WHERE sc.estado = 'aprobado'\n      AND DATE(m.entrada) BETWEEN ? AND ?\n      AND sc.empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n    GROUP BY sc.empleado_id\n");
 $stmt_adj->execute([$primer_dia, $ultimo_dia, $dueño_id]);
 $ajustes = [];
 foreach ($stmt_adj->fetchAll(PDO::FETCH_ASSOC) as $aj) {

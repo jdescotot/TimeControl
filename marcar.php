@@ -9,7 +9,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
 
 $empleado_id = $_SESSION['user_id'];
 $hoy = date('Y-m-d');
-$hora_actual = date('H:i:s');
+$ahora = date('Y-m-d H:i:s');
 $accion = $_POST['accion'] ?? '';
 
 if (!in_array($accion, ['entrada', 'salida'])) {
@@ -28,27 +28,28 @@ try {
     if ($accion === 'entrada') {
         // Verificar que no exista una jornada abierta (entrada sin salida)
         $stmt = $pdo->prepare("
-            SELECT id FROM marcaciones 
-            WHERE empleado_id = ? AND fecha = ? AND hora_entrada IS NOT NULL AND hora_salida IS NULL
-            ORDER BY id DESC LIMIT 1
+            SELECT id, salida FROM marcaciones 
+            WHERE empleado_id = ?
+            ORDER BY entrada DESC LIMIT 1
         ");
-        $stmt->execute([$empleado_id, $hoy]);
-        if ($stmt->fetch()) {
+        $stmt->execute([$empleado_id]);
+        $ultimo = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($ultimo && empty($ultimo['salida'])) {
             die('Ya tienes una jornada abierta. Marca salida antes de una nueva entrada.');
         }
 
         // Insertar nueva marca con entrada
-        $stmt = $pdo->prepare("INSERT INTO marcaciones (empleado_id, fecha, hora_entrada) VALUES (?, ?, ?)");
-        $stmt->execute([$empleado_id, $hoy, $hora_actual]);
+        $stmt = $pdo->prepare("INSERT INTO marcaciones (empleado_id, entrada) VALUES (?, ?)");
+        $stmt->execute([$empleado_id, $ahora]);
     } 
     elseif ($accion === 'salida') {
         // Buscar registro de hoy sin salida
         $stmt = $pdo->prepare("
             SELECT id FROM marcaciones 
-            WHERE empleado_id = ? AND fecha = ? AND hora_entrada IS NOT NULL AND hora_salida IS NULL
-            ORDER BY id DESC LIMIT 1
+            WHERE empleado_id = ? AND salida IS NULL
+            ORDER BY entrada DESC LIMIT 1
         ");
-        $stmt->execute([$empleado_id, $hoy]);
+        $stmt->execute([$empleado_id]);
         $registro = $stmt->fetch();
 
         if (!$registro) {
@@ -56,8 +57,8 @@ try {
         }
 
         // Actualizar salida
-        $stmt = $pdo->prepare("UPDATE marcaciones SET hora_salida = ? WHERE id = ?");
-        $stmt->execute([$hora_actual, $registro['id']]);
+        $stmt = $pdo->prepare("UPDATE marcaciones SET salida = ? WHERE id = ?");
+        $stmt->execute([$ahora, $registro['id']]);
     }
 
     header('Location: empleado.php?mensaje=success');

@@ -42,12 +42,12 @@ if (!empty($empleado['created_at'])) {
 
 // Obtener marcaciones del empleado con ajustes aprobados
 $stmt = $pdo->prepare("
-    SELECT m.fecha, m.hora_entrada, m.hora_salida,
+    SELECT DATE(m.entrada) as fecha, m.entrada, m.salida,
            sc.nueva_hora_entrada, sc.nueva_hora_salida, sc.motivo
     FROM marcaciones m
     LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
     WHERE m.empleado_id = ? 
-    ORDER BY m.fecha DESC, m.hora_entrada DESC
+    ORDER BY m.entrada DESC
 ");
 $stmt->execute([$empleado_id]);
 $marcaciones = $stmt->fetchAll();
@@ -126,21 +126,29 @@ $marcaciones = $stmt->fetchAll();
                             <tbody>
                                 <?php if (count($marcaciones) > 0): ?>
                                     <?php foreach ($marcaciones as $fila):
-                                        $entrada = $fila['hora_entrada'];
-                                        $salida = $fila['hora_salida'];
+                                        $entrada_dt = $fila['entrada'] ? new DateTime($fila['entrada']) : null;
+                                        $salida_dt = $fila['salida'] ? new DateTime($fila['salida']) : null;
+                                        $entrada = $entrada_dt ? $entrada_dt->format('H:i') : null;
+                                        $salida = $salida_dt ? $salida_dt->format('H:i') : null;
                                         $entrada_ajustada = $fila['nueva_hora_entrada'];
                                         $salida_ajustada = $fila['nueva_hora_salida'];
                                         $tiene_ajuste = !empty($entrada_ajustada);
                                         
-                                        // Usar horas ajustadas para cálculos si existen
-                                        $entrada_calcular = $entrada_ajustada ?? $entrada;
-                                        $salida_calcular = $salida_ajustada ?? $salida;
+                                        // Usar horas ajustadas para cálculos si existen (día de inicio)
+                                        $fecha_base = $fila['fecha'];
+                                        $entrada_calcular_dt = $entrada_ajustada ? new DateTime($fecha_base . ' ' . $entrada_ajustada) : $entrada_dt;
+                                        if ($salida_ajustada) {
+                                            $salida_calcular_dt = new DateTime($fecha_base . ' ' . $salida_ajustada);
+                                        } else {
+                                            $salida_calcular_dt = $salida_dt;
+                                        }
                                         
                                         $horas = '—';
-                                        if ($entrada_calcular && $salida_calcular) {
-                                            $inicio = new DateTime($fila['fecha'] . ' ' . $entrada_calcular);
-                                            $fin = new DateTime($fila['fecha'] . ' ' . $salida_calcular);
-                                            $intervalo = $inicio->diff($fin);
+                                        if ($entrada_calcular_dt && $salida_calcular_dt) {
+                                            if ($salida_calcular_dt < $entrada_calcular_dt) {
+                                                $salida_calcular_dt->modify('+1 day');
+                                            }
+                                            $intervalo = $entrada_calcular_dt->diff($salida_calcular_dt);
                                             $horas = $intervalo->format('%h horas %i minutos');
                                         }
                                     ?>

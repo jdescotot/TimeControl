@@ -28,9 +28,9 @@ $query = "
         s.fecha_solicitud,
         u.username,
         u.nombre,
-        m.fecha,
-        m.hora_entrada as entrada_original,
-        m.hora_salida as salida_original
+        DATE(m.entrada) as fecha,
+        m.entrada as entrada_original,
+        m.salida as salida_original
     FROM solicitudes_cambio s
     JOIN usuarios u ON s.empleado_id = u.id
     JOIN marcaciones m ON s.marcacion_id = m.id
@@ -129,8 +129,8 @@ try {
                                         <td data-label="Fecha"><?php echo date('d/m/Y', strtotime($s['fecha'])); ?></td>
                                         <td data-label="Horario Original">
                                             <small>
-                                                <strong>E:</strong> <?php echo $s['entrada_original'] ? substr($s['entrada_original'], 0, 5) : '—'; ?><br>
-                                                <strong>S:</strong> <?php echo $s['salida_original'] ? substr($s['salida_original'], 0, 5) : '—'; ?>
+                                                <strong>E:</strong> <?php echo $s['entrada_original'] ? date('H:i', strtotime($s['entrada_original'])) : '—'; ?><br>
+                                                <strong>S:</strong> <?php echo $s['salida_original'] ? date('H:i', strtotime($s['salida_original'])) : '—'; ?>
                                             </small>
                                         </td>
                                         <td data-label="Horario Solicitado" class="horario-highlight">
