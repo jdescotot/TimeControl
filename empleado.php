@@ -82,6 +82,10 @@ $registro_hoy = $stmt->fetch();
 $tiene_registro_hoy = $registro_hoy && date('Y-m-d', strtotime($registro_hoy['entrada'])) === $hoy;
 $jornada_abierta = $registro_hoy && !empty($registro_hoy['entrada']) && empty($registro_hoy['salida']);
 $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
+$entrada_fecha = $registro_hoy && !empty($registro_hoy['entrada']) ? date('Y-m-d', strtotime($registro_hoy['entrada'])) : null;
+$entrada_es_hoy = $entrada_fecha === $hoy;
+$bloqueo_flag = isset($_GET['bloqueo']) && $_GET['bloqueo'] === 'salida_pendiente';
+$bloqueo_salida_pendiente = $jornada_abierta && (!$entrada_es_hoy || $bloqueo_flag);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -161,24 +165,52 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
                             </button>
                         </form>
                     <?php elseif ($jornada_abierta): ?>
-                        <div class="status-message warning">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                            <span>Jornada en curso - Entrada marcada: <?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
-                        </div>
-                        <form action="marcar.php" method="POST" class="marcacion-form">
-                            <input type="hidden" name="accion" value="salida">
-                            <button type="submit" class="btn btn-secondary">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                        <?php if ($bloqueo_salida_pendiente): ?>
+                            <div class="status-message warning">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
                                 </svg>
-                                Marcar Salida
-                            </button>
-                        </form>
+                                <span>
+                                    Jornada pendiente sin salida. No puedes marcar una nueva entrada.
+                                    Solicita la hora de salida para revisión.
+                                </span>
+                            </div>
+                            <div class="jornada-info" style="margin-bottom: 12px;">
+                                <div class="info-item">
+                                    <span class="label">Entrada:</span>
+                                    <span class="value"><?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
+                                </div>
+                            </div>
+                            <div class="marcacion-form" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-primary" onclick="abrirSolicitud(<?= (int)($registro_hoy['id'] ?? 0) ?>, '<?= $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '' ?>', '', true)">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    Solicitar Salida
+                                </button>
+                            </div>
+                        <?php else: ?>
+                            <div class="status-message warning">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <span>Jornada en curso - Entrada marcada: <?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
+                            </div>
+                            <form action="marcar.php" method="POST" class="marcacion-form">
+                                <input type="hidden" name="accion" value="salida">
+                                <button type="submit" class="btn btn-secondary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    Marcar Salida
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     <?php else: ?>
                         <div class="status-message success">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -251,7 +283,8 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
                                         $salida = $salida_dt ? $salida_dt->format('H:i') : null;
                                         $entrada_ajustada = $fila['nueva_hora_entrada'];
                                         $salida_ajustada = $fila['nueva_hora_salida'];
-                                        $tiene_ajuste = !empty($entrada_ajustada);
+                                        $tiene_ajuste_entrada = !empty($entrada_ajustada);
+                                        $tiene_ajuste_salida = !empty($salida_ajustada);
                                         
                                         // Usar horas ajustadas si existen (con día de inicio)
                                         $fecha_base = $fila['fecha'];
@@ -274,7 +307,7 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
                                     <tr>
                                         <td data-label="Fecha"><?= htmlspecialchars($fila['fecha']) ?></td>
                                         <td data-label="Entrada">
-                                            <?php if ($tiene_ajuste): ?>
+                                            <?php if ($tiene_ajuste_entrada): ?>
                                                 <span style="text-decoration: line-through; opacity: 0.6; font-size: 12px;"><?= $entrada ? substr($entrada, 0, 5) : '—' ?></span><br>
                                                 <strong style="color: #667eea;"><?= substr($entrada_ajustada, 0, 5) ?></strong>
                                                 <span style="background: #667eea; color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 3px;" title="<?= htmlspecialchars($fila['motivo']) ?>">Ajustado</span>
@@ -283,7 +316,7 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
                                             <?php endif; ?>
                                         </td>
                                         <td data-label="Salida">
-                                            <?php if ($tiene_ajuste): ?>
+                                            <?php if ($tiene_ajuste_salida): ?>
                                                 <span style="text-decoration: line-through; opacity: 0.6; font-size: 12px;"><?= $salida ? substr($salida, 0, 5) : '—' ?></span><br>
                                                 <strong style="color: #667eea;"><?= substr($salida_ajustada, 0, 5) ?></strong>
                                                 <span style="background: #667eea; color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 3px;" title="<?= htmlspecialchars($fila['motivo']) ?>">Ajustado</span>
@@ -333,10 +366,11 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
         <div id="modalCambio" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Solicitar Cambio de Horario</h3>
+                    <h3 id="modalTitulo">Solicitar Cambio de Horario</h3>
                 </div>
                 <form action="solicitar_cambio.php" method="POST">
                     <input type="hidden" name="marcacion_id" id="form_id">
+                    <input type="hidden" name="solo_salida" id="form_solo_salida" value="0">
                         <div class="form-group">
                             <label for="nueva_entrada">Nueva Hora de Entrada:</label>
                             <input type="time" name="nueva_entrada" id="form_entrada" step="60" required>
@@ -371,10 +405,28 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
     </div>
 
     <script>
-function abrirSolicitud(id, entrada, salida) {
+function abrirSolicitud(id, entrada, salida, soloSalida = false) {
+    const entradaInput = document.getElementById('form_entrada');
+    const salidaInput = document.getElementById('form_salida');
+    const soloSalidaInput = document.getElementById('form_solo_salida');
+    const titulo = document.getElementById('modalTitulo');
+
     document.getElementById('form_id').value = id;
-    document.getElementById('form_entrada').value = entrada ? entrada.substring(0, 5) : '';
-    document.getElementById('form_salida').value = salida ? salida.substring(0, 5) : '';
+    entradaInput.value = entrada ? entrada.substring(0, 5) : '';
+    salidaInput.value = salida ? salida.substring(0, 5) : '';
+    soloSalidaInput.value = soloSalida ? '1' : '0';
+
+    if (soloSalida) {
+        titulo.textContent = 'Solicitar Hora de Salida';
+        entradaInput.required = false;
+        entradaInput.disabled = true;
+    } else {
+        titulo.textContent = 'Solicitar Cambio de Horario';
+        entradaInput.required = true;
+        entradaInput.disabled = false;
+    }
+
+    salidaInput.required = true;
     document.getElementById('modalCambio').style.display = 'block';
 }
 

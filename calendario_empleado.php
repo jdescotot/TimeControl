@@ -31,16 +31,16 @@ $stmt_marcaciones = $pdo->prepare("
     SELECT DATE(m.entrada) as fecha, m.entrada, m.salida,
            sc.nueva_hora_entrada, sc.nueva_hora_salida,
            CASE 
-               WHEN sc.nueva_hora_entrada IS NOT NULL AND sc.nueva_hora_salida IS NOT NULL THEN 
+               WHEN ( (sc.nueva_hora_entrada IS NOT NULL OR m.entrada IS NOT NULL)
+                      AND (sc.nueva_hora_salida IS NOT NULL OR m.salida IS NOT NULL) ) THEN
                    TIMESTAMPDIFF(SECOND,
-                       CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_entrada),
+                       CONCAT(DATE(m.entrada), ' ', COALESCE(sc.nueva_hora_entrada, TIME(m.entrada))),
                        CASE
-                           WHEN sc.nueva_hora_salida < sc.nueva_hora_entrada THEN DATE_ADD(CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_salida), INTERVAL 1 DAY)
-                           ELSE CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_salida)
+                           WHEN COALESCE(sc.nueva_hora_salida, TIME(m.salida)) < COALESCE(sc.nueva_hora_entrada, TIME(m.entrada)) THEN
+                               DATE_ADD(CONCAT(DATE(m.entrada), ' ', COALESCE(sc.nueva_hora_salida, TIME(m.salida))), INTERVAL 1 DAY)
+                           ELSE CONCAT(DATE(m.entrada), ' ', COALESCE(sc.nueva_hora_salida, TIME(m.salida)))
                        END
                    ) / 3600
-               WHEN m.entrada IS NOT NULL AND m.salida IS NOT NULL THEN
-                   TIMESTAMPDIFF(SECOND, m.entrada, m.salida) / 3600
                ELSE 0
            END as horas_trabajadas
     FROM marcaciones m

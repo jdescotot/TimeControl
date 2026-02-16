@@ -132,7 +132,8 @@ $marcaciones = $stmt->fetchAll();
                                         $salida = $salida_dt ? $salida_dt->format('H:i') : null;
                                         $entrada_ajustada = $fila['nueva_hora_entrada'];
                                         $salida_ajustada = $fila['nueva_hora_salida'];
-                                        $tiene_ajuste = !empty($entrada_ajustada);
+                                        $tiene_ajuste_entrada = !empty($entrada_ajustada);
+                                        $tiene_ajuste_salida = !empty($salida_ajustada);
                                         
                                         // Usar horas ajustadas para cálculos si existen (día de inicio)
                                         $fecha_base = $fila['fecha'];
@@ -155,7 +156,7 @@ $marcaciones = $stmt->fetchAll();
                                         <tr>
                                             <td data-label="Fecha"><?= htmlspecialchars($fila['fecha']) ?></td>
                                             <td data-label="Entrada">
-                                                <?php if ($tiene_ajuste): ?>
+                                                <?php if ($tiene_ajuste_entrada): ?>
                                                     <div style="display: flex; flex-direction: column; gap: 4px;">
                                                         <span style="text-decoration: line-through; opacity: 0.5; font-size: 12px;">
                                                             <?= $entrada ? substr($entrada, 0, 5) : '—' ?>
@@ -170,7 +171,7 @@ $marcaciones = $stmt->fetchAll();
                                                 <?php endif; ?>
                                             </td>
                                             <td data-label="Salida">
-                                                <?php if ($tiene_ajuste): ?>
+                                                <?php if ($tiene_ajuste_salida): ?>
                                                     <div style="display: flex; flex-direction: column; gap: 4px;">
                                                         <span style="text-decoration: line-through; opacity: 0.5; font-size: 12px;">
                                                             <?= $salida ? substr($salida, 0, 5) : '—' ?>

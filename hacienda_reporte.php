@@ -69,23 +69,25 @@ $stmt_horas = $pdo->prepare("
         m.empleado_id,
         SEC_TO_TIME(SUM(
             CASE
-                WHEN sc.nueva_hora_entrada IS NOT NULL AND sc.nueva_hora_salida IS NOT NULL THEN
+                WHEN ( (sc.nueva_hora_entrada IS NOT NULL OR m.entrada IS NOT NULL)
+                       AND (sc.nueva_hora_salida IS NOT NULL OR m.salida IS NOT NULL) ) THEN
                     TIMESTAMPDIFF(SECOND,
-                        CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_entrada),
+                        CONCAT(DATE(m.entrada), ' ', COALESCE(sc.nueva_hora_entrada, TIME(m.entrada))),
                         CASE
-                            WHEN sc.nueva_hora_salida < sc.nueva_hora_entrada THEN DATE_ADD(CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_salida), INTERVAL 1 DAY)
-                            ELSE CONCAT(DATE(m.entrada), ' ', sc.nueva_hora_salida)
+                            WHEN COALESCE(sc.nueva_hora_salida, TIME(m.salida)) < COALESCE(sc.nueva_hora_entrada, TIME(m.entrada)) THEN
+                                DATE_ADD(CONCAT(DATE(m.entrada), ' ', COALESCE(sc.nueva_hora_salida, TIME(m.salida))), INTERVAL 1 DAY)
+                            ELSE CONCAT(DATE(m.entrada), ' ', COALESCE(sc.nueva_hora_salida, TIME(m.salida)))
                         END
                     )
-                ELSE TIMESTAMPDIFF(SECOND, m.entrada, m.salida)
+                ELSE 0
             END
         )) as total_horas
     FROM marcaciones m
     LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'
     WHERE DATE(m.entrada) BETWEEN ? AND ? 
     AND (
-        (sc.nueva_hora_entrada IS NOT NULL AND sc.nueva_hora_salida IS NOT NULL)
-        OR (m.entrada IS NOT NULL AND m.salida IS NOT NULL)
+        (sc.nueva_hora_entrada IS NOT NULL OR m.entrada IS NOT NULL)
+        AND (sc.nueva_hora_salida IS NOT NULL OR m.salida IS NOT NULL)
     )
     AND m.empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?

@@ -35,7 +35,12 @@ try {
         $stmt->execute([$empleado_id]);
         $ultimo = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($ultimo && empty($ultimo['salida'])) {
-            die('Ya tienes una jornada abierta. Marca salida antes de una nueva entrada.');
+            $redirect = 'empleado.php?bloqueo=salida_pendiente';
+            if (!empty($ultimo['id'])) {
+                $redirect .= '&marcacion_id=' . urlencode((string) $ultimo['id']);
+            }
+            header('Location: ' . $redirect);
+            exit;
         }
 
         // Insertar nueva marca con entrada

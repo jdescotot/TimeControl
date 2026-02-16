@@ -110,7 +110,7 @@ if (!empty($empleados)) {
         $empleados[$key]['salida_hora'] = !empty($registro['salida']) ? date('H:i', strtotime($registro['salida'])) : null;
         $empleados[$key]['hora_entrada_ajustada'] = $registro['nueva_hora_entrada'] ?? null;
         $empleados[$key]['hora_salida_ajustada'] = $registro['nueva_hora_salida'] ?? null;
-        $empleados[$key]['tiene_ajuste'] = !empty($registro['nueva_hora_entrada']);
+        $empleados[$key]['tiene_ajuste'] = !empty($registro['nueva_hora_entrada']) || !empty($registro['nueva_hora_salida']);
 
         if ($empleados[$key]['entrada']) {
             $entraron_hoy++;

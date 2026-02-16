@@ -10,12 +10,24 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $empleado_id = $_SESSION['user_id'];
     $marcacion_id = $_POST['marcacion_id'] ?? 0;
-    $nueva_entrada = $_POST['nueva_entrada'] ?? '';
-    $nueva_salida = $_POST['nueva_salida'] ?? '';
-    $motivo = $_POST['motivo'] ?? '';
+    $nueva_entrada = trim($_POST['nueva_entrada'] ?? '');
+    $nueva_salida = trim($_POST['nueva_salida'] ?? '');
+    $motivo = trim($_POST['motivo'] ?? '');
+    $solo_salida = ($_POST['solo_salida'] ?? '0') === '1';
 
-    if (empty($marcacion_id) || empty($nueva_entrada) || empty($motivo)) {
+    if (empty($marcacion_id) || empty($motivo)) {
         die('Datos insuficientes para la solicitud.');
+    }
+
+    if ($solo_salida) {
+        if (empty($nueva_salida)) {
+            die('Datos insuficientes para la solicitud.');
+        }
+        $nueva_entrada = '';
+    } else {
+        if (empty($nueva_entrada) || empty($nueva_salida)) {
+            die('Datos insuficientes para la solicitud.');
+        }
     }
 
     try {

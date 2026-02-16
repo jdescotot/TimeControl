@@ -134,8 +134,8 @@ try {
                                             </small>
                                         </td>
                                         <td data-label="Horario Solicitado" class="horario-highlight">
-                                            <strong>E:</strong> <?php echo substr($s['nueva_hora_entrada'], 0, 5); ?><br>
-                                            <strong>S:</strong> <?php echo substr($s['nueva_hora_salida'], 0, 5); ?>
+                                            <strong>E:</strong> <?php echo !empty($s['nueva_hora_entrada']) ? substr($s['nueva_hora_entrada'], 0, 5) : '—'; ?><br>
+                                            <strong>S:</strong> <?php echo !empty($s['nueva_hora_salida']) ? substr($s['nueva_hora_salida'], 0, 5) : '—'; ?>
                                         </td>
                                         <td data-label="Motivo" class="motivo-cell"><?php echo htmlspecialchars($s['motivo']); ?></td>
                                         <td data-label="Acciones">
