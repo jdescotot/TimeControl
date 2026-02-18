@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST" action="" class="registro-form">
             <div class="form-group">
-                <label for="nombre_completo">Nombre Completo</label>
+                <label for="nombre_completo">Razón Social</label>
                 <input 
                     type="text" 
                     id="nombre_completo" 
@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="form-group">
-                <label for="username">Nombre de Usuario</label>
+                <label for="username">Nombre de Establecimiento</label>
                 <input 
                     type="text" 
                     id="username" 

@@ -16,7 +16,7 @@ try {
         SELECT COUNT(*) as total 
         FROM solicitudes_cambio sc
         INNER JOIN usuarios u ON sc.empleado_id = u.id
-        WHERE sc.estado = 'pendiente' AND u.propietario_id = ?
+        WHERE sc.estado IN ('pendiente', 'rechazado_empleado') AND u.propietario_id = ?
     ");
     $stmt_pendientes->execute([$dueño_id]);
     $resultado = $stmt_pendientes->fetch(PDO::FETCH_ASSOC);

@@ -31,11 +31,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        $check = $pdo->prepare("SELECT id FROM marcaciones WHERE id = ? AND empleado_id = ?");
+        $check = $pdo->prepare("SELECT id, entrada FROM marcaciones WHERE id = ? AND empleado_id = ?");
         $check->execute([$marcacion_id, $empleado_id]);
+        $marcacion = $check->fetch(PDO::FETCH_ASSOC);
         
-        if (!$check->fetch()) {
+        if (!$marcacion) {
             die('Operación no permitida.');
+        }
+
+        $fecha_base = date('Y-m-d', strtotime($marcacion['entrada']));
+
+        if ($solo_salida) {
+            $entrada_dt = new DateTime($marcacion['entrada']);
+            $salida_dt = new DateTime($fecha_base . ' ' . $nueva_salida);
+            if ($salida_dt < $entrada_dt) {
+                $salida_dt->modify('+1 day');
+            }
+            $limite_dt = clone $entrada_dt;
+            $limite_dt->modify('+12 hours');
+            if ($salida_dt > $limite_dt) {
+                die('La hora de salida no puede exceder 12 horas desde la entrada.');
+            }
+        } else {
+            $entrada_dt = new DateTime($fecha_base . ' ' . $nueva_entrada);
+            $salida_dt = new DateTime($fecha_base . ' ' . $nueva_salida);
+            if ($salida_dt < $entrada_dt) {
+                $salida_dt->modify('+1 day');
+            }
+            $limite_dt = clone $entrada_dt;
+            $limite_dt->modify('+12 hours');
+            if ($salida_dt > $limite_dt) {
+                die('La hora de salida no puede exceder 12 horas desde la entrada.');
+            }
         }
 
         $stmt = $pdo->prepare("

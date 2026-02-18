@@ -85,7 +85,31 @@ $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
 $entrada_fecha = $registro_hoy && !empty($registro_hoy['entrada']) ? date('Y-m-d', strtotime($registro_hoy['entrada'])) : null;
 $entrada_es_hoy = $entrada_fecha === $hoy;
 $bloqueo_flag = isset($_GET['bloqueo']) && $_GET['bloqueo'] === 'salida_pendiente';
-$bloqueo_salida_pendiente = $jornada_abierta && (!$entrada_es_hoy || $bloqueo_flag);
+$estado_solicitud_pendiente = null;
+$tiene_solicitud_pendiente = false;
+
+if ($jornada_abierta && !empty($registro_hoy['id'])) {
+    $stmt_pendiente = $pdo->prepare("SELECT estado FROM solicitudes_cambio WHERE marcacion_id = ? AND estado IN ('pendiente', 'pendiente_empleado', 'rechazado_empleado') ORDER BY id DESC LIMIT 1");
+    $stmt_pendiente->execute([$registro_hoy['id']]);
+    $solicitud_pendiente = $stmt_pendiente->fetch(PDO::FETCH_ASSOC);
+    if ($solicitud_pendiente) {
+        $tiene_solicitud_pendiente = true;
+        $estado_solicitud_pendiente = $solicitud_pendiente['estado'];
+    }
+}
+
+$bloqueo_salida_pendiente = $jornada_abierta && (!$entrada_es_hoy || $bloqueo_flag) && !$tiene_solicitud_pendiente;
+
+$stmt_pendientes_empleado = $pdo->prepare("
+    SELECT s.id, s.nueva_hora_entrada, s.nueva_hora_salida, s.motivo, s.fecha_solicitud,
+           m.entrada, m.salida, DATE(m.entrada) as fecha
+    FROM solicitudes_cambio s
+    JOIN marcaciones m ON s.marcacion_id = m.id
+    WHERE s.empleado_id = ? AND s.estado = 'pendiente_empleado'
+    ORDER BY s.fecha_solicitud DESC
+");
+$stmt_pendientes_empleado->execute([$empleado_id]);
+$solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -95,6 +119,7 @@ $bloqueo_salida_pendiente = $jornada_abierta && (!$entrada_es_hoy || $bloqueo_fl
     <title>Panel del Empleado - Control Horario</title>
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="solicitudes_cambio.css">
+    <link rel="stylesheet" href="gestionar_solicitud.css">
 </head>
 <body>
     <div class="container">
@@ -144,6 +169,27 @@ $bloqueo_salida_pendiente = $jornada_abierta && (!$entrada_es_hoy || $bloqueo_fl
                         </div>
                     <?php endif; ?>
 
+                    <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'respuesta_ok'): ?>
+                        <div class="status-message success" style="margin-bottom: 15px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span>Respuesta enviada correctamente.</span>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'salida_fuera_rango'): ?>
+                        <div class="status-message warning" style="margin-bottom: 15px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span>La salida no puede exceder 12 horas desde la entrada. Solicita una corrección.</span>
+                        </div>
+                    <?php endif; ?>
+
                     <?php if (!$tiene_registro_hoy && !$jornada_abierta): ?>
                         <div class="status-message info">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -165,7 +211,41 @@ $bloqueo_salida_pendiente = $jornada_abierta && (!$entrada_es_hoy || $bloqueo_fl
                             </button>
                         </form>
                     <?php elseif ($jornada_abierta): ?>
-                        <?php if ($bloqueo_salida_pendiente): ?>
+                        <?php if ($tiene_solicitud_pendiente): ?>
+                            <div class="status-message info">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <span>
+                                    Tienes una solicitud en revisión. Puedes marcar una nueva entrada mientras se procesa.
+                                </span>
+                            </div>
+                            <div class="jornada-info" style="margin-bottom: 12px;">
+                                <div class="info-item">
+                                    <span class="label">Entrada pendiente:</span>
+                                    <span class="value"><?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
+                                </div>
+                                <?php if ($estado_solicitud_pendiente): ?>
+                                <div class="info-item">
+                                    <span class="label">Estado:</span>
+                                    <span class="value"><?php echo htmlspecialchars($estado_solicitud_pendiente); ?></span>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <form action="marcar.php" method="POST" class="marcacion-form">
+                                <input type="hidden" name="accion" value="entrada">
+                                <button type="submit" class="btn btn-primary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                        <polyline points="10 17 15 12 10 7"></polyline>
+                                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                                    </svg>
+                                    Marcar Nueva Entrada
+                                </button>
+                            </form>
+                        <?php elseif ($bloqueo_salida_pendiente): ?>
                             <div class="status-message warning">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"></circle>
@@ -243,6 +323,55 @@ $bloqueo_salida_pendiente = $jornada_abierta && (!$entrada_es_hoy || $bloqueo_fl
                     <?php endif; ?>
                 </div>
             </div>
+
+            <?php if (!empty($solicitudes_empleado)): ?>
+            <div class="card solicitudes-card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h2>Propuestas del Dueño</h2>
+                    <div class="date-badge"><?php echo count($solicitudes_empleado); ?> pendiente<?php echo count($solicitudes_empleado) !== 1 ? 's' : ''; ?></div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Horario Original</th>
+                                    <th>Horario Propuesto</th>
+                                    <th>Motivo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($solicitudes_empleado as $s): ?>
+                                    <tr>
+                                        <td data-label="Fecha"><?php echo date('d/m/Y', strtotime($s['fecha'])); ?></td>
+                                        <td data-label="Horario Original">
+                                            <small>
+                                                <strong>E:</strong> <?php echo $s['entrada'] ? date('H:i', strtotime($s['entrada'])) : '—'; ?><br>
+                                                <strong>S:</strong> <?php echo $s['salida'] ? date('H:i', strtotime($s['salida'])) : '—'; ?>
+                                            </small>
+                                        </td>
+                                        <td data-label="Horario Propuesto" class="horario-highlight">
+                                            <strong>E:</strong> <?php echo !empty($s['nueva_hora_entrada']) ? substr($s['nueva_hora_entrada'], 0, 5) : '—'; ?><br>
+                                            <strong>S:</strong> <?php echo !empty($s['nueva_hora_salida']) ? substr($s['nueva_hora_salida'], 0, 5) : '—'; ?>
+                                        </td>
+                                        <td data-label="Motivo" class="motivo-cell"><?php echo htmlspecialchars($s['motivo']); ?></td>
+                                        <td data-label="Acciones">
+                                            <form action="procesar_solicitud_empleado.php" method="POST" style="display:inline;" class="actions-cell">
+                                                <input type="hidden" name="id_solicitud" value="<?php echo $s['id']; ?>">
+                                                <button name="accion" value="aprobar" class="btn-aprobar">Aprobar</button>
+                                                <button name="accion" value="rechazar" class="btn-rechazar">Rechazar</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Card de historial -->
             <div class="card historial-card">

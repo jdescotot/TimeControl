@@ -35,12 +35,18 @@ try {
         $stmt->execute([$empleado_id]);
         $ultimo = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($ultimo && empty($ultimo['salida'])) {
-            $redirect = 'empleado.php?bloqueo=salida_pendiente';
-            if (!empty($ultimo['id'])) {
-                $redirect .= '&marcacion_id=' . urlencode((string) $ultimo['id']);
+            $stmt_pendiente = $pdo->prepare("SELECT id FROM solicitudes_cambio WHERE marcacion_id = ? AND estado IN ('pendiente', 'pendiente_empleado', 'rechazado_empleado') ORDER BY id DESC LIMIT 1");
+            $stmt_pendiente->execute([$ultimo['id']]);
+            $solicitud_pendiente = $stmt_pendiente->fetch(PDO::FETCH_ASSOC);
+
+            if (!$solicitud_pendiente) {
+                $redirect = 'empleado.php?bloqueo=salida_pendiente';
+                if (!empty($ultimo['id'])) {
+                    $redirect .= '&marcacion_id=' . urlencode((string) $ultimo['id']);
+                }
+                header('Location: ' . $redirect);
+                exit;
             }
-            header('Location: ' . $redirect);
-            exit;
         }
 
         // Insertar nueva marca con entrada
@@ -50,7 +56,7 @@ try {
     elseif ($accion === 'salida') {
         // Buscar registro de hoy sin salida
         $stmt = $pdo->prepare("
-            SELECT id FROM marcaciones 
+            SELECT id, entrada FROM marcaciones 
             WHERE empleado_id = ? AND salida IS NULL
             ORDER BY entrada DESC LIMIT 1
         ");
@@ -59,6 +65,20 @@ try {
 
         if (!$registro) {
             die('No puedes marcar salida sin tener una jornada abierta.');
+        }
+
+        $entrada_dt = new DateTime($registro['entrada']);
+        $limite_dt = clone $entrada_dt;
+        $limite_dt->modify('+12 hours');
+        $ahora_dt = new DateTime($ahora);
+
+        if ($ahora_dt > $limite_dt) {
+            $redirect = 'empleado.php?bloqueo=salida_pendiente&mensaje=salida_fuera_rango';
+            if (!empty($registro['id'])) {
+                $redirect .= '&marcacion_id=' . urlencode((string) $registro['id']);
+            }
+            header('Location: ' . $redirect);
+            exit;
         }
 
         // Actualizar salida

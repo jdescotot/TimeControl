@@ -34,7 +34,7 @@ $query = "
     FROM solicitudes_cambio s
     JOIN usuarios u ON s.empleado_id = u.id
     JOIN marcaciones m ON s.marcacion_id = m.id
-    WHERE s.estado = 'pendiente' AND u.propietario_id = ?
+    WHERE s.estado IN ('pendiente', 'rechazado_empleado') AND u.propietario_id = ?
     ORDER BY s.fecha_solicitud DESC
 ";
 
@@ -113,6 +113,7 @@ try {
                                     <th>Horario Original</th>
                                     <th>Horario Solicitado</th>
                                     <th>Motivo</th>
+                                    <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -138,6 +139,13 @@ try {
                                             <strong>S:</strong> <?php echo !empty($s['nueva_hora_salida']) ? substr($s['nueva_hora_salida'], 0, 5) : '—'; ?>
                                         </td>
                                         <td data-label="Motivo" class="motivo-cell"><?php echo htmlspecialchars($s['motivo']); ?></td>
+                                        <td data-label="Estado">
+                                            <?php if ($s['estado'] === 'rechazado_empleado'): ?>
+                                                <span style="background:#f59e0b;color:#fff;padding:2px 6px;border-radius:4px;font-size:11px;">Devuelta por empleado</span>
+                                            <?php else: ?>
+                                                <span style="background:#667eea;color:#fff;padding:2px 6px;border-radius:4px;font-size:11px;">Pendiente</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td data-label="Acciones">
                                             <form action="procesar_solicitud.php" method="POST" style="display:inline;" class="actions-cell">
                                                 <input type="hidden" name="id_solicitud" value="<?php echo $s['id']; ?>">
@@ -155,12 +163,22 @@ try {
                                                     Rechazar
                                                 </button>
                                             </form>
+                                            <form action="procesar_solicitud.php" method="POST" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+                                                <input type="hidden" name="id_solicitud" value="<?php echo $s['id']; ?>">
+                                                <?php
+                                                    $entrada_sugerida = !empty($s['nueva_hora_entrada']) ? substr($s['nueva_hora_entrada'], 0, 5) : ($s['entrada_original'] ? date('H:i', strtotime($s['entrada_original'])) : '');
+                                                    $salida_sugerida = !empty($s['nueva_hora_salida']) ? substr($s['nueva_hora_salida'], 0, 5) : ($s['salida_original'] ? date('H:i', strtotime($s['salida_original'])) : '');
+                                                ?>
+                                                <input type="time" name="nueva_entrada" step="60" value="<?php echo htmlspecialchars($entrada_sugerida); ?>" style="min-width:110px;">
+                                                <input type="time" name="nueva_salida" step="60" value="<?php echo htmlspecialchars($salida_sugerida); ?>" required style="min-width:110px;">
+                                                <button name="accion" value="proponer" class="btn-aprobar">Proponer al empleado</button>
+                                            </form>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="6" class="empty-state">
+                                        <td colspan="7" class="empty-state">
                                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <circle cx="12" cy="12" r="10"></circle>
                                                 <line x1="12" y1="8" x2="12" y2="12"></line>
