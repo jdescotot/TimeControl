@@ -93,6 +93,10 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
             <p>1. Completa el formulario arriba y haz clic en <strong>"Enviar Correos"</strong> para encolar los mensajes.</p>
             <p>2. Los correos se almacenarán en la cola de envío para procesarse en lotes seguros.</p>
             <p>3. Ve a <a href="estado_envios.php" style="font-weight: bold; color: #2196F3;">📊 Estado de envíos</a> para ver la cola y procesar los correos en lotes desde el navegador.</p>
+            <p style="margin-top: 15px; padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 4px;">
+                <strong>🔧 ¿Problemas con el envío?</strong> 
+                <a href="test_smtp.php" style="font-weight: bold; color: #0066cc;">Prueba la conexión SMTP aquí</a>
+            </p>
         </div>
     </div>
 

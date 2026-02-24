@@ -118,7 +118,7 @@ $success = isset($_GET['success']) ? htmlspecialchars($_GET['success']) : null;
         <div class="error-section">
             <h3>❌ Error de envío</h3>
             <div class="error-message">
-                <?= htmlspecialchars($email['last_error']) ?>
+                <?= nl2br(htmlspecialchars($email['last_error'])) ?>
             </div>
             <div class="error-hint">
                 <strong>💡 Posibles soluciones:</strong>
@@ -127,6 +127,7 @@ $success = isset($_GET['success']) ? htmlspecialchars($_GET['success']) : null;
                     <li>Revisa que el servidor SMTP esté disponible</li>
                     <li>Confirma que el correo del destinatario es válido</li>
                     <li>Revisa los logs del servidor para más detalles</li>
+                    <li><strong><a href="test_smtp.php" style="color: #0066cc;">🔧 Usar herramienta de diagnóstico SMTP</a></strong></li>
                 </ul>
             </div>
         </div>

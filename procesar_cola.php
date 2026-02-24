@@ -88,6 +88,7 @@ for ($lote = 0; $lote < $lotes; $lote++) {
 
     foreach ($rows as $row) {
         $mail = new PHPMailer(true);
+        $debug_log = [];
         try {
             // Configurar SMTP
             $mail->CharSet = 'UTF-8';
@@ -98,7 +99,13 @@ for ($lote = 0; $lote < $lotes; $lote++) {
             $mail->Password = $smtp['pass'];
             $mail->SMTPSecure = $smtp['secure'] ?? 'tls';
             $mail->Port = $smtp['port'] ?? 587;
-            $mail->Timeout = 5;
+            $mail->Timeout = 15;
+            
+            // Capturar debug SMTP para mostrar en errores
+            $mail->SMTPDebug = 2;
+            $mail->Debugoutput = function($str, $level) use (&$debug_log) {
+                $debug_log[] = $str;
+            };
 
             $mail->setFrom($from['email'], $from['name']);
             $mail->addAddress($row['recipient_email'], $row['recipient_name']);
@@ -120,8 +127,14 @@ for ($lote = 0; $lote < $lotes; $lote++) {
             $lote_enviados++;
             $total_enviados++;
         } catch (Exception $e) {
+            // Crear mensaje de error detallado con el log SMTP
+            $error_msg = $e->getMessage();
+            if (!empty($debug_log)) {
+                $error_msg .= "\n\n=== DEBUG SMTP ===\n" . implode("\n", $debug_log);
+            }
+            
             $stmt = $pdo->prepare("UPDATE email_queue SET status='failed', attempts = attempts + 1, last_error = ? WHERE id = ?");
-            $stmt->execute([substr($e->getMessage(), 0, 1000), $row['id']]);
+            $stmt->execute([substr($error_msg, 0, 2500), $row['id']]);
             $lote_errores++;
             $total_errores++;
         }

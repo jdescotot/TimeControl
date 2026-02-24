@@ -243,6 +243,13 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
         </div>
         <?php endif; ?>
 
+        <?php if ($failed > 0): ?>
+        <div class="worker-notice" style="background: #fff3cd; border-color: #ffc107; color: #856404;">
+            <strong>⚠️ Hay <?= $failed ?> correo(s) fallidos.</strong> 
+            <a href="test_smtp.php" style="color: #856404; font-weight: bold; text-decoration: underline;">🔧 Probar conexión SMTP</a> para diagnosticar el problema.
+        </div>
+        <?php endif; ?>
+
         <div class="refresh-notice">
             🔄 Esta página se actualiza automáticamente cada 30 segundos
         </div>

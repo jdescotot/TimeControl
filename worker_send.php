@@ -47,6 +47,7 @@ while (true) {
 
     foreach ($rows as $row) {
         $mail = new PHPMailer(true);
+        $debug_log = [];
         try {
             // Configurar SMTP
             $mail->CharSet = 'UTF-8';
@@ -57,6 +58,13 @@ while (true) {
             $mail->Password = $smtp['pass'];
             $mail->SMTPSecure = $smtp['secure'] ?? 'tls';
             $mail->Port = $smtp['port'] ?? 587;
+            
+            // Debug SMTP para terminal
+            $mail->SMTPDebug = 2;
+            $mail->Debugoutput = function($str, $level) use (&$debug_log) {
+                $debug_log[] = $str;
+                echo $str; // También mostrar en consola
+            };
 
             $mail->setFrom($from['email'], $from['name']);
             $mail->addAddress($row['recipient_email'], $row['recipient_name']);
@@ -77,9 +85,18 @@ while (true) {
             $stmt->execute([$row['id']]);
             echo "Enviado a {$row['recipient_email']}\n";
         } catch (Exception $e) {
+            // Crear mensaje de error detallado con el log SMTP
+            $error_msg = $e->getMessage();
+            if (!empty($debug_log)) {
+                $error_msg .= "\n\n=== DEBUG SMTP ===\n" . implode("\n", $debug_log);
+            }
+            
             $stmt = $pdo->prepare("UPDATE email_queue SET status='failed', attempts = attempts + 1, last_error = ? WHERE id = ?");
-            $stmt->execute([substr($e->getMessage(), 0, 1000), $row['id']]);
+            $stmt->execute([substr($error_msg, 0, 2500), $row['id']]);
             echo "Error enviando a {$row['recipient_email']}: " . $e->getMessage() . "\n";
+            if (!empty($debug_log)) {
+                echo "=== DEBUG SMTP ===\n" . implode("\n", $debug_log) . "\n";
+            }
         }
     }
 
