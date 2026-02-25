@@ -58,12 +58,12 @@
         }
 
         #viejoBtn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
         }
 
         #stinkyBtn {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
         }
 
@@ -464,11 +464,11 @@
     <!-- Selector de jugador -->
     <div id="playerSelector">
         <button class="playerButton" id="viejoBtn" onclick="selectPlayer('viejo')">
-            <div class="emoji">👴</div>
+            <div class="emoji">😼</div>
             <div class="name">VIEJO</div>
         </button>
         <button class="playerButton" id="stinkyBtn" onclick="selectPlayer('stinky')">
-            <div class="emoji">😼</div>
+            <div class="emoji">🦝</div>
             <div class="name">STINKY</div>
         </button>
     </div>
@@ -479,11 +479,11 @@
             <h1 id="gameTitle">Scrabble</h1>
             <div class="scores">
                 <div class="score" id="score1">
-                    <h3 id="player1Name">👴 VIEJO</h3>
+                    <h3 id="player1Name">� VIEJO</h3>
                     <p id="player1Score">0</p>
                 </div>
                 <div class="score" id="score2">
-                    <h3 id="player2Name">😼 STINKY</h3>
+                    <h3 id="player2Name">🦝 STINKY</h3>
                     <p id="player2Score">0</p>
                 </div>
             </div>
@@ -530,8 +530,8 @@
         const translations = {
             spanish: {
                 gameTitle: 'Scrabble',
-                player1Name: '👴 VIEJO',
-                player2Name: '😼 STINKY',
+                player1Name: '🐱 VIEJO',
+                player2Name: '🦝 STINKY',
                 controlsTitle: 'Controles',
                 btnPlay: '▶️ Jugar Turno',
                 btnDispute: '⚠️ Disputar Palabra',
@@ -564,8 +564,8 @@
             },
             russian: {
                 gameTitle: 'Эрудит',
-                player1Name: '👴 СТАРИК',
-                player2Name: '😼 ВОНЮЧКА',
+                player1Name: '🐱 СТАРИК',
+                player2Name: '🦝 ВОНЮЧКА',
                 controlsTitle: 'Управление',
                 btnPlay: '▶️ Играть',
                 btnDispute: '⚠️ Оспорить слово',
@@ -1277,3 +1277,5 @@
     </script>
 </body>
 </html>
+
+
