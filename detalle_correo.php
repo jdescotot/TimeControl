@@ -31,7 +31,28 @@ if (!$email) {
     die('Correo no encontrado');
 }
 
-$attachments = json_decode($email['attachments'] ?? '[]', true);
+$attachments_raw = json_decode($email['attachments'] ?? '[]', true);
+if (!is_array($attachments_raw)) { $attachments_raw = []; }
+
+$attachments = [];
+$inline_images = [];
+foreach ($attachments_raw as $att) {
+    if (is_string($att)) {
+        $attachments[] = ['file' => $att, 'name' => $att];
+        continue;
+    }
+    $type = $att['type'] ?? 'attachment';
+    if ($type === 'inline') {
+        $inline_images[] = $att;
+    } else {
+        $file = $att['file'] ?? '';
+        if ($file === '') continue;
+        $attachments[] = [
+            'file' => $file,
+            'name' => $att['name'] ?? $file
+        ];
+    }
+}
 
 // Capturar mensajes de éxito
 $success = isset($_GET['success']) ? htmlspecialchars($_GET['success']) : null;
@@ -146,10 +167,12 @@ $success = isset($_GET['success']) ? htmlspecialchars($_GET['success']) : null;
             <div class="attachments-list">
                 <?php foreach ($attachments as $att): ?>
                     <?php
-                    $path = __DIR__ . '/mail_uploads/' . basename($att);
+                    $file = $att['file'] ?? '';
+                    if ($file === '') continue;
+                    $path = __DIR__ . '/mail_uploads/' . basename($file);
                     $exists = is_file($path);
                     $size = $exists ? filesize($path) : 0;
-                    $ext = pathinfo($att, PATHINFO_EXTENSION);
+                    $ext = pathinfo($file, PATHINFO_EXTENSION);
                     ?>
                     <div class="attachment-item <?= $exists ? '' : 'missing' ?>">
                         <div class="attachment-icon">
@@ -166,13 +189,13 @@ $success = isset($_GET['success']) ? htmlspecialchars($_GET['success']) : null;
                             ?>
                         </div>
                         <div class="attachment-info">
-                            <div class="attachment-name"><?= htmlspecialchars($att) ?></div>
+                            <div class="attachment-name"><?= htmlspecialchars($att['name'] ?? $file) ?></div>
                             <div class="attachment-size">
                                 <?= $exists ? round($size / 1024, 2) . ' KB' : '⚠️ Archivo no encontrado' ?>
                             </div>
                         </div>
                         <?php if ($exists): ?>
-                        <a href="serve_file.php?file=<?= urlencode($att) ?>" class="btn-download" target="_blank">
+                        <a href="serve_file.php?file=<?= urlencode($file) ?>" class="btn-download" target="_blank">
                             ⬇️ Descargar
                         </a>
                         <?php endif; ?>

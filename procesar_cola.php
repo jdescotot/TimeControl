@@ -113,11 +113,31 @@ for ($lote = 0; $lote < $lotes; $lote++) {
             $mail->Subject = $row['subject'];
             $mail->Body = $row['body'];
 
-            // Adjuntos
+            // Adjuntos e imágenes embebidas
             $attachments = json_decode($row['attachments'] ?? '[]', true);
+            if (!is_array($attachments)) { $attachments = []; }
             foreach ($attachments as $att) {
-                $path = __DIR__ . '/mail_uploads/' . basename($att);
-                if (is_file($path)) $mail->addAttachment($path);
+                if (is_string($att)) {
+                    $file = $att;
+                    $type = 'attachment';
+                    $name = basename($att);
+                    $cid = null;
+                } else {
+                    $file = $att['file'] ?? '';
+                    $type = $att['type'] ?? 'attachment';
+                    $name = $att['name'] ?? basename($file);
+                    $cid = $att['cid'] ?? null;
+                }
+
+                if ($file === '') continue;
+                $path = __DIR__ . '/mail_uploads/' . basename($file);
+                if (!is_file($path)) continue;
+
+                if ($type === 'inline' && $cid) {
+                    $mail->addEmbeddedImage($path, $cid, $name);
+                } else {
+                    $mail->addAttachment($path, $name);
+                }
             }
 
             $mail->send();

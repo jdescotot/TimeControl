@@ -32,16 +32,47 @@ if ($subject === '' || $body === '') {
 // Procesar archivos y mover a mail_uploads/
 $upload_dir = __DIR__ . '/mail_uploads';
 if (!is_dir($upload_dir)) { mkdir($upload_dir, 0755, true); }
-$attachments_saved = [];
+
+$attachments_meta = [];
+$inline_map = [];
+
 if (!empty($_FILES['attachments'])) {
     for ($i=0; $i<count($_FILES['attachments']['name']); $i++) {
         if ($_FILES['attachments']['error'][$i] !== UPLOAD_ERR_OK) continue;
         $tmp = $_FILES['attachments']['tmp_name'][$i];
         $orig = basename($_FILES['attachments']['name'][$i]);
         $ext = pathinfo($orig, PATHINFO_EXTENSION);
-        $newname = bin2hex(random_bytes(12)) . '.' . $ext;
+        $newname = bin2hex(random_bytes(12)) . ($ext ? ('.' . $ext) : '');
         if (move_uploaded_file($tmp, $upload_dir . '/' . $newname)) {
-            $attachments_saved[] = $newname;
+            $attachments_meta[] = [
+                'type' => 'attachment',
+                'file' => $newname,
+                'name' => $orig
+            ];
+        }
+    }
+}
+
+if (!empty($_FILES['inline_images'])) {
+    for ($i=0; $i<count($_FILES['inline_images']['name']); $i++) {
+        if ($_FILES['inline_images']['error'][$i] !== UPLOAD_ERR_OK) continue;
+        $tmp = $_FILES['inline_images']['tmp_name'][$i];
+        $orig = basename($_FILES['inline_images']['name'][$i]);
+        $ext = pathinfo($orig, PATHINFO_EXTENSION);
+
+        // Validar que sea imagen
+        if (!@getimagesize($tmp)) continue;
+
+        $newname = bin2hex(random_bytes(12)) . ($ext ? ('.' . $ext) : '');
+        if (move_uploaded_file($tmp, $upload_dir . '/' . $newname)) {
+            $cid = 'img_' . bin2hex(random_bytes(8));
+            $inline_map[$orig] = $cid;
+            $attachments_meta[] = [
+                'type' => 'inline',
+                'file' => $newname,
+                'cid' => $cid,
+                'name' => $orig
+            ];
         }
     }
 }
@@ -49,7 +80,13 @@ if (!empty($_FILES['attachments'])) {
 $insert_stmt = $pdo->prepare("INSERT INTO email_queue (recipient_email, recipient_name, subject, body, attachments, status, attempts, created_at) VALUES (?, ?, ?, ?, ?, 'queued', 0, NOW())");
 
 $enqueued = 0;
-$attachments_json = json_encode($attachments_saved);
+if (!empty($inline_map)) {
+    foreach ($inline_map as $filename => $cid) {
+        $body = str_replace('cid:' . $filename, 'cid:' . $cid, $body);
+    }
+}
+
+$attachments_json = json_encode($attachments_meta, JSON_UNESCAPED_SLASHES);
 
 if ($recipients_source === 'csv' && isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
     $csv = fopen($_FILES['csv_file']['tmp_name'], 'r');

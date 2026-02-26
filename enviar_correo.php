@@ -52,6 +52,10 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
             <div class="form-group">
                 <label>Cuerpo <span>(HTML permitido - requerido)</span></label>
                 <textarea name="body" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                <p style="font-size: 12px; color: #666; margin-top: 6px;">
+                    Para imágenes embebidas usa <code>&lt;img src="cid:nombre_archivo.ext"&gt;</code>.
+                    El sistema reemplaza automáticamente el CID al enviar.
+                </p>
             </div>
 
             <div class="form-group">
@@ -74,6 +78,14 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
             <div class="form-group" id="manual_input" style="display: none;">
                 <label for="manual_emails">Emails manuales:</label>
                 <textarea name="manual_emails" id="manual_emails" rows="5" placeholder="Ingresa un email por línea"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="inline_images">Imágenes embebidas (HTML):</label>
+                <input type="file" name="inline_images[]" id="inline_images" accept="image/*" multiple>
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                    Sube imágenes y referencia su nombre en el HTML con <code>cid:nombre_archivo.ext</code>.
+                </p>
             </div>
 
             <div class="form-group">
@@ -106,6 +118,8 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
         const manualInput = document.getElementById('manual_input');
         const manualEmails = document.getElementById('manual_emails');
         const csvFile = document.getElementById('csv_file');
+        const bodyField = document.querySelector('textarea[name="body"]');
+        const inlineImages = document.getElementById('inline_images');
 
         function syncRecipientBlocks(value) {
             const source = value || recipientsSource.value;
@@ -203,6 +217,29 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
             });
 
             preview.appendChild(fileList);
+        });
+
+        function insertAtCursor(field, text) {
+            if (!field) return;
+            const start = field.selectionStart ?? field.value.length;
+            const end = field.selectionEnd ?? field.value.length;
+            field.value = field.value.slice(0, start) + text + field.value.slice(end);
+            const cursor = start + text.length;
+            field.setSelectionRange(cursor, cursor);
+            field.dispatchEvent(new Event('input'));
+        }
+
+        function buildInlineTag(fileName) {
+            const safeName = fileName.replace(/\s+/g, '_');
+            return `\n<img src="cid:${safeName}" alt="${safeName}">\n`;
+        }
+
+        // Auto insertar etiquetas <img> para imágenes embebidas
+        inlineImages?.addEventListener('change', function (e) {
+            if (!bodyField || !e.target.files || e.target.files.length === 0) return;
+
+            const tags = Array.from(e.target.files).map(file => buildInlineTag(file.name)).join('');
+            insertAtCursor(bodyField, tags);
         });
 
         // Inicializar estado de campos al cargar
