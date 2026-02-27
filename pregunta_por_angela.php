@@ -10,7 +10,7 @@
 
     <!-- ===== CABECERA ===== -->
     <header class="page-header">
-        <img src="vendor/images/logohosturjaen600x.png" alt="Hosturjaén" class="logo-top">
+        <img src="imagenes/logohosturjaen600x.png" alt="Hosturjaén" class="logo-top">
         <p class="org-name">Asociación Empresarial de Hostelería y Turismo de la Provincia de Jaén</p>
         <h1>Protocolo <span>"Pregunta por Ángela"</span></h1>
         <p class="subtitle">Guía de Actuación para el Personal de un Establecimiento de Hostelería</p>
@@ -192,11 +192,16 @@
 
     </main>
 
+    <!-- ===== LOGO INTERMEDIO ===== -->
+    <section class="logo-intermedio">
+        <img src="imagenes/hosteleriaSocial.jpg" alt="Hostelería Social">
+        <img src="imagenes/CajaRural.png" alt="Caja Rural">
+    </section>
+
     <!-- ===== PIE ===== -->
     <footer class="page-footer">
         <div class="footer-logos">
-            <img src="vendor/images/hosteleriaSocial.jpg" alt="Hostelería Social">
-            <img src="vendor/images/CEA.jpg" alt="CEA">
+            <img src="imagenes/CEA.jpg" alt="CEA">
         </div>
         <hr class="footer-divider">
         <p>Hosturjaén — Asociación Empresarial de Hostelería y Turismo de la Provincia de Jaén</p>
