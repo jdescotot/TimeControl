@@ -155,6 +155,8 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
                 <p style="margin: 10px 0 0 0; font-size: 13px; color: #666;">Procesa los correos en lotes seguros para evitar problemas con los servidores SMTP.</p>
             </div>
             <div class="action-buttons">
+                <a href="procesar_cola.php?batch_size=1" class="btn btn-process">▶ 1 Correo</a>
+                <a href="procesar_cola.php?batch_size=29" class="btn btn-process btn-process-multi">▶ 29 Correos</a>
                 <a href="procesar_cola.php?lotes=1" class="btn btn-process">▶ 1 Lote (<?= $mail_config['batch_size'] ?? 50 ?> correos)</a>
                 <a href="procesar_cola.php?lotes=3" class="btn btn-process btn-process-multi">▶ 3 Lotes</a>
                 <a href="procesar_cola.php?lotes=5" class="btn btn-process btn-process-multi">▶ 5 Lotes</a>
@@ -245,8 +247,13 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
 
         <?php if ($failed > 0): ?>
         <div class="worker-notice" style="background: #fff3cd; border-color: #ffc107; color: #856404;">
-            <strong>⚠️ Hay <?= $failed ?> correo(s) fallidos.</strong> 
-            <a href="test_smtp.php" style="color: #856404; font-weight: bold; text-decoration: underline;">🔧 Probar conexión SMTP</a> para diagnosticar el problema.
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>⚠️ Hay <?= $failed ?> correo(s) fallidos.</strong> 
+                    <a href="test_smtp.php" style="color: #856404; font-weight: bold; text-decoration: underline;">🔧 Probar conexión SMTP</a> para diagnosticar el problema.
+                </div>
+                <a href="resetear_fallidos.php" class="btn btn-retry" style="background: #ffc107; color: #856404; border: none; margin-left: 10px;">🔄 Mover a cola</a>
+            </div>
         </div>
         <?php endif; ?>
 

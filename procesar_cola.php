@@ -59,6 +59,11 @@ $lotes = isset($_GET['lotes']) ? (int)$_GET['lotes'] : 1;
 if ($lotes < 1) $lotes = 1;
 if ($lotes > 5) $lotes = 5; // Máximo 5 lotes para evitar timeout
 
+// Si se pasa batch_size por URL, usarlo en lugar del config
+if (isset($_GET['batch_size'])) {
+    $batch_size = max(1, (int)$_GET['batch_size']);
+}
+
 $total_enviados = 0;
 $total_errores = 0;
 $resultados = [];
