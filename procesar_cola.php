@@ -90,21 +90,30 @@ for ($lote = 0; $lote < $lotes; $lote++) {
 
     $lote_enviados = 0;
     $lote_errores = 0;
+    $contador = 0;
+
+    // CREAR UNA SOLA INSTANCIA DE PHPMAILER PARA TODO EL LOTE
+    // Esto mantiene la conexión SMTP abierta y evita bloqueos por volumen
+    $mail = new PHPMailer(true);
+    $mail->CharSet = 'UTF-8';
+    $mail->isSMTP();
+    $mail->Host = $smtp['host'];
+    $mail->SMTPAuth = true;
+    $mail->Username = $smtp['user'];
+    $mail->Password = $smtp['pass'];
+    $mail->SMTPSecure = $smtp['secure'] ?? 'tls';
+    $mail->Port = $smtp['port'] ?? 587;
+    $mail->Timeout = 15;
+    $mail->SMTPKeepAlive = true; // MANTENER CONEXIÓN ABIERTA
+    $mail->setFrom($from['email'], $from['name']);
 
     foreach ($rows as $row) {
-        $mail = new PHPMailer(true);
         $debug_log = [];
         try {
-            // Configurar SMTP
-            $mail->CharSet = 'UTF-8';
-            $mail->isSMTP();
-            $mail->Host = $smtp['host'];
-            $mail->SMTPAuth = true;
-            $mail->Username = $smtp['user'];
-            $mail->Password = $smtp['pass'];
-            $mail->SMTPSecure = $smtp['secure'] ?? 'tls';
-            $mail->Port = $smtp['port'] ?? 587;
-            $mail->Timeout = 15;
+            // Limpiar destinatarios anteriores
+            $mail->clearAddresses();
+            $mail->clearAllRecipients();
+            $mail->clearAttachments();
             
             // Capturar debug SMTP para mostrar en errores
             $mail->SMTPDebug = 2;
@@ -112,7 +121,6 @@ for ($lote = 0; $lote < $lotes; $lote++) {
                 $debug_log[] = $str;
             };
 
-            $mail->setFrom($from['email'], $from['name']);
             $mail->addAddress($row['recipient_email'], $row['recipient_name']);
             $mail->isHTML(true);
             $mail->Subject = $row['subject'];
@@ -151,19 +159,100 @@ for ($lote = 0; $lote < $lotes; $lote++) {
             $stmt->execute([$row['id']]);
             $lote_enviados++;
             $total_enviados++;
+            
+            $contador++;
+            
+            // 🔥 PAUSA CONTRA BLOQUEO DE IONOS 🔥
+            // 1.5 segundos entre cada correo
+            usleep(1500000);
+            
+            // Cada 10 correos, cerrar conexión y esperar más
+            if ($contador % 10 == 0) {
+                $mail->smtpClose();
+                sleep(3); // Pausa de 3 segundos para que IONOS respire
+                // Reconectar para los siguientes correos
+                $mail->smtpConnect();
+            }
+            
         } catch (Exception $e) {
-            // Crear mensaje de error detallado con el log SMTP
             $error_msg = $e->getMessage();
             if (!empty($debug_log)) {
                 $error_msg .= "\n\n=== DEBUG SMTP ===\n" . implode("\n", $debug_log);
             }
             
-            $stmt = $pdo->prepare("UPDATE email_queue SET status='failed', attempts = attempts + 1, last_error = ? WHERE id = ?");
-            $stmt->execute([substr($error_msg, 0, 2500), $row['id']]);
+            // Detectar si es un error permanente (no reintentar) o transitorio
+            $is_permanent_error = false;
+            $is_timeout = false;
+            
+            // Errores permanentes: destinatario inválido, no existe, etc
+            $permanent_patterns = [
+                '/Invalid email address/i',
+                'does not exist',
+                'no mail from',
+                'mailbox not found',
+                'user unknown',
+                'invalid recipient',
+                'undeliverable',
+                '550',  // Mailbox unavailable
+                '551',  // User not local
+                '553',  // Mailbox name not allowed
+                '555',  // MAIL FROM/RCPT TO parameters not recognized
+            ];
+            
+            // Errores de timeout/transitorios
+            $timeout_patterns = [
+                'timeout',
+                'Connection timed out',
+                'SMTP connect',
+                'Could not connect',
+                'SMTP Error',
+                '421',  // Service not available
+                '451',  // Requested action aborted
+            ];
+            
+            foreach ($permanent_patterns as $pattern) {
+                if (stripos($error_msg, $pattern) !== false) {
+                    $is_permanent_error = true;
+                    break;
+                }
+            }
+            
+            foreach ($timeout_patterns as $pattern) {
+                if (stripos($error_msg, $pattern) !== false) {
+                    $is_timeout = true;
+                    break;
+                }
+            }
+            
+            // Si es error permanente, marcar como 'permanent_error' (NO se va a poder resetear)
+            if ($is_permanent_error) {
+                $stmt = $pdo->prepare("UPDATE email_queue SET status='permanent_error', last_error = ? WHERE id = ?");
+                $stmt->execute([substr($error_msg, 0, 2500), $row['id']]);
+            } else {
+                // Para errores transitorios/timeout: NO incrementar attempts
+                // Ya estamos esperando y reconectando, no tiene sentido reintentar si IONOS nos bloquea
+                $stmt = $pdo->prepare("UPDATE email_queue SET status='failed', last_error = ? WHERE id = ?");
+                $stmt->execute([substr($error_msg, 0, 2500), $row['id']]);
+            }
+            
             $lote_errores++;
             $total_errores++;
+            
+            $contador++;
+            
+            // Pausa también después de error
+            usleep(1500000);
+            
+            if ($contador % 10 == 0) {
+                $mail->smtpClose();
+                sleep(3);
+                $mail->smtpConnect();
+            }
         }
     }
+
+    // CERRAR LA CONEXIÓN SMTP AL FINAL DEL LOTE
+    $mail->smtpClose();
 
     $resultados[] = "Lote " . ($lote + 1) . ": $lote_enviados enviados, $lote_errores errores";
 }

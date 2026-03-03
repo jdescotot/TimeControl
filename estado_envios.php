@@ -31,6 +31,7 @@ $queued = $stats['queued'] ?? 0;
 $sending = $stats['sending'] ?? 0;
 $sent = $stats['sent'] ?? 0;
 $failed = $stats['failed'] ?? 0;
+$permanent_error = $stats['permanent_error'] ?? 0;
 
 // Filtro de estado
 $filter = $_GET['filter'] ?? 'all';
@@ -124,7 +125,15 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
                 <div class="stat-icon">❌</div>
                 <div class="stat-info">
                     <div class="stat-value"><?= number_format($failed) ?></div>
-                    <div class="stat-label">Fallidos</div>
+                    <div class="stat-label">Fallidos (SMTP)</div>
+                </div>
+            </div>
+
+            <div class="stat-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);">
+                <div class="stat-icon">🚫</div>
+                <div class="stat-info">
+                    <div class="stat-value"><?= number_format($permanent_error) ?></div>
+                    <div class="stat-label">Error Permanente</div>
                 </div>
             </div>
         </div>
@@ -145,7 +154,8 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
             <a href="?filter=queued" class="filter-btn <?= $filter === 'queued' ? 'active' : '' ?>">En cola</a>
             <a href="?filter=sending" class="filter-btn <?= $filter === 'sending' ? 'active' : '' ?>">Enviando</a>
             <a href="?filter=sent" class="filter-btn <?= $filter === 'sent' ? 'active' : '' ?>">Enviados</a>
-            <a href="?filter=failed" class="filter-btn <?= $filter === 'failed' ? 'active' : '' ?>">Fallidos</a>
+            <a href="?filter=failed" class="filter-btn <?= $filter === 'failed' ? 'active' : '' ?>">Fallidos (SMTP)</a>
+            <a href="?filter=permanent_error" class="filter-btn <?= $filter === 'permanent_error' ? 'active' : '' ?>">Error Permanente</a>
         </div>
 
         <?php if ($queued > 0): ?>
@@ -204,7 +214,8 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
                                 'queued' => '⏳ En cola',
                                 'sending' => '🔄 Enviando',
                                 'sent' => '✅ Enviado',
-                                'failed' => '❌ Fallido'
+                                'failed' => '❌ Fallido (SMTP)',
+                                'permanent_error' => '🚫 Error Permanente'
                             ][$email['status']] ?? $email['status'];
                             ?>
                             <span class="status-badge <?= $status_class ?>"><?= $status_label ?></span>
@@ -249,11 +260,19 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
         <div class="worker-notice" style="background: #fff3cd; border-color: #ffc107; color: #856404;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <strong>⚠️ Hay <?= $failed ?> correo(s) fallidos.</strong> 
+                    <strong>⚠️ Hay <?= $failed ?> correo(s) fallidos por SMTP.</strong> 
                     <a href="test_smtp.php" style="color: #856404; font-weight: bold; text-decoration: underline;">🔧 Probar conexión SMTP</a> para diagnosticar el problema.
                 </div>
                 <a href="resetear_fallidos.php" class="btn btn-retry" style="background: #ffc107; color: #856404; border: none; margin-left: 10px;">🔄 Mover a cola</a>
             </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($permanent_error > 0): ?>
+        <div class="worker-notice" style="background: #f8d7da; border-color: #f5c6cb; color: #721c24;">
+            <strong>🚫 Hay <?= $permanent_error ?> correo(s) con error permanente:</strong> 
+            Destinatarios inválidos, no existen o han sido rechazados permanentemente. 
+            <a href="?filter=permanent_error" style="color: #721c24; font-weight: bold; text-decoration: underline;">Ver lista</a> - NO se reintentan automáticamente.
         </div>
         <?php endif; ?>
 
