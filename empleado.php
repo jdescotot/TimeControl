@@ -110,6 +110,7 @@ $stmt_pendientes_empleado = $pdo->prepare("
 ");
 $stmt_pendientes_empleado->execute([$empleado_id]);
 $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -259,7 +260,7 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                             <div class="jornada-info" style="margin-bottom: 12px;">
                                 <div class="info-item">
                                     <span class="label">Entrada:</span>
-                                    <span class="value"><?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
+                                    <span class="value"><?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i:s', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
                                 </div>
                             </div>
                             <div class="marcacion-form" style="display: flex; gap: 12px; flex-wrap: wrap;">
@@ -277,7 +278,7 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <polyline points="12 6 12 12 16 14"></polyline>
                                 </svg>
-                                <span>Jornada en curso - Entrada marcada: <?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
+                                <span>Jornada en curso - Entrada marcada: <?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i:s', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
                             </div>
                             <form action="marcar.php" method="POST" class="marcacion-form">
                                 <input type="hidden" name="accion" value="salida">
@@ -302,11 +303,11 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                         <div class="jornada-info">
                             <div class="info-item">
                                 <span class="label">Entrada:</span>
-                                <span class="value"><?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
+                                <span class="value"><?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i:s', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
                             </div>
                             <div class="info-item">
                                 <span class="label">Salida:</span>
-                                <span class="value"><?php echo $registro_hoy && $registro_hoy['salida'] ? date('H:i', strtotime($registro_hoy['salida'])) : '—'; ?></span>
+                                <span class="value"><?php echo $registro_hoy && $registro_hoy['salida'] ? date('H:i:s', strtotime($registro_hoy['salida'])) : '—'; ?></span>
                             </div>
                         </div>
                         <form action="marcar.php" method="POST" class="marcacion-form" style="margin-top: 12px;">
@@ -348,8 +349,8 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                         <td data-label="Fecha"><?php echo date('d/m/Y', strtotime($s['fecha'])); ?></td>
                                         <td data-label="Horario Original">
                                             <small>
-                                                <strong>E:</strong> <?php echo $s['entrada'] ? date('H:i', strtotime($s['entrada'])) : '—'; ?><br>
-                                                <strong>S:</strong> <?php echo $s['salida'] ? date('H:i', strtotime($s['salida'])) : '—'; ?>
+                                                <strong>E:</strong> <?php echo $s['entrada'] ? date('H:i:s', strtotime($s['entrada'])) : '—'; ?><br>
+                                                <strong>S:</strong> <?php echo $s['salida'] ? date('H:i:s', strtotime($s['salida'])) : '—'; ?>
                                             </small>
                                         </td>
                                         <td data-label="Horario Propuesto" class="horario-highlight">
@@ -408,8 +409,8 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                     foreach ($marcaciones as $fila):
                                         $entrada_dt = $fila['entrada'] ? new DateTime($fila['entrada']) : null;
                                         $salida_dt = $fila['salida'] ? new DateTime($fila['salida']) : null;
-                                        $entrada = $entrada_dt ? $entrada_dt->format('H:i') : null;
-                                        $salida = $salida_dt ? $salida_dt->format('H:i') : null;
+                                        $entrada = $entrada_dt ? $entrada_dt->format('H:i:s') : null;
+                                        $salida = $salida_dt ? $salida_dt->format('H:i:s') : null;
                                         $entrada_ajustada = $fila['nueva_hora_entrada'];
                                         $salida_ajustada = $fila['nueva_hora_salida'];
                                         $tiene_ajuste_entrada = !empty($entrada_ajustada);
@@ -430,27 +431,27 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                                 $salida_calcular_dt->modify('+1 day');
                                             }
                                             $intervalo = $entrada_calcular_dt->diff($salida_calcular_dt);
-                                            $horas = $intervalo->format('%h horas %i minutos');
+                                            $horas = $intervalo->format('%h horas %i minutos %s segundos');
                                         }
                                 ?>
                                     <tr>
                                         <td data-label="Fecha"><?= htmlspecialchars($fila['fecha']) ?></td>
                                         <td data-label="Entrada">
                                             <?php if ($tiene_ajuste_entrada): ?>
-                                                <span style="text-decoration: line-through; opacity: 0.6; font-size: 12px;"><?= $entrada ? substr($entrada, 0, 5) : '—' ?></span><br>
+                                                <span style="text-decoration: line-through; opacity: 0.6; font-size: 12px;"><?= $entrada ? substr($entrada, 0, 8) : '—' ?></span><br>
                                                 <strong style="color: #667eea;"><?= substr($entrada_ajustada, 0, 5) ?></strong>
                                                 <span style="background: #667eea; color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 3px;" title="<?= htmlspecialchars($fila['motivo']) ?>">Ajustado</span>
                                             <?php else: ?>
-                                                <?= $entrada ? substr($entrada, 0, 5) : '—' ?>
+                                                <?= $entrada ? substr($entrada, 0, 8) : '—' ?>
                                             <?php endif; ?>
                                         </td>
                                         <td data-label="Salida">
                                             <?php if ($tiene_ajuste_salida): ?>
-                                                <span style="text-decoration: line-through; opacity: 0.6; font-size: 12px;"><?= $salida ? substr($salida, 0, 5) : '—' ?></span><br>
+                                                <span style="text-decoration: line-through; opacity: 0.6; font-size: 12px;"><?= $salida ? substr($salida, 0, 8) : '—' ?></span><br>
                                                 <strong style="color: #667eea;"><?= substr($salida_ajustada, 0, 5) ?></strong>
                                                 <span style="background: #667eea; color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 3px;" title="<?= htmlspecialchars($fila['motivo']) ?>">Ajustado</span>
                                             <?php else: ?>
-                                                <?= $salida ? substr($salida, 0, 5) : '—' ?>
+                                                <?= $salida ? substr($salida, 0, 8) : '—' ?>
                                             <?php endif; ?>
                                         </td>
                                         <td data-label="Horas"><?= $horas ?></td>

@@ -686,3 +686,279 @@ body {
         margin-left: 4px;
     }
 }
+
+/* ==================== PANEL DE RESUMEN DE HORAS ==================== */
+.horas-summary-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hora-actual-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 40px 30px;
+    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3), 0 6px 12px rgba(118, 75, 162, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hora-actual-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at top right, rgba(255,255,255,0.1), transparent);
+    pointer-events: none;
+}
+
+.hora-label {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.95;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 1;
+}
+
+.hora-grande {
+    font-size: 64px;
+    font-weight: 800;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 12px;
+    letter-spacing: 3px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    line-height: 1;
+}
+
+.fecha-label {
+    font-size: 12px;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+    font-weight: 500;
+}
+
+.horas-trabajadas-box {
+    display: contents;
+}
+
+.semana-card,
+.mes-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid #f0f2f5;
+    position: relative;
+}
+
+.semana-card::before,
+.mes-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 16px 16px 0 0;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.semana-card:hover,
+.mes-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    border-color: #667eea;
+}
+
+.semana-card:hover::before,
+.mes-card:hover::before {
+    opacity: 1;
+}
+
+.card-valor {
+    font-size: 44px;
+    font-weight: 800;
+    color: #667eea;
+    margin-bottom: 12px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.card-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.card-periodo {
+    font-size: 11px;
+    color: #a0aec0;
+    font-weight: 500;
+}
+
+/* Responsive para panel de horas */
+@media (max-width: 1200px) {
+    .horas-summary-panel {
+        grid-template-columns: 1fr;
+    }
+    
+    .hora-actual-box {
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 1024px) {
+    .horas-summary-panel {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .hora-actual-box {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .horas-summary-panel {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .hora-actual-box {
+        padding: 28px 20px;
+        grid-column: auto;
+    }
+    
+    .hora-grande {
+        font-size: 48px;
+        letter-spacing: 2px;
+    }
+    
+    .semana-card,
+    .mes-card {
+        padding: 20px;
+    }
+    
+    .card-valor {
+        font-size: 36px;
+    }
+    
+    .card-label {
+        font-size: 12px;
+    }
+    
+    .card-periodo {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hora-grande {
+        font-size: 40px;
+    }
+    
+    .card-valor {
+        font-size: 28px;
+    }
+    
+    .semana-card,
+    .mes-card {
+        padding: 16px;
+    }
+}
+
+.semana-card,
+.mes-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid #f0f2f5;
+    position: relative;
+}
+
+.semana-card::before,
+.mes-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 16px 16px 0 0;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.semana-card:hover,
+.mes-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    border-color: #667eea;
+}
+
+.semana-card:hover::before,
+.mes-card:hover::before {
+    opacity: 1;
+}
+
+.card-valor {
+    font-size: 44px;
+    font-weight: 800;
+    color: #667eea;
+    margin-bottom: 12px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.card-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.card-periodo {
+    font-size: 11px;
+    color: #a0aec0;
+    font-weight: 500;
+}

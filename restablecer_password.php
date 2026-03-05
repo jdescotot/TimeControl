@@ -2,17 +2,24 @@
 session_start();
 require_once 'config.php';
 
+// Headers de seguridad
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
 $token = $_GET['token'] ?? '';
 $mensaje_error = '';
 $mensaje_exito = '';
 $token_valido = false;
+$user = null;
+$ip_address = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
 if (empty($token)) {
-    $mensaje_error = 'Token de recuperación inválido';
+    $mensaje_error = 'Token de recuperación inválido. Por favor solicita un nuevo enlace.';
 } else {
     // Verificar que el token existe y no ha expirado
     $stmt = $pdo->prepare("
-        SELECT id, username, reset_token_expira 
+        SELECT id, username, email, correo, nombre, reset_token_expira 
         FROM usuarios 
         WHERE reset_token = ? AND reset_token_expira > NOW()
     ");
@@ -20,7 +27,7 @@ if (empty($token)) {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user) {
-        $mensaje_error = 'El enlace de recuperación ha expirado o es inválido';
+        $mensaje_error = 'El enlace de recuperación ha expirado o es inválido. Los enlaces expiran después de 1 hora por seguridad.';
     } else {
         $token_valido = true;
     }
@@ -54,7 +61,175 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
             ");
             $stmt->execute([$password_hash, $token]);
 
+            // ===============================================
+            // REGISTRAR EN AUDITORÍA
+            // ===============================================
+            $stmt = $pdo->prepare("INSERT INTO password_reset_log 
+                (user_id, username, token_used_at, ip_address, user_agent, success, action) 
+                VALUES (?, ?, NOW(), ?, ?, 1, 'password_changed')");
+            $stmt->execute([
+                $user['id'], 
+                $user['username'], 
+                $ip_address, 
+                $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
+            ]);
+
+            // ===============================================
+            // ENVIAR EMAIL DE NOTIFICACIÓN DE CAMBIO
+            // ===============================================
+            $email_destino = $user['email'] ?? $user['correo'] ?? null;
+            
+            if ($email_destino) {
+                $asunto_notif = "🔐 Tu contraseña ha sido cambiada - Control Horario";
+                
+                $mensaje_notif = "
+                <!DOCTYPE html>
+                <html lang='es'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <style>
+                        body { 
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                            line-height: 1.6; 
+                            color: #2d3748; 
+                            background-color: #f7fafc;
+                            margin: 0;
+                            padding: 0;
+                        }
+                        .container { 
+                            max-width: 600px; 
+                            margin: 40px auto; 
+                            background: white;
+                            border-radius: 12px;
+                            overflow: hidden;
+                            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                        }
+                        .header { 
+                            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); 
+                            color: white; 
+                            padding: 40px 30px; 
+                            text-align: center; 
+                        }
+                        .header h1 {
+                            margin: 0;
+                            font-size: 28px;
+                            font-weight: 600;
+                        }
+                        .content { 
+                            padding: 40px 30px; 
+                        }
+                        .content p {
+                            margin: 0 0 16px 0;
+                            color: #4a5568;
+                        }
+                        .username {
+                            color: #38a169;
+                            font-weight: 600;
+                        }
+                        .info {
+                            background: #f0fff4;
+                            border-left: 4px solid #48bb78;
+                            padding: 15px;
+                            border-radius: 8px;
+                            margin: 20px 0;
+                            font-size: 14px;
+                        }
+                        .warning {
+                            background: #fff5f5;
+                            border-left: 4px solid #f56565;
+                            padding: 15px;
+                            border-radius: 8px;
+                            margin: 20px 0;
+                        }
+                        .warning strong {
+                            color: #c53030;
+                        }
+                        .btn-container {
+                            text-align: center;
+                            margin: 30px 0;
+                        }
+                        .btn { 
+                            display: inline-block; 
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white !important; 
+                            padding: 14px 40px; 
+                            text-decoration: none; 
+                            border-radius: 8px; 
+                            font-weight: 600;
+                            font-size: 16px;
+                        }
+                        .footer { 
+                            text-align: center; 
+                            padding: 30px; 
+                            background: #f7fafc;
+                            color: #718096; 
+                            font-size: 13px; 
+                            border-top: 1px solid #e2e8f0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>✅ Contraseña Actualizada</h1>
+                        </div>
+                        <div class='content'>
+                            <p>Hola <span class='username'>" . htmlspecialchars($user['username']) . "</span>,</p>
+                            
+                            <p>Te confirmamos que la contraseña de tu cuenta en el sistema de Control Horario <strong>ha sido cambiada exitosamente</strong>.</p>
+                            
+                            <div class='info'>
+                                <strong>📋 Detalles del cambio:</strong><br>
+                                • Usuario: " . htmlspecialchars($user['username']) . "<br>
+                                • Fecha y hora: " . date('d/m/Y H:i:s') . "<br>
+                                • Dirección IP: " . htmlspecialchars($ip_address) . "
+                            </div>
+                            
+                            <p>Ya puedes iniciar sesión con tu nueva contraseña:</p>
+                            
+                            <div class='btn-container'>
+                                <a href='https://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/index.php' class='btn'>Ir al inicio de sesión</a>
+                            </div>
+                            
+                            <div class='warning'>
+                                <strong>⚠️ ¿No fuiste tú?</strong><br>
+                                Si no realizaste este cambio, tu cuenta puede estar comprometida. Contacta inmediatamente con el administrador del sistema y solicita un nuevo cambio de contraseña.
+                            </div>
+                            
+                            <p style='margin-top: 30px; color: #718096; font-size: 14px;'>
+                                Este es un correo automático de seguridad. Por favor no respondas a este mensaje.
+                            </p>
+                        </div>
+                        <div class='footer'>
+                            <p><strong>Sistema de Control Horario</strong></p>
+                            <p>© " . date('Y') . " - Todos los derechos reservados</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                ";
+
+                // Encolar email de notificación
+                $recipient_name = !empty($user['nombre']) ? $user['nombre'] : $user['username'];
+                
+                $stmt = $pdo->prepare("INSERT INTO email_queue 
+                    (recipient_email, recipient_name, subject, body, status, attempts, created_at) 
+                    VALUES (?, ?, ?, ?, 'queued', 0, NOW())");
+                
+                $stmt->execute([
+                    $email_destino,
+                    $recipient_name,
+                    $asunto_notif,
+                    $mensaje_notif
+                ]);
+            }
+
             $mensaje_exito = 'Contraseña actualizada exitosamente. Redirigiendo al inicio de sesión...';
+            
+            // Regenerar ID de sesión por seguridad
+            session_regenerate_id(true);
+            
             header("refresh:3;url=index.php");
         } catch (Exception $e) {
             error_log("Error al restablecer contraseña: " . $e->getMessage());
