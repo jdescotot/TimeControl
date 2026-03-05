@@ -36,8 +36,10 @@ $permanent_error = $stats['permanent_error'] ?? 0;
 // Filtro de estado
 $filter = $_GET['filter'] ?? 'all';
 $where = '';
+$params = [];
 if ($filter !== 'all') {
-    $where = "WHERE status = " . $pdo->quote($filter);
+    $where = "WHERE status = ?";
+    $params[] = $filter;
 }
 
 // Paginación
@@ -45,16 +47,26 @@ $page = max(1, (int)($_GET['page'] ?? 1));
 $per_page = 50;
 $offset = ($page - 1) * $per_page;
 
-// Obtener correos
-$stmt = $pdo->query("
-    SELECT * FROM email_queue
-    $where
-    ORDER BY id DESC
-    LIMIT $per_page OFFSET $offset
-");
+// Obtener correos (ordenados por created_at descendente para mostrar los más recientes primero)
+$sql = "SELECT * FROM email_queue $where ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?";
+$stmt = $pdo->prepare($sql);
+$bindParams = array_merge($params, [$per_page, $offset]);
+foreach ($bindParams as $i => $param) {
+    $stmt->bindValue($i + 1, $param, is_int($param) ? PDO::PARAM_INT : PDO::PARAM_STR);
+}
+$stmt->execute();
 $emails = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$total_filtered = $pdo->query("SELECT COUNT(*) FROM email_queue $where")->fetchColumn();
+// Contar total filtrado
+$countSql = "SELECT COUNT(*) FROM email_queue $where";
+$countStmt = $pdo->prepare($countSql);
+if (!empty($params)) {
+    foreach ($params as $i => $param) {
+        $countStmt->bindValue($i + 1, $param, PDO::PARAM_STR);
+    }
+}
+$countStmt->execute();
+$total_filtered = $countStmt->fetchColumn();
 $total_pages = ceil($total_filtered / $per_page);
 
 // Capturar mensajes de éxito o error
@@ -66,6 +78,7 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="refresh" content="30">
     <title>Estado de envíos - Sistema de correo masivo</title>
     <link rel="stylesheet" href="estado_envios.css">
 </head>
@@ -137,6 +150,17 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
                 </div>
             </div>
         </div>
+
+        <?php 
+        // Verificar si hay correos recientes (últimas 24 horas)
+        $recent_check = $pdo->query("SELECT COUNT(*) FROM email_queue WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)")->fetchColumn();
+        if ($recent_check == 0 && $total > 0):
+        ?>
+        <div class="worker-notice" style="background: #fff3cd; border-color: #ffc107; color: #856404;">
+            <strong>⚠️ Advertencia:</strong> No se han encolado correos nuevos en las últimas 24 horas. 
+            Todos los correos mostrados son antiguos. Si esperabas correos nuevos, verifica el proceso de encolado.
+        </div>
+        <?php endif; ?>
 
         <?php if ($sent > 0): ?>
         <div class="progress-bar-container">
@@ -221,9 +245,9 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
                             <span class="status-badge <?= $status_class ?>"><?= $status_label ?></span>
                         </td>
                         <td class="attempts"><?= $email['attempts'] ?></td>
-                        <td class="date"><?= date('d/m/Y H:i', strtotime($email['created_at'])) ?></td>
+                        <td class="date"><?= date('d/m/Y H:i:s', strtotime($email['created_at'])) ?></td>
                         <td class="date">
-                            <?= $email['sent_at'] ? date('d/m/Y H:i', strtotime($email['sent_at'])) : '-' ?>
+                            <?= $email['sent_at'] ? date('d/m/Y H:i:s', strtotime($email['sent_at'])) : '-' ?>
                         </td>
                         <td>
                             <a href="detalle_correo.php?id=<?= $email['id'] ?>" class="btn-detail">Ver detalle</a>
@@ -277,15 +301,8 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
         <?php endif; ?>
 
         <div class="refresh-notice">
-            🔄 Esta página se actualiza automáticamente cada 30 segundos
+            🔄 Esta página se actualiza automáticamente cada 30 segundos (última actualización: <?= date('H:i:s') ?>)
         </div>
     </div>
-
-    <script>
-        // Auto-refresh cada 30 segundos
-        setTimeout(function() {
-            location.reload();
-        }, 30000);
-    </script>
 </body>
 </html>

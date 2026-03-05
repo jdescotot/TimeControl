@@ -2,6 +2,11 @@
 session_start();
 require_once 'config.php';
 
+// Headers de seguridad
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
 function columnas_perfil_usuario(PDO $pdo): array {
     $stmt = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'");
     $cols = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -87,6 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$password_hash, $_SESSION['user_id']]);
 
                 $mensaje_exito = 'Contraseña actualizada exitosamente';
+                
+                // Regenerar ID de sesión por seguridad
+                session_regenerate_id(true);
 
                 $destino = 'politica_datos.php';
 
