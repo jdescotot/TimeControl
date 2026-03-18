@@ -9,6 +9,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $empleado_id = $_SESSION['user_id'];
+    $dias_correccion_horario = 5;
     $marcacion_id = $_POST['marcacion_id'] ?? 0;
     $nueva_entrada = trim($_POST['nueva_entrada'] ?? '');
     $nueva_salida = trim($_POST['nueva_salida'] ?? '');
@@ -40,6 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $fecha_base = date('Y-m-d', strtotime($marcacion['entrada']));
+        $fecha_marcacion = new DateTime($fecha_base);
+        $fecha_minima_correccion = (new DateTime('today'))
+            ->modify("-{$dias_correccion_horario} days");
+        $fecha_maxima_correccion = new DateTime('today');
+
+        if ($fecha_marcacion < $fecha_minima_correccion || $fecha_marcacion > $fecha_maxima_correccion) {
+            die('Solo puedes solicitar correcciones dentro del rango permitido de fechas.');
+        }
 
         if ($solo_salida) {
             $entrada_dt = new DateTime($marcacion['entrada']);

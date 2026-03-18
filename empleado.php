@@ -6,6 +6,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
     exit;
 }
 $empleado_id = $_SESSION['user_id'];
+$dias_correccion_horario = 5;
 
 // Obtener el nombre del empleado si existe
 $stmt_nombre = $pdo->prepare("SELECT nombre FROM usuarios WHERE id = ?");
@@ -69,6 +70,9 @@ if (perfil_incompleto($pdo, $empleado_id)) {
     exit;
 }
 $hoy = date('Y-m-d');
+$fecha_minima_correccion = (new DateTime($hoy))
+    ->modify("-{$dias_correccion_horario} days")
+    ->format('Y-m-d');
 // Verificar si ya marcó entrada hoy (y si ya salió)
 $stmt = $pdo->prepare("
     SELECT id, entrada, salida
@@ -380,6 +384,14 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                     <h2>Historial de Marcaciones</h2>
                 </div>
                 <div class="card-body">
+                    <div class="status-message" style="margin-bottom: 15px; background: rgba(102, 126, 234, 0.08); color: #4c51bf; border: 1px solid rgba(102, 126, 234, 0.18);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 8v4"></path>
+                            <path d="M12 16h.01"></path>
+                        </svg>
+                        <span>Puedes corregir marcaciones desde el <?php echo date('d/m/Y', strtotime($fecha_minima_correccion)); ?> hasta hoy.</span>
+                    </div>
                     <div class="table-container">
                         <table class="data-table">
                             <thead>
@@ -403,8 +415,7 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                 ");
                                 $stmt->execute([$empleado_id]);
                                 $marcaciones = $stmt->fetchAll();
-                                
-                                $es_ultimo = true; // Flag para detectar la última entrada
+
                                 if (count($marcaciones) > 0):
                                     foreach ($marcaciones as $fila):
                                         $entrada_dt = $fila['entrada'] ? new DateTime($fila['entrada']) : null;
@@ -433,6 +444,8 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                             $intervalo = $entrada_calcular_dt->diff($salida_calcular_dt);
                                             $horas = $intervalo->format('%h horas %i minutos %s segundos');
                                         }
+
+                                        $puede_corregir = $fila['fecha'] >= $fecha_minima_correccion && $fila['fecha'] <= $hoy;
                                 ?>
                                     <tr>
                                         <td data-label="Fecha"><?= htmlspecialchars($fila['fecha']) ?></td>
@@ -456,7 +469,7 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                         </td>
                                         <td data-label="Horas"><?= $horas ?></td>
                                         <td data-label="Acción">
-                                            <?php if ($es_ultimo): ?>
+                                            <?php if ($puede_corregir): ?>
                                                 <button class="btn-request" onclick="abrirSolicitud(<?= $fila['id'] ?>, '<?= $entrada ?? '' ?>', '<?= $salida ?? '' ?>')">
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -464,9 +477,8 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                                     </svg>
                                                     Corregir
                                                 </button>
-                                                <?php $es_ultimo = false; ?>
                                             <?php else: ?>
-                                                —
+                                                <span style="opacity: 0.7;">Fuera de rango</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
