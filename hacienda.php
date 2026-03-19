@@ -95,6 +95,11 @@ $meses = [
 
 $primer_dia = sprintf('%04d-%02d-01', $anio_filtro, $mes_filtro);
 $ultimo_dia = date('Y-m-d', strtotime($primer_dia . ' +1 month -1 day'));
+$export_query = http_build_query([
+    'busqueda' => $busqueda,
+    'mes' => $mes_filtro,
+    'año' => $anio_filtro,
+]);
 
 $query_duenos = "
     SELECT
@@ -288,6 +293,15 @@ $duenos_sin_uso = $total_duenos - $duenos_en_uso;
                             </svg>
                             Filtrar
                         </button>
+
+                        <a href="export_reporte_hacienda.php?<?php echo htmlspecialchars($export_query, ENT_QUOTES, 'UTF-8'); ?>" class="btn-export">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Exportar Excel
+                        </a>
                     </form>
                 </div>
             </div>

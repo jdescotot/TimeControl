@@ -6,7 +6,7 @@ $password = 'Hostur.1710';
 
 // Clave compartida para acceso al panel maestro (hacienda.php)
 if (!defined('PANEL_MAESTRO_PASSWORD')) {
-    define('PANEL_MAESTRO_PASSWORD', 'PanelMaestro2026');
+    define('PANEL_MAESTRO_PASSWORD', 'Hostur.1710');
 }
 
 try {
