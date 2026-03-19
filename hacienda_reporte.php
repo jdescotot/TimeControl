@@ -2,7 +2,10 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'hacienda') {
+$has_hacienda_role = isset($_SESSION['rol']) && $_SESSION['rol'] === 'hacienda';
+$has_master_access = !empty($_SESSION['hacienda_master_access']);
+
+if (!$has_hacienda_role && !$has_master_access) {
     header('Location: index.php');
     exit;
 }

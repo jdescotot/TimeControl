@@ -2,62 +2,89 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'hacienda') {
-    header('Location: index.php');
+function formatear_fecha($valor, $formato = 'd/m/Y H:i')
+{
+    if (empty($valor)) {
+        return 'Sin fecha';
+    }
+
+    try {
+        return (new DateTime($valor))->format($formato);
+    } catch (Exception $e) {
+        return 'Fecha invalida';
+    }
+}
+
+if (isset($_GET['logout_hacienda'])) {
+    unset($_SESSION['hacienda_master_access']);
+    header('Location: hacienda.php');
     exit;
 }
 
-// Obtener filtros
-$busqueda = $_GET['busqueda'] ?? '';
-$mes_filtro = $_GET['mes'] ?? date('m');
-$año_filtro = $_GET['año'] ?? date('Y');
+$master_error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['master_password'])) {
+    $master_password = trim((string)($_POST['master_password'] ?? ''));
 
-// Obtener todos los dueños con sus estadísticas
-$query_duenos = "
-    SELECT 
-        u.id,
-        u.username,
-        u.created_at,
-        COUNT(DISTINCT emp.id) as total_empleados
-    FROM usuarios u
-    LEFT JOIN usuarios emp ON emp.propietario_id = u.id AND emp.rol = 'empleado'
-    WHERE u.rol = 'dueño'
-";
+    if (defined('PANEL_MAESTRO_PASSWORD') && hash_equals(PANEL_MAESTRO_PASSWORD, $master_password)) {
+        $_SESSION['hacienda_master_access'] = true;
+        header('Location: hacienda.php');
+        exit;
+    }
 
-if ($busqueda) {
-    $query_duenos .= " AND u.username LIKE :busqueda";
+    $master_error = 'Clave incorrecta. Intenta nuevamente.';
 }
 
-$query_duenos .= " GROUP BY u.id ORDER BY u.username";
+$has_hacienda_role = isset($_SESSION['rol']) && $_SESSION['rol'] === 'hacienda';
+$has_master_access = !empty($_SESSION['hacienda_master_access']) || $has_hacienda_role;
 
-$stmt_duenos = $pdo->prepare($query_duenos);
-if ($busqueda) {
-    $stmt_duenos->bindValue(':busqueda', "%$busqueda%");
+if (!$has_master_access):
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Panel Maestro</title>
+    <link rel="stylesheet" href="empleado.css">
+    <link rel="stylesheet" href="hacienda.css">
+</head>
+<body>
+    <div class="container">
+        <main class="main-content master-login-wrapper">
+            <div class="card master-login-card">
+                <div class="card-body">
+                    <h1>Panel Maestro</h1>
+                    <p>Ingresa la clave compartida para ver la actividad de todos los dueños y empleados.</p>
+
+                    <?php if (!empty($master_error)): ?>
+                        <div class="master-login-error"><?php echo htmlspecialchars($master_error); ?></div>
+                    <?php endif; ?>
+
+                    <form method="POST" action="" class="master-login-form">
+                        <label for="master_password">Clave maestra</label>
+                        <input type="password" id="master_password" name="master_password" required autocomplete="current-password">
+                        <button type="submit" class="btn-filter">Entrar al panel</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+<?php
+exit;
+endif;
+
+$busqueda = trim((string)($_GET['busqueda'] ?? ''));
+$mes_filtro = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('n');
+$anio_filtro = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
+
+if ($mes_filtro < 1 || $mes_filtro > 12) {
+    $mes_filtro = (int)date('n');
 }
-$stmt_duenos->execute();
-$duenos = $stmt_duenos->fetchAll(PDO::FETCH_ASSOC);
 
-// Para cada dueño, obtener sus empleados con estadísticas del mes
-$primer_dia = "$año_filtro-" . str_pad($mes_filtro, 2, '0', STR_PAD_LEFT) . "-01";
-$ultimo_dia = date('Y-m-d', strtotime("$año_filtro-" . str_pad($mes_filtro, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
-
-foreach ($duenos as &$dueno) {
-    $stmt_empleados = $pdo->prepare("
-        SELECT 
-            u.id,
-            u.username,
-            COUNT(DISTINCT DATE(m.entrada)) as dias_trabajados,
-            COUNT(DISTINCT CASE WHEN sc.estado = 'aprobado' THEN sc.id END) as ajustes_aprobados
-        FROM usuarios u
-        LEFT JOIN marcaciones m ON m.empleado_id = u.id AND DATE(m.entrada) BETWEEN ? AND ?
-        LEFT JOIN solicitudes_cambio sc ON sc.empleado_id = u.id AND sc.estado = 'aprobado'
-            AND sc.marcacion_id IN (SELECT id FROM marcaciones WHERE DATE(entrada) BETWEEN ? AND ?)
-        WHERE u.rol = 'empleado' AND u.propietario_id = ?
-        GROUP BY u.id
-        ORDER BY u.username
-    ");
-    $stmt_empleados->execute([$primer_dia, $ultimo_dia, $primer_dia, $ultimo_dia, $dueno['id']]);
-    $dueno['empleados'] = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
+if ($anio_filtro < 2020 || $anio_filtro > 2035) {
+    $anio_filtro = (int)date('Y');
 }
 
 $meses = [
@@ -65,14 +92,134 @@ $meses = [
     5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
     9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
 ];
-?>
 
+$primer_dia = sprintf('%04d-%02d-01', $anio_filtro, $mes_filtro);
+$ultimo_dia = date('Y-m-d', strtotime($primer_dia . ' +1 month -1 day'));
+
+$query_duenos = "
+    SELECT
+        u.id,
+        u.username,
+        u.created_at,
+        COUNT(DISTINCT emp.id) AS total_empleados,
+        COALESCE(SUM(CASE WHEN emp.id IS NOT NULL AND um.ultima_marcacion IS NOT NULL THEN 1 ELSE 0 END), 0) AS empleados_con_marcacion,
+        COALESCE(SUM(CASE WHEN emp.id IS NOT NULL AND um.ultima_marcacion IS NULL THEN 1 ELSE 0 END), 0) AS empleados_sin_marcacion,
+        MAX(um.ultima_marcacion) AS ultima_actividad
+    FROM usuarios u
+    LEFT JOIN usuarios emp ON emp.propietario_id = u.id AND emp.rol = 'empleado'
+    LEFT JOIN (
+        SELECT empleado_id, MAX(entrada) AS ultima_marcacion
+        FROM marcaciones
+        GROUP BY empleado_id
+    ) um ON um.empleado_id = emp.id
+    WHERE u.rol = 'dueño'
+";
+
+if ($busqueda !== '') {
+    $query_duenos .= " AND u.username LIKE :busqueda";
+}
+
+$query_duenos .= " GROUP BY u.id, u.username, u.created_at ORDER BY u.username";
+
+$stmt_duenos = $pdo->prepare($query_duenos);
+if ($busqueda !== '') {
+    $stmt_duenos->bindValue(':busqueda', '%' . $busqueda . '%');
+}
+$stmt_duenos->execute();
+$duenos = $stmt_duenos->fetchAll(PDO::FETCH_ASSOC);
+
+$hoy = new DateTime('today');
+
+foreach ($duenos as &$dueno) {
+    $stmt_empleados = $pdo->prepare("
+        SELECT
+            u.id,
+            u.username,
+            u.created_at,
+            (
+                SELECT MAX(m2.entrada)
+                FROM marcaciones m2
+                WHERE m2.empleado_id = u.id
+            ) AS ultima_marcacion,
+            (
+                SELECT COUNT(DISTINCT DATE(m3.entrada))
+                FROM marcaciones m3
+                WHERE m3.empleado_id = u.id
+                  AND DATE(m3.entrada) BETWEEN ? AND ?
+            ) AS dias_trabajados,
+            (
+                SELECT COUNT(DISTINCT sc.id)
+                FROM solicitudes_cambio sc
+                INNER JOIN marcaciones mm ON mm.id = sc.marcacion_id
+                WHERE sc.empleado_id = u.id
+                  AND sc.estado = 'aprobado'
+                  AND DATE(mm.entrada) BETWEEN ? AND ?
+            ) AS ajustes_aprobados
+        FROM usuarios u
+        WHERE u.rol = 'empleado' AND u.propietario_id = ?
+        ORDER BY u.username
+    ");
+
+    $stmt_empleados->execute([$primer_dia, $ultimo_dia, $primer_dia, $ultimo_dia, $dueno['id']]);
+    $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($empleados as &$emp) {
+        $ultima_marcacion = $emp['ultima_marcacion'] ?? null;
+
+        if (empty($ultima_marcacion)) {
+            $emp['estado_uso'] = 'sin_marcacion';
+            $emp['estado_label'] = 'Nunca marco';
+            $emp['ultima_marcacion_fmt'] = 'Nunca';
+        } else {
+            $ultima_fecha = new DateTime($ultima_marcacion);
+            $dias_sin_marcar = (int)$hoy->diff(new DateTime($ultima_fecha->format('Y-m-d')))->days;
+
+            $emp['ultima_marcacion_fmt'] = $ultima_fecha->format('d/m/Y H:i');
+
+            if ($dias_sin_marcar <= 30) {
+                $emp['estado_uso'] = 'activo';
+                $emp['estado_label'] = 'Activo';
+            } else {
+                $emp['estado_uso'] = 'inactivo';
+                $emp['estado_label'] = 'Inactivo';
+            }
+        }
+
+        $emp['created_at_fmt'] = formatear_fecha($emp['created_at'], 'd/m/Y');
+    }
+    unset($emp);
+
+    $dueno['empleados'] = $empleados;
+    $dueno['ultima_actividad_fmt'] = empty($dueno['ultima_actividad'])
+        ? 'Sin actividad'
+        : formatear_fecha($dueno['ultima_actividad']);
+}
+unset($dueno);
+
+$total_duenos = count($duenos);
+$total_empleados = 0;
+$total_empleados_activos = 0;
+$total_empleados_sin_marcacion = 0;
+$duenos_en_uso = 0;
+
+foreach ($duenos as $dueno) {
+    $total_empleados += (int)$dueno['total_empleados'];
+    $total_empleados_activos += (int)$dueno['empleados_con_marcacion'];
+    $total_empleados_sin_marcacion += (int)$dueno['empleados_sin_marcacion'];
+
+    if ((int)$dueno['empleados_con_marcacion'] > 0) {
+        $duenos_en_uso++;
+    }
+}
+
+$duenos_sin_uso = $total_duenos - $duenos_en_uso;
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Hacienda - Control Horario</title>
+    <title>Panel Maestro - Control Horario</title>
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="hacienda.css">
 </head>
@@ -85,22 +232,22 @@ $meses = [
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
-                    <span>Control Horario - Hacienda</span>
+                    <span>Control Horario - Panel Maestro</span>
                 </div>
                 <div class="user-info">
-                    <span class="welcome-text">Panel Universal</span>
-                    <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                    <span class="welcome-text">Vista global de uso</span>
+                    <span class="username"><?php echo $has_hacienda_role ? htmlspecialchars((string)($_SESSION['username'] ?? 'Hacienda')) : 'Acceso Maestro'; ?></span>
+                    <a href="?logout_hacienda=1" class="btn-master-logout">Salir</a>
                 </div>
             </div>
         </header>
 
         <main class="main-content">
             <div class="hacienda-header">
-                <h1>🏛️ Panel de Hacienda</h1>
-                <p>Vista universal de todos los dueños y empleados del sistema</p>
+                <h1>Panel Maestro de Actividad</h1>
+                <p>Monitorea dueños con empleados creados y empleados con o sin marcaciones.</p>
             </div>
 
-            <!-- Filtros y búsqueda -->
             <div class="card filters-card">
                 <div class="card-body">
                     <form method="GET" action="" class="filters-form">
@@ -110,18 +257,18 @@ $meses = [
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <path d="m21 21-4.35-4.35"></path>
                                 </svg>
-                                Buscar Dueño
+                                Buscar dueño
                             </label>
-                            <input type="text" id="busqueda" name="busqueda" 
-                                   placeholder="Nombre del dueño..." 
+                            <input type="text" id="busqueda" name="busqueda"
+                                   placeholder="Nombre del dueño..."
                                    value="<?php echo htmlspecialchars($busqueda); ?>">
                         </div>
-                        
+
                         <div class="filter-group">
                             <label for="mes">Mes</label>
                             <select id="mes" name="mes">
                                 <?php foreach ($meses as $num => $nombre): ?>
-                                    <option value="<?php echo $num; ?>" <?php echo $mes_filtro == $num ? 'selected' : ''; ?>>
+                                    <option value="<?php echo $num; ?>" <?php echo $mes_filtro === $num ? 'selected' : ''; ?>>
                                         <?php echo $nombre; ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -130,9 +277,9 @@ $meses = [
 
                         <div class="filter-group">
                             <label for="año">Año</label>
-                            <input type="number" id="año" name="año" 
-                                   value="<?php echo $año_filtro; ?>" 
-                                   min="2020" max="2030">
+                            <input type="number" id="año" name="año"
+                                   value="<?php echo $anio_filtro; ?>"
+                                   min="2020" max="2035">
                         </div>
 
                         <button type="submit" class="btn-filter">
@@ -145,7 +292,6 @@ $meses = [
                 </div>
             </div>
 
-            <!-- Estadísticas generales -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon" style="background: #bee3f8;">
@@ -156,8 +302,8 @@ $meses = [
                         </svg>
                     </div>
                     <div class="stat-content">
-                        <span class="stat-label">Total Dueños</span>
-                        <span class="stat-value"><?php echo count($duenos); ?></span>
+                        <span class="stat-label">Dueños totales</span>
+                        <span class="stat-value"><?php echo $total_duenos; ?></span>
                     </div>
                 </div>
 
@@ -171,28 +317,69 @@ $meses = [
                         </svg>
                     </div>
                     <div class="stat-content">
-                        <span class="stat-label">Total Empleados</span>
-                        <span class="stat-value"><?php echo array_sum(array_column($duenos, 'total_empleados')); ?></span>
+                        <span class="stat-label">Dueños en uso</span>
+                        <span class="stat-value"><?php echo $duenos_en_uso; ?></span>
                     </div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: #feebc8;">
+                    <div class="stat-icon" style="background: #fef3c7;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M16 11h6"></path>
                         </svg>
                     </div>
                     <div class="stat-content">
-                        <span class="stat-label">Período</span>
-                        <span class="stat-value"><?php echo $meses[$mes_filtro]; ?> <?php echo $año_filtro; ?></span>
+                        <span class="stat-label">Dueños sin uso</span>
+                        <span class="stat-value"><?php echo $duenos_sin_uso; ?></span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #dbeafe;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M21 8v6M18 11h6"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Empleados creados</span>
+                        <span class="stat-value"><?php echo $total_empleados; ?></span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #bbf7d0;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Empleados con marcacion</span>
+                        <span class="stat-value"><?php echo $total_empleados_activos; ?></span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fecaca;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Nunca marcaron</span>
+                        <span class="stat-value"><?php echo $total_empleados_sin_marcacion; ?></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Lista de dueños -->
+            <div class="period-info">
+                Periodo seleccionado: <?php echo $meses[$mes_filtro]; ?> <?php echo $anio_filtro; ?>
+            </div>
+
             <?php if (empty($duenos)): ?>
                 <div class="card">
                     <div class="card-body empty-state">
@@ -201,28 +388,37 @@ $meses = [
                             <line x1="12" y1="8" x2="12" y2="12"></line>
                             <line x1="12" y1="16" x2="12.01" y2="16"></line>
                         </svg>
-                        <p>No se encontraron dueños</p>
+                        <p>No se encontraron dueños con ese filtro.</p>
                     </div>
                 </div>
             <?php else: ?>
                 <?php foreach ($duenos as $dueno): ?>
+                    <?php
+                        $dueno_en_uso = (int)$dueno['empleados_con_marcacion'] > 0;
+                        $dueno_badge_clase = $dueno_en_uso ? 'badge-green' : 'badge-red';
+                        $dueno_badge_label = $dueno_en_uso ? 'En uso' : 'Sin uso';
+                    ?>
                     <div class="card dueno-card">
-                        <div class="dueno-header" onclick="toggleDueno(<?php echo $dueno['id']; ?>)">
+                        <div class="dueno-header" onclick="toggleDueno(<?php echo (int)$dueno['id']; ?>)">
                             <div class="dueno-info">
                                 <h3>
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                         <circle cx="12" cy="7" r="4"></circle>
                                     </svg>
-                                    <?php echo htmlspecialchars($dueno['username']); ?>
+                                    <?php echo htmlspecialchars((string)$dueno['username']); ?>
                                 </h3>
                                 <div class="dueno-stats">
-                                    <span class="badge badge-blue"><?php echo $dueno['total_empleados']; ?> empleados</span>
-                                    <span class="date-info">Registrado: <?php echo date('d/m/Y', strtotime($dueno['created_at'])); ?></span>
+                                    <span class="badge badge-blue"><?php echo (int)$dueno['total_empleados']; ?> empleados</span>
+                                    <span class="badge badge-green"><?php echo (int)$dueno['empleados_con_marcacion']; ?> con marcacion</span>
+                                    <span class="badge badge-red"><?php echo (int)$dueno['empleados_sin_marcacion']; ?> sin marcar</span>
+                                    <span class="badge <?php echo $dueno_badge_clase; ?>"><?php echo $dueno_badge_label; ?></span>
+                                    <span class="date-info">Ultima actividad: <?php echo htmlspecialchars((string)$dueno['ultima_actividad_fmt']); ?></span>
+                                    <span class="date-info">Dueño registrado: <?php echo formatear_fecha($dueno['created_at'], 'd/m/Y'); ?></span>
                                 </div>
                             </div>
                             <div class="dueno-actions">
-                                <a href="hacienda_reporte.php?dueno_id=<?php echo $dueno['id']; ?>&mes=<?php echo $mes_filtro; ?>&año=<?php echo $año_filtro; ?>" 
+                                <a href="hacienda_reporte.php?dueno_id=<?php echo (int)$dueno['id']; ?>&mes=<?php echo $mes_filtro; ?>&año=<?php echo $anio_filtro; ?>"
                                    class="btn-action" onclick="event.stopPropagation();">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -239,10 +435,10 @@ $meses = [
                             </div>
                         </div>
 
-                        <div class="dueno-content" id="dueno-<?php echo $dueno['id']; ?>" style="display: none;">
+                        <div class="dueno-content" id="dueno-<?php echo (int)$dueno['id']; ?>" style="display: none;">
                             <?php if (empty($dueno['empleados'])): ?>
                                 <div class="empty-state-small">
-                                    <p>No hay empleados registrados para este dueño</p>
+                                    <p>Este dueño aun no tiene empleados registrados.</p>
                                 </div>
                             <?php else: ?>
                                 <div class="empleados-table">
@@ -250,40 +446,45 @@ $meses = [
                                         <thead>
                                             <tr>
                                                 <th>Empleado</th>
-                                                <th>Días Trabajados (<?php echo $meses[$mes_filtro]; ?>)</th>
-                                                <th>Ajustes Aprobados</th>
-                                                <th>Acciones</th>
+                                                <th>Creado</th>
+                                                <th>Ultima marcacion</th>
+                                                <th>Estado de uso</th>
+                                                <th>Dias en periodo</th>
+                                                <th>Ajustes aprobados</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php foreach ($dueno['empleados'] as $emp): ?>
+                                                <?php
+                                                    $estado_clase = 'badge-red';
+                                                    if ($emp['estado_uso'] === 'activo') {
+                                                        $estado_clase = 'badge-green';
+                                                    } elseif ($emp['estado_uso'] === 'inactivo') {
+                                                        $estado_clase = 'badge-orange';
+                                                    }
+                                                ?>
                                                 <tr>
                                                     <td>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                                             <circle cx="12" cy="7" r="4"></circle>
                                                         </svg>
-                                                        <?php echo htmlspecialchars($emp['username']); ?>
+                                                        <?php echo htmlspecialchars((string)$emp['username']); ?>
+                                                    </td>
+                                                    <td><?php echo htmlspecialchars((string)$emp['created_at_fmt']); ?></td>
+                                                    <td><?php echo htmlspecialchars((string)$emp['ultima_marcacion_fmt']); ?></td>
+                                                    <td>
+                                                        <span class="badge <?php echo $estado_clase; ?>"><?php echo htmlspecialchars((string)$emp['estado_label']); ?></span>
                                                     </td>
                                                     <td>
-                                                        <span class="badge badge-green"><?php echo $emp['dias_trabajados']; ?> días</span>
+                                                        <span class="badge badge-blue"><?php echo (int)$emp['dias_trabajados']; ?> dias</span>
                                                     </td>
                                                     <td>
-                                                        <?php if ($emp['ajustes_aprobados'] > 0): ?>
-                                                            <span class="badge badge-purple"><?php echo $emp['ajustes_aprobados']; ?> ajustes</span>
+                                                        <?php if ((int)$emp['ajustes_aprobados'] > 0): ?>
+                                                            <span class="badge badge-purple"><?php echo (int)$emp['ajustes_aprobados']; ?> ajustes</span>
                                                         <?php else: ?>
-                                                            <span style="color: #a0aec0;">—</span>
+                                                            <span style="color: #a0aec0;">0</span>
                                                         <?php endif; ?>
-                                                    </td>
-                                                    <td>
-                                                        <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" 
-                                                           class="btn-action-small">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                                                <circle cx="12" cy="12" r="3"></circle>
-                                                            </svg>
-                                                            Ver Historial
-                                                        </a>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
@@ -297,15 +498,11 @@ $meses = [
             <?php endif; ?>
         </main>
 
-        <footer class="footer">
-            <a href="logout.php" class="logout-link">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                Cerrar Sesión
-            </a>
+        <footer class="footer master-footer">
+            <a href="?logout_hacienda=1" class="logout-link">Cerrar panel maestro</a>
+            <?php if ($has_hacienda_role): ?>
+                <a href="logout.php" class="logout-link">Cerrar sesion completa</a>
+            <?php endif; ?>
         </footer>
     </div>
 
@@ -313,7 +510,7 @@ $meses = [
         function toggleDueno(duenoId) {
             const content = document.getElementById(`dueno-${duenoId}`);
             const card = content.closest('.dueno-card');
-            
+
             if (content.style.display === 'none') {
                 content.style.display = 'block';
                 card.classList.add('expanded');

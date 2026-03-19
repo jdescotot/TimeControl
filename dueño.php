@@ -133,9 +133,10 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
     <title>Panel del Dueño - Control Horario</title>
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="solicitudes_cambio.css">
+    <link rel="stylesheet" href="dueño.css">
 </head>
 
-<body>
+<body class="owner-dashboard">
     <div class="container">
         <!-- Header -->
         <header class="header">
@@ -148,9 +149,8 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                     <span>Control Horario</span>
                 </div>
                 <div class="user-info">
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-                        <a href="horario_semanal.php" class="btn"
-                            style="padding:8px 16px; font-size:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                    <div class="header-actions">
+                        <a href="horario_semanal.php" class="btn top-nav-btn top-nav-btn--schedule">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -160,8 +160,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                             </svg>
                             Horario Semanal
                         </a>
-                        <a href="reporte_mensual.php" class="btn"
-                            style="padding:8px 16px; font-size:14px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                        <a href="reporte_mensual.php" class="btn top-nav-btn top-nav-btn--report">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -169,7 +168,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                             </svg>
                             Reporte Mensual
                         </a>
-                        <div style="text-align: right;">
+                        <div class="welcome-block">
                             <span class="welcome-text">Bienvenido,</span>
                             <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
                         </div>
@@ -182,7 +181,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
         <main class="main-content">
             <!-- Mensaje de éxito al crear empleado -->
             <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'empleado_creado'): ?>
-                <div class="status-message success" style="margin-bottom: 20px;">
+                <div class="status-message success">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -194,8 +193,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
 
             <!-- Mensaje de error al crear empleado -->
             <?php if (isset($_GET['error'])): ?>
-                <div class="status-message"
-                    style="background-color: #fed7d7; color: #c53030; border-left-color: #e53e3e; margin-bottom: 20px;">
+                <div class="status-message error">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -244,20 +242,20 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                     <div class="date-badge"><?php echo date('d/m/Y'); ?></div>
                 </div>
                 <div class="card-body">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                        <div class="info-item" style="border-left-color: #48bb78;">
+                    <div class="summary-grid">
+                        <div class="info-item info-item--success">
                             <span class="label">Total Empleados</span>
                             <span class="value"><?php echo $total_empleados; ?></span>
                         </div>
-                        <div class="info-item" style="border-left-color: #3182ce;">
+                        <div class="info-item info-item--primary">
                             <span class="label">Ya Entraron</span>
                             <span class="value"><?php echo $entraron_hoy; ?></span>
                         </div>
-                        <div class="info-item" style="border-left-color: #ed8936;">
+                        <div class="info-item info-item--warning">
                             <span class="label">En Jornada</span>
                             <span class="value"><?php echo $en_jornada; ?></span>
                         </div>
-                        <div class="info-item" style="border-left-color: #e53e3e;">
+                        <div class="info-item info-item--danger">
                             <span class="label">Pendientes</span>
                             <span class="value"><?php echo $pendientes; ?></span>
                         </div>
@@ -269,8 +267,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
             <div class="card">
                 <div class="card-header">
                     <h2>Empleados</h2>
-                    <a href="nuevo_empleado.php" class="btn"
-                        style="padding:10px 20px; font-size:15px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; border:none; cursor:pointer; border-radius:8px; display:inline-flex; align-items:center; gap:8px; text-decoration:none;">
+                    <a href="nuevo_empleado.php" class="btn btn-add-employee">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -309,10 +306,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                     <?php foreach ($empleados as $emp): ?>
                                         <tr>
                                             <td data-label="Empleado">
-                                                <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" 
-                                                   style="color: #667eea; text-decoration: none; font-weight: 500; cursor: pointer; transition: all 0.2s;"
-                                                   onmouseover="this.style.color='#764ba2'; this.style.textDecoration='underline';"
-                                                   onmouseout="this.style.color='#667eea'; this.style.textDecoration='none';">
+                                                <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="employee-link">
                                                     <?php 
                                                     $nombre_mostrar = !empty($emp['nombre']) ? $emp['nombre'] : $emp['username'];
                                                     echo htmlspecialchars($nombre_mostrar); 
@@ -322,8 +316,8 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                             </td>
                                             <td data-label="Estado">
                                                 <?php if ($emp['tiene_descanso']): ?>
-                                                    <span style="color:#48bb78; font-weight: 500;">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                                    <span class="status-inline status-inline--success">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="status-icon">
                                                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                                             <line x1="16" y1="2" x2="16" y2="6"></line>
                                                             <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -335,15 +329,15 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                     <?php
                                                         $tipo = $emp['ausencia_hoy'];
                                                         $map = [
-                                                            'vacaciones_ley' => ['color' => '#d69e2e', 'texto' => 'Vacaciones Ley'],
-                                                            'enfermedad' => ['color' => '#e53e3e', 'texto' => 'Enfermedad'],
-                                                            'emergencia_familiar' => ['color' => '#6b46c1', 'texto' => 'Falta Justificada (Emerg. Fam.)'],
-                                                            'fuerza_mayor' => ['color' => '#6b46c1', 'texto' => 'Falta Justificada (Fuerza Mayor)'],
+                                                            'vacaciones_ley' => ['clase' => 'status-inline--warning', 'texto' => 'Vacaciones Ley'],
+                                                            'enfermedad' => ['clase' => 'status-inline--danger', 'texto' => 'Enfermedad'],
+                                                            'emergencia_familiar' => ['clase' => 'status-inline--accent', 'texto' => 'Falta Justificada (Emerg. Fam.)'],
+                                                            'fuerza_mayor' => ['clase' => 'status-inline--accent', 'texto' => 'Falta Justificada (Fuerza Mayor)'],
                                                         ];
-                                                        $info = $map[$tipo] ?? ['color' => '#e53e3e', 'texto' => 'Ausencia'];
+                                                        $info = $map[$tipo] ?? ['clase' => 'status-inline--danger', 'texto' => 'Ausencia'];
                                                     ?>
-                                                    <span style="color:<?php echo $info['color']; ?>; font-weight: 600;">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                                    <span class="status-inline <?php echo htmlspecialchars($info['clase']); ?>">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="status-icon">
                                                             <circle cx="12" cy="12" r="10"></circle>
                                                             <line x1="12" y1="8" x2="12" y2="12"></line>
                                                             <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -351,30 +345,30 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                         <?php echo htmlspecialchars($info['texto']); ?>
                                                     </span>
                                                 <?php elseif (!$emp['entrada']): ?>
-                                                    <span style="color:#e53e3e;">Sin marcar</span>
+                                                    <span class="status-inline status-inline--danger">Sin marcar</span>
                                                 <?php elseif ($emp['entrada'] && !$emp['salida']): ?>
                                                     <?php if ($emp['tiene_ajuste']): ?>
-                                                        <span style="color:#ed8936;">En jornada (desde
-                                                            <span style="text-decoration: line-through; opacity: 0.6;"><?php echo $emp['entrada_hora'] ?? '—'; ?></span>
-                                                            <strong style="color: #667eea;"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong>
-                                                            <span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 4px;">Ajustado</span>)
+                                                        <span class="status-inline status-inline--warning">En jornada (desde
+                                                            <span class="time-original"><?php echo $emp['entrada_hora'] ?? '—'; ?></span>
+                                                            <strong class="time-adjusted"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong>
+                                                            <span class="badge-adjusted">Ajustado</span>)
                                                         </span>
                                                     <?php else: ?>
-                                                        <span style="color:#ed8936;">En jornada (desde
+                                                        <span class="status-inline status-inline--warning">En jornada (desde
                                                             <?php echo $emp['entrada_hora'] ?? '—'; ?>)</span>
                                                     <?php endif; ?>
                                                 <?php else: ?>
-                                                    <span style="color:#38a169;">Completado</span><br>
+                                                    <span class="status-inline status-inline--success">Completado</span><br>
                                                     <?php if ($emp['tiene_ajuste']): ?>
-                                                        <small>
-                                                            Entrada: <span style="text-decoration: line-through; opacity: 0.6;"><?php echo $emp['entrada_hora'] ?? '—'; ?></span> 
-                                                            <strong style="color: #667eea;"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong> | 
-                                                            Salida: <span style="text-decoration: line-through; opacity: 0.6;"><?php echo $emp['salida_hora'] ?? '—'; ?></span> 
-                                                            <strong style="color: #667eea;"><?php echo substr($emp['hora_salida_ajustada'], 0, 5); ?></strong>
-                                                            <span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 4px;">Ajustado</span>
+                                                        <small class="status-detail">
+                                                            Entrada: <span class="time-original"><?php echo $emp['entrada_hora'] ?? '—'; ?></span>
+                                                            <strong class="time-adjusted"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong> |
+                                                            Salida: <span class="time-original"><?php echo $emp['salida_hora'] ?? '—'; ?></span>
+                                                            <strong class="time-adjusted"><?php echo substr($emp['hora_salida_ajustada'], 0, 5); ?></strong>
+                                                            <span class="badge-adjusted badge-adjusted--sm">Ajustado</span>
                                                         </small>
                                                     <?php else: ?>
-                                                        <small>Entrada: <?php echo $emp['entrada_hora'] ?? '—'; ?> | Salida:
+                                                        <small class="status-detail">Entrada: <?php echo $emp['entrada_hora'] ?? '—'; ?> | Salida:
                                                             <?php echo $emp['salida_hora'] ?? '—'; ?></small>
                                                     <?php endif; ?>
                                                 <?php endif; ?>
@@ -398,7 +392,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                         $intervalo = $entrada_usar_dt->diff($salida_usar_dt);
                                                         echo $intervalo->format('%h:%i');
                                                         if ($emp['tiene_ajuste']) {
-                                                            echo ' <span style="color: #667eea; font-size: 11px;">*</span>';
+                                                            echo ' <span class="hours-adjusted-mark">*</span>';
                                                         }
                                                     } catch (Exception $e) {
                                                         echo '—';
@@ -409,8 +403,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                 ?>
                                             </td>
                                             <td data-label="Acción">
-                                                <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn"
-                                                    style="padding:6px 12px; font-size:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; text-decoration:none; display:inline-block;">
+                                                <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn btn-history">
                                                     Ver Historial
                                                 </a>
                                             </td>
@@ -440,7 +433,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                         <label for="username">DNI / NIE / NIF / Pasaporte:</label>
                         <input type="text" name="username" id="username" required minlength="3" maxlength="50"
                             placeholder="Ej: X1234567L" autocomplete="off">
-                        <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
+                        <small class="form-help">
                             Se convertirá automáticamente a minúsculas sin espacios
                         </small>
                     </div>
@@ -448,18 +441,18 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                         <label for="fecha_inicio">Fecha de Inicio:</label>
                         <input type="date" name="fecha_inicio" id="fecha_inicio" required
                             value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
-                        <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
+                        <small class="form-help">
                             Fecha en que el empleado comenzó a trabajar
                         </small>
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña Temporal:</label>
-                        <div style="position: relative;">
+                        <div class="password-wrapper">
                             <input type="password" name="password" id="password" required minlength="6"
                                 placeholder="Mínimo 6 caracteres sin espacios" autocomplete="new-password"
-                                style="padding-right: 45px;">
+                                class="input-with-eye">
                             <button type="button" onclick="togglePassword('password', this)" 
-                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
+                                class="btn-eye"
                                 aria-label="Mostrar contraseña">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -467,18 +460,18 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                 </svg>
                             </button>
                         </div>
-                        <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
+                        <small class="form-help">
                             No se permiten espacios. El empleado deberá cambiarla en su primer inicio de sesión
                         </small>
                     </div>
                     <div class="form-group">
                         <label for="confirmar_password">Confirmar Contraseña:</label>
-                        <div style="position: relative;">
+                        <div class="password-wrapper">
                             <input type="password" name="confirmar_password" id="confirmar_password" required minlength="6"
                                 placeholder="Repite la contraseña" autocomplete="new-password"
-                                style="padding-right: 45px;">
+                                class="input-with-eye">
                             <button type="button" onclick="togglePassword('confirmar_password', this)" 
-                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
+                                class="btn-eye"
                                 aria-label="Mostrar contraseña">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -488,7 +481,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <button type="submit" class="btn btn-primary">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -498,8 +491,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                             </svg>
                             Crear Empleado
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="cerrarModalEmpleado()"
-                            style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModalEmpleado()">
                             Cancelar
                         </button>
                     </div>
@@ -541,26 +533,26 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
 
         function showUsernamePopup(original, sanitized) {
             const overlay = document.createElement('div');
-            overlay.style = 'position:fixed; inset:0; background:rgba(45,55,72,0.6); display:flex; align-items:center; justify-content:center; z-index:9999; padding:16px;';
+            overlay.className = 'username-popup-overlay';
 
             const modal = document.createElement('div');
-            modal.style = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:24px; border-radius:14px; max-width:420px; width:100%; box-shadow:0 12px 32px rgba(0,0,0,0.25);';
+            modal.className = 'username-popup-modal';
             modal.innerHTML = `
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                <div class="username-popup-head">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
                     </svg>
                     <div>
-                        <div style="font-weight:700; font-size:18px;">No se permiten espacios ni mayúsculas</div>
-                        <div style="opacity:0.9; font-size:14px;">Ingresaste: <strong>${original}</strong></div>
+                        <div class="username-popup-title">No se permiten espacios ni mayúsculas</div>
+                        <div class="username-popup-subtitle">Ingresaste: <strong>${original}</strong></div>
                     </div>
                 </div>
-                <div style="background:rgba(255,255,255,0.15); padding:12px 14px; border-radius:10px; margin-bottom:14px; font-size:14px;">
+                <div class="username-popup-preview">
                     Podemos usar esta versión: <strong>${sanitized}</strong>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button id="useSanitized" style="flex:1; background:white; color:#5a67d8; border:none; padding:12px; border-radius:10px; font-weight:700; cursor:pointer;">Usar ${sanitized}</button>
-                    <button id="keepOriginal" style="flex:1; background:rgba(255,255,255,0.16); color:white; border:1px solid rgba(255,255,255,0.4); padding:12px; border-radius:10px; font-weight:600; cursor:pointer;">Corregir manualmente</button>
+                <div class="username-popup-actions">
+                    <button id="useSanitized" class="username-popup-btn username-popup-btn--primary">Usar ${sanitized}</button>
+                    <button id="keepOriginal" class="username-popup-btn username-popup-btn--ghost">Corregir manualmente</button>
                 </div>
             `;
 
