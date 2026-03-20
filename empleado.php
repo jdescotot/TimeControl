@@ -184,14 +184,24 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     <?php endif; ?>
 
-                    <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'salida_fuera_rango'): ?>
+                    <?php if (isset($_GET['error']) && $_GET['error'] === 'salida_anterior_entrada'): ?>
                         <div class="status-message warning" style="margin-bottom: 15px;">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
                             </svg>
-                            <span>La salida no puede exceder 19 horas desde la entrada. Solicita una corrección.</span>
+                            <span>La hora de salida no puede ser anterior o igual a la hora de entrada.</span>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (isset($_GET['error']) && $_GET['error'] === 'salida_futuro'): ?>
+                        <div class="status-message warning" style="margin-bottom: 15px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span>La hora de salida no puede ser en el futuro.</span>
                         </div>
                     <?php endif; ?>
 
@@ -251,31 +261,47 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                 </button>
                             </form>
                         <?php elseif ($bloqueo_salida_pendiente): ?>
-                            <div class="status-message warning">
+                            <?php
+                            $entrada_dt_form    = new DateTime($registro_hoy['entrada']);
+                            $siguiente_dt_form  = clone $entrada_dt_form;
+                            $siguiente_dt_form->modify('+1 day');
+                            ?>
+                            <div class="status-message warning" style="margin-bottom: 15px;">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <polyline points="12 6 12 12 16 14"></polyline>
                                 </svg>
-                                <span>
-                                    Jornada pendiente sin salida. No puedes marcar una nueva entrada.
-                                    Solicita la hora de salida para revisión.
-                                </span>
+                                <span>Tienes una jornada anterior sin cerrar. Entrada: <strong><?php echo htmlspecialchars($entrada_dt_form->format('d/m/Y H:i')); ?></strong>. Indica la hora de salida para continuar.</span>
                             </div>
-                            <div class="jornada-info" style="margin-bottom: 12px;">
-                                <div class="info-item">
-                                    <span class="label">Entrada:</span>
-                                    <span class="value"><?php echo $registro_hoy && $registro_hoy['entrada'] ? date('H:i:s', strtotime($registro_hoy['entrada'])) : '—'; ?></span>
+                            <form action="marcar.php" method="POST" style="display:flex; flex-direction:column; gap:16px; margin-top:8px;">
+                                <input type="hidden" name="accion" value="cerrar_y_entrar">
+                                <input type="hidden" name="marcacion_id_anterior" value="<?php echo (int)($registro_hoy['id'] ?? 0); ?>">
+                                <div>
+                                    <label style="font-weight:600; display:block; margin-bottom:6px;">Hora de salida</label>
+                                    <input type="time" name="hora_salida" required style="padding:8px 12px; border:1px solid #cbd5e0; border-radius:8px; font-size:1rem; width:100%; max-width:200px;">
                                 </div>
-                            </div>
-                            <div class="marcacion-form" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                                <button type="button" class="btn btn-primary" onclick="abrirSolicitud(<?= (int)($registro_hoy['id'] ?? 0) ?>, '<?= $registro_hoy && $registro_hoy['entrada'] ? date('H:i', strtotime($registro_hoy['entrada'])) : '' ?>', '', true)">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                    Solicitar Salida
-                                </button>
-                            </div>
+                                <div>
+                                    <label style="font-weight:600; display:block; margin-bottom:8px;">¿Qué día fue la salida?</label>
+                                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer;">
+                                        <input type="radio" name="dia_salida" value="mismo" checked>
+                                        <?php echo htmlspecialchars($entrada_dt_form->format('d/m/Y') . ' — día de entrada'); ?>
+                                    </label>
+                                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                        <input type="radio" name="dia_salida" value="siguiente">
+                                        <?php echo htmlspecialchars($siguiente_dt_form->format('d/m/Y') . ' — día siguiente'); ?>
+                                    </label>
+                                </div>
+                                <div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                            <polyline points="10 17 15 12 10 7"></polyline>
+                                            <line x1="15" y1="12" x2="3" y2="12"></line>
+                                        </svg>
+                                        Confirmar salida y marcar nueva entrada
+                                    </button>
+                                </div>
+                            </form>
                         <?php else: ?>
                             <div class="status-message warning">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
