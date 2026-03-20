@@ -57,9 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $salida_dt->modify('+1 day');
             }
             $limite_dt = clone $entrada_dt;
-            $limite_dt->modify('+12 hours');
+            $limite_dt->modify('+19 hours');
             if ($salida_dt > $limite_dt) {
-                die('La hora de salida no puede exceder 12 horas desde la entrada.');
+                die('La hora de salida no puede exceder 19 horas desde la entrada.');
             }
         } else {
             $entrada_dt = new DateTime($fecha_base . ' ' . $nueva_entrada);
@@ -68,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $salida_dt->modify('+1 day');
             }
             $limite_dt = clone $entrada_dt;
-            $limite_dt->modify('+12 hours');
+            $limite_dt->modify('+19 hours');
             if ($salida_dt > $limite_dt) {
-                die('La hora de salida no puede exceder 12 horas desde la entrada.');
+                die('La hora de salida no puede exceder 19 horas desde la entrada.');
             }
         }
 

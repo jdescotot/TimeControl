@@ -191,7 +191,7 @@ $solicitudes_empleado = $stmt_pendientes_empleado->fetchAll(PDO::FETCH_ASSOC);
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
                             </svg>
-                            <span>La salida no puede exceder 12 horas desde la entrada. Solicita una corrección.</span>
+                            <span>La salida no puede exceder 19 horas desde la entrada. Solicita una corrección.</span>
                         </div>
                     <?php endif; ?>
 

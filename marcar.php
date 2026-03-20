@@ -69,7 +69,7 @@ try {
 
         $entrada_dt = new DateTime($registro['entrada']);
         $limite_dt = clone $entrada_dt;
-        $limite_dt->modify('+12 hours');
+        $limite_dt->modify('+19 hours');
         $ahora_dt = new DateTime($ahora);
 
         if ($ahora_dt > $limite_dt) {
