@@ -75,6 +75,61 @@ if (!$has_master_access):
 exit;
 endif;
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_employee_password') {
+    $empleado_id = isset($_POST['empleado_id']) ? (int)$_POST['empleado_id'] : 0;
+    $dueno_id = isset($_POST['dueno_id']) ? (int)$_POST['dueno_id'] : 0;
+
+    $redirect_busqueda = trim((string)($_POST['redirect_busqueda'] ?? ''));
+    $redirect_mes = isset($_POST['redirect_mes']) ? (int)$_POST['redirect_mes'] : (int)date('n');
+    $redirect_anio = isset($_POST['redirect_anio']) ? (int)$_POST['redirect_anio'] : (int)date('Y');
+
+    if ($redirect_mes < 1 || $redirect_mes > 12) {
+        $redirect_mes = (int)date('n');
+    }
+    if ($redirect_anio < 2020 || $redirect_anio > 2035) {
+        $redirect_anio = (int)date('Y');
+    }
+
+    if ($empleado_id <= 0 || $dueno_id <= 0) {
+        $_SESSION['hacienda_reset_error'] = 'No se pudo resetear: datos de empleado invalidos.';
+    } else {
+        try {
+            $stmt_empleado = $pdo->prepare("SELECT id, username FROM usuarios WHERE id = ? AND rol = 'empleado' AND propietario_id = ? LIMIT 1");
+            $stmt_empleado->execute([$empleado_id, $dueno_id]);
+            $empleado = $stmt_empleado->fetch(PDO::FETCH_ASSOC);
+
+            if (!$empleado) {
+                $_SESSION['hacienda_reset_error'] = 'No se pudo resetear: empleado no encontrado para ese dueño.';
+            } else {
+                $password_temporal = '123456';
+                $password_hash = password_hash($password_temporal, PASSWORD_DEFAULT);
+
+                $stmt_update = $pdo->prepare('UPDATE usuarios SET password = ?, requiere_cambio_password = 1 WHERE id = ?');
+                $stmt_update->execute([$password_hash, $empleado_id]);
+
+                $_SESSION['hacienda_reset_success'] = 'Contraseña reseteada para el usuario ' . $empleado['username'] . '.';
+                $_SESSION['hacienda_reset_temp_password'] = $password_temporal;
+            }
+        } catch (Exception $e) {
+            $_SESSION['hacienda_reset_error'] = 'Error al resetear contraseña. Intenta nuevamente.';
+            error_log('Error reset hacienda empleado: ' . $e->getMessage());
+        }
+    }
+
+    $redirect_params = [
+        'busqueda' => $redirect_busqueda,
+        'mes' => $redirect_mes,
+        'año' => $redirect_anio,
+    ];
+    header('Location: hacienda.php?' . http_build_query($redirect_params));
+    exit;
+}
+
+$reset_success = $_SESSION['hacienda_reset_success'] ?? null;
+$reset_error = $_SESSION['hacienda_reset_error'] ?? null;
+$reset_temp_password = $_SESSION['hacienda_reset_temp_password'] ?? null;
+unset($_SESSION['hacienda_reset_success'], $_SESSION['hacienda_reset_error'], $_SESSION['hacienda_reset_temp_password']);
+
 $busqueda = trim((string)($_GET['busqueda'] ?? ''));
 $mes_filtro = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('n');
 $anio_filtro = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
@@ -252,6 +307,31 @@ $duenos_sin_uso = $total_duenos - $duenos_en_uso;
                 <h1>Panel Maestro de Actividad</h1>
                 <p>Monitorea dueños con empleados creados y empleados con o sin marcaciones.</p>
             </div>
+
+            <?php if (!empty($reset_success)): ?>
+                <div class="card" style="border-left: 4px solid #16a34a; margin-bottom: 16px;">
+                    <div class="card-body" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+                        <div>
+                            <strong style="color: #166534;">✓ <?php echo htmlspecialchars((string)$reset_success); ?></strong>
+                            <div style="margin-top: 6px; color: #334155;">
+                                Contraseña temporal: <strong id="temp-password-text"><?php echo htmlspecialchars((string)$reset_temp_password); ?></strong>
+                                <small style="display: block; margin-top: 4px; color: #64748b;">El empleado debera cambiarla en su siguiente inicio de sesion.</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-action" id="copy-temp-password-btn" onclick="copyTempPassword()">
+                            Copiar contraseña
+                        </button>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($reset_error)): ?>
+                <div class="card" style="border-left: 4px solid #dc2626; margin-bottom: 16px;">
+                    <div class="card-body">
+                        <strong style="color: #991b1b;">✕ <?php echo htmlspecialchars((string)$reset_error); ?></strong>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <div class="card filters-card">
                 <div class="card-body">
@@ -465,6 +545,7 @@ $duenos_sin_uso = $total_duenos - $duenos_en_uso;
                                                 <th>Estado de uso</th>
                                                 <th>Dias en periodo</th>
                                                 <th>Ajustes aprobados</th>
+                                                <th>Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -500,6 +581,17 @@ $duenos_sin_uso = $total_duenos - $duenos_en_uso;
                                                             <span style="color: #a0aec0;">0</span>
                                                         <?php endif; ?>
                                                     </td>
+                                                    <td>
+                                                        <form method="POST" action="" onsubmit="return confirm('Se reseteara la contraseña de este empleado a 123456. ¿Continuar?');" style="display:inline;">
+                                                            <input type="hidden" name="action" value="reset_employee_password">
+                                                            <input type="hidden" name="empleado_id" value="<?php echo (int)$emp['id']; ?>">
+                                                            <input type="hidden" name="dueno_id" value="<?php echo (int)$dueno['id']; ?>">
+                                                            <input type="hidden" name="redirect_busqueda" value="<?php echo htmlspecialchars($busqueda, ENT_QUOTES, 'UTF-8'); ?>">
+                                                            <input type="hidden" name="redirect_mes" value="<?php echo (int)$mes_filtro; ?>">
+                                                            <input type="hidden" name="redirect_anio" value="<?php echo (int)$anio_filtro; ?>">
+                                                            <button type="submit" class="btn-action">Resetear contraseña</button>
+                                                        </form>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
@@ -533,6 +625,35 @@ $duenos_sin_uso = $total_duenos - $duenos_en_uso;
                 card.classList.remove('expanded');
             }
         }
+
+        function copyTempPassword() {
+            const passwordElement = document.getElementById('temp-password-text');
+            const copyButton = document.getElementById('copy-temp-password-btn');
+
+            if (!passwordElement || !copyButton) {
+                return;
+            }
+
+            const tempPassword = passwordElement.textContent.trim();
+            navigator.clipboard.writeText(tempPassword).then(function () {
+                copyButton.textContent = 'Copiada ✓';
+                setTimeout(function () {
+                    copyButton.textContent = 'Copiar contraseña';
+                }, 1800);
+            }).catch(function () {
+                copyButton.textContent = 'No se pudo copiar';
+                setTimeout(function () {
+                    copyButton.textContent = 'Copiar contraseña';
+                }, 1800);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const button = document.getElementById('copy-temp-password-btn');
+            if (button) {
+                copyTempPassword();
+            }
+        });
     </script>
 </body>
 </html>
