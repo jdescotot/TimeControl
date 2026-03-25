@@ -145,6 +145,13 @@ if ($mes_siguiente > 12) {
     $mes_siguiente = 1;
     $año_siguiente++;
 }
+
+$export_query_params = [
+    'mes' => $mes,
+    'año' => $año,
+];
+$export_csv_query = http_build_query($export_query_params);
+$export_xlsx_query = http_build_query($export_query_params);
 ?>
 
 <!DOCTYPE html>
@@ -269,14 +276,25 @@ if ($mes_siguiente > 12) {
             <div class="card">
                 <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
                     <h3 style="margin:0;">Detalle por Empleado</h3>
-                    <a href="export_reporte_mensual.php?mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="btn"
-                       style="padding:8px 14px; font-size:14px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14"></path>
-                            <path d="M5 12h14"></path>
-                        </svg>
-                        Generar CSV del Mes
-                    </a>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                        <a href="export_reporte_mensual.php?<?php echo htmlspecialchars($export_csv_query, ENT_QUOTES, 'UTF-8'); ?>" class="btn"
+                           style="padding:8px 14px; font-size:14px; background:linear-gradient(135deg, #48bb78 0%, #38a169 100%); color:white; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14"></path>
+                                <path d="M5 12h14"></path>
+                            </svg>
+                            Generar CSV del Mes
+                        </a>
+                        <a href="export_reporte_mensual_xlsx.php?<?php echo htmlspecialchars($export_xlsx_query, ENT_QUOTES, 'UTF-8'); ?>" class="btn"
+                           style="padding:8px 14px; font-size:14px; background:linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%); color:white; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                <path d="M8 8l8 8"></path>
+                                <path d="M16 8l-8 8"></path>
+                            </svg>
+                            Generar XLSX del Mes
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-container">
@@ -308,6 +326,11 @@ if ($mes_siguiente > 12) {
                                     <?php 
                                     $dias_mes = (int)((strtotime($ultimo_dia) - strtotime($primer_dia)) / 86400) + 1;
                                     foreach ($empleados as $emp): 
+                                        $export_emp_query = http_build_query([
+                                            'empleado_id' => (int)$emp['id'],
+                                            'mes' => $mes,
+                                            'año' => $año,
+                                        ]);
                                         $marcaciones = $marcaciones_data[$emp['id']] ?? ['dias_trabajados' => 0];
                                         $ausencias = $ausencias_data[$emp['id']] ?? [];
                                         $horas_totales = $horas_data[$emp['id']] ?? '00:00:00';
@@ -334,10 +357,15 @@ if ($mes_siguiente > 12) {
                                                onmouseout="this.style.color='#667eea'; this.style.textDecoration='none';">
                                                 <?php echo htmlspecialchars($emp['username']); ?>
                                             </a>
-                                            <a href="export_reporte_mensual.php?empleado_id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                            <a href="export_reporte_mensual.php?<?php echo htmlspecialchars($export_emp_query, ENT_QUOTES, 'UTF-8'); ?>" 
                                                class="btn"
                                                style="margin-left:8px; padding:4px 8px; font-size:12px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:6px; text-decoration:none;">
                                                 CSV
+                                            </a>
+                                            <a href="export_reporte_mensual_xlsx.php?<?php echo htmlspecialchars($export_emp_query, ENT_QUOTES, 'UTF-8'); ?>" 
+                                               class="btn"
+                                               style="margin-left:6px; padding:4px 8px; font-size:12px; background:linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%); color:white; border-radius:6px; text-decoration:none;">
+                                                XLSX
                                             </a>
                                         </td>
                                         <td data-label="Días Trabajados">
