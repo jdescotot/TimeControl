@@ -30,7 +30,7 @@ $primer_dia = sprintf('%04d-%02d-01', $año, $mes);
 $ultimo_dia = date('Y-m-d', strtotime($primer_dia . ' +1 month -1 day'));
 $empleado_id = isset($_GET['empleado_id']) ? (int)$_GET['empleado_id'] : null;
 
-$filename = $empleado_id ? "reporte_empleado_{$empleado_id}_{$año}_{$mes}.xlsx" : "reporte_mensual_{$año}_{$mes}.xlsx";
+$filename = $empleado_id ? "reporte_empleado_{$empleado_id}_{$año}_{$mes}.xls" : "reporte_mensual_{$año}_{$mes}.xls";
 header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: max-age=0');

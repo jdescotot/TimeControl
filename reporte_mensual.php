@@ -292,7 +292,7 @@ $export_xlsx_query = http_build_query($export_query_params);
                                 <path d="M8 8l8 8"></path>
                                 <path d="M16 8l-8 8"></path>
                             </svg>
-                            Generar XLSX del Mes
+                            Generar Excel del Mes
                         </a>
                     </div>
                 </div>
@@ -365,7 +365,7 @@ $export_xlsx_query = http_build_query($export_query_params);
                                             <a href="export_reporte_mensual_xlsx.php?<?php echo htmlspecialchars($export_emp_query, ENT_QUOTES, 'UTF-8'); ?>" 
                                                class="btn"
                                                style="margin-left:6px; padding:4px 8px; font-size:12px; background:linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%); color:white; border-radius:6px; text-decoration:none;">
-                                                XLSX
+                                                Excel
                                             </a>
                                         </td>
                                         <td data-label="Días Trabajados">
