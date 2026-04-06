@@ -8,6 +8,12 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
 }
 
 $hoy = date('Y-m-d');
+$mes_actual = (int)date('n');
+$año_actual = (int)date('Y');
+$pdf_mes_query = http_build_query([
+    'mes' => $mes_actual,
+    'año' => $año_actual,
+]);
 
 // Obtener número de solicitudes pendientes solo de empleados del dueño actual
 $dueño_id = $_SESSION['user_id'];
@@ -267,16 +273,26 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
             <div class="card">
                 <div class="card-header">
                     <h2>Empleados</h2>
-                    <a href="nuevo_empleado.php" class="btn btn-add-employee">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="8.5" cy="7" r="4"></circle>
-                            <line x1="20" y1="8" x2="20" y2="14"></line>
-                            <line x1="23" y1="11" x2="17" y2="11"></line>
-                        </svg>
-                        Agregar Empleado
-                    </a>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <a href="export_reporte_mensual_pdf.php?<?php echo htmlspecialchars($pdf_mes_query, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-add-employee" style="background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M7 2h8l5 5v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
+                                <path d="M14 2v6h6"></path>
+                            </svg>
+                            PDF del Mes
+                        </a>
+                        <a href="nuevo_empleado.php" class="btn btn-add-employee">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            Agregar Empleado
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-container">
@@ -403,9 +419,14 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                 ?>
                                             </td>
                                             <td data-label="Acción">
-                                                <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn btn-history">
-                                                    Ver Historial
-                                                </a>
+                                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                                    <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn btn-history">
+                                                        Ver Historial
+                                                    </a>
+                                                    <a href="historial_empleado_pdf.php?id=<?php echo $emp['id']; ?>" class="btn btn-history" style="background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%); color: white;">
+                                                        PDF
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
