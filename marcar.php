@@ -12,6 +12,24 @@ $hoy = date('Y-m-d');
 $ahora = date('Y-m-d H:i:s');
 $accion = $_POST['accion'] ?? '';
 
+// Leer y validar coordenadas GPS (opcionales — NULL si no se envían o son inválidas)
+function gps_coord(string $raw, float $min, float $max): ?string {
+    $v = filter_var(trim($raw), FILTER_VALIDATE_FLOAT);
+    if ($v === false || $v < $min || $v > $max) {
+        return null;
+    }
+    return number_format($v, 8, '.', '');
+}
+$lat_post = $_POST['lat'] ?? '';
+$lng_post = $_POST['lng'] ?? '';
+$lat = gps_coord((string)$lat_post, -90.0, 90.0);
+$lng = gps_coord((string)$lng_post, -180.0, 180.0);
+// Ambas coords deben ser válidas o ambas son NULL
+if ($lat === null || $lng === null) {
+    $lat = null;
+    $lng = null;
+}
+
 if (!in_array($accion, ['entrada', 'salida', 'cerrar_y_entrar'])) {
     die('Acción inválida');
 }
@@ -49,9 +67,9 @@ try {
             }
         }
 
-        // Insertar nueva marca con entrada
-        $stmt = $pdo->prepare("INSERT INTO marcaciones (empleado_id, entrada) VALUES (?, ?)");
-        $stmt->execute([$empleado_id, $ahora]);
+        // Insertar nueva marca con entrada (y coordenadas GPS si disponibles)
+        $stmt = $pdo->prepare("INSERT INTO marcaciones (empleado_id, entrada, lat_entrada, lng_entrada) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$empleado_id, $ahora, $lat, $lng]);
     } 
     elseif ($accion === 'salida') {
         // Buscar registro sin salida
@@ -67,9 +85,9 @@ try {
             die('No puedes marcar salida sin tener una jornada abierta.');
         }
 
-        // Actualizar salida
-        $stmt = $pdo->prepare("UPDATE marcaciones SET salida = ? WHERE id = ?");
-        $stmt->execute([$ahora, $registro['id']]);
+        // Actualizar salida (y coordenadas GPS de salida si disponibles)
+        $stmt = $pdo->prepare("UPDATE marcaciones SET salida = ?, lat_salida = ?, lng_salida = ? WHERE id = ?");
+        $stmt->execute([$ahora, $lat, $lng, $registro['id']]);
     }
     elseif ($accion === 'cerrar_y_entrar') {
         $marcacion_id_anterior = (int)($_POST['marcacion_id_anterior'] ?? 0);
@@ -118,9 +136,9 @@ try {
         $stmt = $pdo->prepare("UPDATE marcaciones SET salida = ? WHERE id = ? AND empleado_id = ?");
         $stmt->execute([$salida_completa, $marcacion_id_anterior, $empleado_id]);
 
-        // Registrar nueva entrada
-        $stmt = $pdo->prepare("INSERT INTO marcaciones (empleado_id, entrada) VALUES (?, ?)");
-        $stmt->execute([$empleado_id, $ahora]);
+        // Registrar nueva entrada (y coordenadas GPS si disponibles)
+        $stmt = $pdo->prepare("INSERT INTO marcaciones (empleado_id, entrada, lat_entrada, lng_entrada) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$empleado_id, $ahora, $lat, $lng]);
     }
 
     header('Location: empleado.php?mensaje=success');

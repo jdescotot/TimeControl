@@ -88,6 +88,7 @@ $jornada_abierta = $registro_hoy && !empty($registro_hoy['entrada']) && empty($r
 $ultimo_cerrado = $registro_hoy && !empty($registro_hoy['salida']);
 $entrada_fecha = $registro_hoy && !empty($registro_hoy['entrada']) ? date('Y-m-d', strtotime($registro_hoy['entrada'])) : null;
 $entrada_es_hoy = $entrada_fecha === $hoy;
+$entrada_es_ayer = $entrada_fecha === date('Y-m-d', strtotime('-1 day'));
 $bloqueo_flag = isset($_GET['bloqueo']) && $_GET['bloqueo'] === 'salida_pendiente';
 $estado_solicitud_pendiente = null;
 $tiene_solicitud_pendiente = false;
@@ -102,7 +103,7 @@ if ($jornada_abierta && !empty($registro_hoy['id'])) {
     }
 }
 
-$bloqueo_salida_pendiente = $jornada_abierta && (!$entrada_es_hoy || $bloqueo_flag) && !$tiene_solicitud_pendiente;
+$bloqueo_salida_pendiente = $jornada_abierta && ((!$entrada_es_hoy && !$entrada_es_ayer) || $bloqueo_flag) && !$tiene_solicitud_pendiente;
 
 $stmt_pendientes_empleado = $pdo->prepare("
     SELECT s.id, s.nueva_hora_entrada, s.nueva_hora_salida, s.motivo, s.fecha_solicitud,
@@ -609,6 +610,58 @@ function abrirSolicitud(id, entrada, salida, soloSalida = false) {
                 cerrarSolicitud();
             }
         }
+
+        // ── GPS Geolocalización en marcajes ─────────────────────────────────
+        // Añade campos lat/lng a todos los formularios de marcar.php y solicita
+        // coordenadas antes de enviar. Si el usuario deniega el GPS o no hay
+        // soporte, el formulario se envía igualmente (coordenadas vacías → NULL).
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('form[action="marcar.php"]').forEach(function (form) {
+                var latInput = document.createElement('input');
+                latInput.type = 'hidden';
+                latInput.name = 'lat';
+
+                var lngInput = document.createElement('input');
+                lngInput.type = 'hidden';
+                lngInput.name = 'lng';
+
+                form.appendChild(latInput);
+                form.appendChild(lngInput);
+
+                form.addEventListener('submit', function (e) {
+                    if (!navigator.geolocation) {
+                        return; // sin soporte → envío normal sin coords
+                    }
+
+                    e.preventDefault();
+
+                    var btn = form.querySelector('button[type="submit"]');
+                    var htmlOriginal = btn ? btn.innerHTML : null;
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="12"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Obteniendo ubicación...';
+                    }
+
+                    navigator.geolocation.getCurrentPosition(
+                        function (pos) {
+                            latInput.value = pos.coords.latitude.toFixed(8);
+                            lngInput.value = pos.coords.longitude.toFixed(8);
+                            form.submit();
+                        },
+                        function () {
+                            // GPS denegado o error → enviar sin coordenadas
+                            if (btn && htmlOriginal) {
+                                btn.disabled = false;
+                                btn.innerHTML = htmlOriginal;
+                            }
+                            form.submit();
+                        },
+                        { timeout: 8000, maximumAge: 30000, enableHighAccuracy: true }
+                    );
+                });
+            });
+        });
+        // ────────────────────────────────────────────────────────────────────
     </script>
 </body>
 </html>

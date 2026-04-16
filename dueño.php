@@ -174,6 +174,14 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                             </svg>
                             Reporte Mensual
                         </a>
+                        <a href="mapa_marcaciones.php" class="btn top-nav-btn" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Mapa de Marcaciones
+                        </a>
                         <div class="welcome-block">
                             <span class="welcome-text">Bienvenido,</span>
                             <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
