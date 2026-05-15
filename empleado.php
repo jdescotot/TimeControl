@@ -630,37 +630,87 @@ function abrirSolicitud(id, entrada, salida, soloSalida = false) {
 
                 form.addEventListener('submit', function (e) {
                     if (!navigator.geolocation) {
-                        return; // sin soporte → envío normal sin coords
+                        // Sin soporte de geolocalización → envío normal sin coords
+                        return;
                     }
 
                     e.preventDefault();
 
                     var btn = form.querySelector('button[type="submit"]');
                     var htmlOriginal = btn ? btn.innerHTML : null;
+                    
                     if (btn) {
                         btn.disabled = true;
-                        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="12"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Obteniendo ubicación...';
+                        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/></svg> Obteniendo ubicación...';
                     }
+
+                    var timeoutHandle = setTimeout(function () {
+                        // Timeout: enviar de todas formas sin coords
+                        if (btn && htmlOriginal) {
+                            btn.disabled = false;
+                            btn.innerHTML = htmlOriginal;
+                        }
+                        console.warn('GPS: timeout (8s) - enviando sin coordenadas');
+                        form.submit();
+                    }, 8000);
 
                     navigator.geolocation.getCurrentPosition(
                         function (pos) {
+                            clearTimeout(timeoutHandle);
                             latInput.value = pos.coords.latitude.toFixed(8);
                             lngInput.value = pos.coords.longitude.toFixed(8);
-                            form.submit();
+                            
+                            if (btn) {
+                                btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Ubicación confirmada';
+                                setTimeout(function () {
+                                    form.submit();
+                                }, 300);
+                            } else {
+                                form.submit();
+                            }
                         },
-                        function () {
-                            // GPS denegado o error → enviar sin coordenadas
+                        function (error) {
+                            clearTimeout(timeoutHandle);
+                            // GPS denegado, no disponible o error → enviar sin coordenadas
                             if (btn && htmlOriginal) {
                                 btn.disabled = false;
                                 btn.innerHTML = htmlOriginal;
                             }
+                            
+                            var mensajes = {
+                                1: 'Permiso de ubicación denegado - marcando sin GPS',
+                                2: 'Ubicación no disponible - marcando sin GPS',
+                                3: 'Timeout de GPS - marcando sin GPS'
+                            };
+                            console.warn('GPS error:', mensajes[error.code] || 'Error desconocido');
                             form.submit();
                         },
-                        { timeout: 8000, maximumAge: 30000, enableHighAccuracy: true }
+                        { 
+                            timeout: 8000,           // 8 segundos máximo de espera
+                            maximumAge: 30000,       // Reutilizar posición si existe y es < 30s
+                            enableHighAccuracy: true // Máxima precisión
+                        }
                     );
                 });
             });
         });
+        
+        // ── Estilos de animación para spinner ─────────────────────────────────
+        if (!document.getElementById('gps-spinner-styles')) {
+            var style = document.createElement('style');
+            style.id = 'gps-spinner-styles';
+            style.textContent = `
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                button[type="submit"][disabled] {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+            `;
+            document.head.appendChild(style);
+        }
         // ────────────────────────────────────────────────────────────────────
     </script>
 </body>

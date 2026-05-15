@@ -137,6 +137,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel del Dueño - Control Horario</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-utilities.min.css">
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="solicitudes_cambio.css">
     <link rel="stylesheet" href="dueño.css">
@@ -281,7 +282,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
             <div class="card">
                 <div class="card-header">
                     <h2>Empleados</h2>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <div class="d-flex flex-wrap gap-2">
                         <a href="export_reporte_mensual_pdf.php?<?php echo htmlspecialchars($pdf_mes_query, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-add-employee" style="background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
@@ -427,7 +428,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                 ?>
                                             </td>
                                             <td data-label="Acción">
-                                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                                <div class="d-flex flex-wrap gap-2">
                                                     <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn btn-history">
                                                         Ver Historial
                                                     </a>
