@@ -1,22 +1,22 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 require_once 'jaen_geocoder.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     header('Location: index.php');
     exit;
 }
 
 $fecha_hoy    = date('Y-m-d');
-$fecha_inicio = date('Y-m-d', strtotime('-90 days')); // límite del date picker
+$fecha_inicio = date('Y-m-d', strtotime('-90 days')); // lÃ­mite del date picker
 
 // Leer el tipo de rango solicitado (hoy, 3dias, 7dias, personalizado)
 $rango_tipo = $_GET['rango'] ?? 'hoy';
 $fecha_desde_param = $_GET['fecha_desde'] ?? '';
 $fecha_hasta_param = $_GET['fecha_hasta'] ?? '';
 
-// Determinar fechas según el tipo de rango
+// Determinar fechas segÃºn el tipo de rango
 $fecha_desde = $fecha_hoy;
 $fecha_hasta = $fecha_hoy;
 
@@ -39,7 +39,7 @@ if ($rango_tipo === '3dias') {
     }
 }
 
-// Preparar límites y centro de Jaén para pasar a JavaScript
+// Preparar lÃ­mites y centro de JaÃ©n para pasar a JavaScript
 $jaen_bounds = getJaenBoundsArray();
 $jaen_center = getJaenCenter();
 $allowed_zones = getAllowedMarkingLocations();
@@ -52,7 +52,7 @@ $allowed_zones_json = json_encode($allowed_zones);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa de Marcaciones — Control Horario</title>
+    <title>Mapa de Marcaciones â€” Control Horario</title>
 
     <!-- Bootstrap 5 (solo para esta pantalla) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -61,7 +61,7 @@ $allowed_zones_json = json_encode($allowed_zones);
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 
-    <!-- Pasar límites de Jaén a JavaScript -->
+    <!-- Pasar lÃ­mites de JaÃ©n a JavaScript -->
     <script>
         window.JAEN_BOUNDS = <?php echo $jaen_bounds_json; ?>;
         window.JAEN_CENTER = <?php echo $jaen_center_json; ?>;
@@ -73,13 +73,13 @@ $allowed_zones_json = json_encode($allowed_zones);
 
     <!-- Estilos propios -->
     <link rel="stylesheet" href="empleado.css">
-    <link rel="stylesheet" href="dueño.css">
+    <link rel="stylesheet" href="dueÃ±o.css">
     <link rel="stylesheet" href="mapa_marcaciones.css">
 </head>
 <body class="owner-dashboard mapa-page">
 <div class="container">
 
-    <!-- ── Header (igual que dueño.php) ─────────────────────────────── -->
+    <!-- â”€â”€ Header (igual que dueÃ±o.php) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <header class="header">
         <div class="header-content">
             <div class="logo">
@@ -91,7 +91,7 @@ $allowed_zones_json = json_encode($allowed_zones);
             </div>
             <div class="user-info">
                 <div class="header-actions">
-                    <a href="dueño.php" class="btn top-nav-btn top-nav-btn--schedule">
+                    <a href="dueÃ±o.php" class="btn top-nav-btn top-nav-btn--schedule">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -114,7 +114,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         </div>
     </header>
 
-    <!-- ── Contenido principal ───────────────────────────────────────── -->
+    <!-- â”€â”€ Contenido principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <main class="main-content">
         <div class="container-fluid px-0">
             <div class="row g-3">
@@ -126,7 +126,7 @@ $allowed_zones_json = json_encode($allowed_zones);
                                 if ($fecha_desde === $fecha_hasta) {
                                     echo date('d/m/Y', strtotime($fecha_desde));
                                 } else {
-                                    echo date('d/m/Y', strtotime($fecha_desde)) . ' — ' . date('d/m/Y', strtotime($fecha_hasta));
+                                    echo date('d/m/Y', strtotime($fecha_desde)) . ' â€” ' . date('d/m/Y', strtotime($fecha_hasta));
                                 }
                             ?></div>
                         </div>
@@ -137,8 +137,8 @@ $allowed_zones_json = json_encode($allowed_zones);
                                 <label for="rango-tipo" class="mb-0">Rango:</label>
                                 <select class="form-control form-control-sm" id="rango-tipo" style="max-width: 150px;">
                                     <option value="hoy" <?php echo $rango_tipo === 'hoy' ? 'selected' : ''; ?>>Hoy</option>
-                                    <option value="3dias" <?php echo $rango_tipo === '3dias' ? 'selected' : ''; ?>>Últimos 3 días</option>
-                                    <option value="7dias" <?php echo $rango_tipo === '7dias' ? 'selected' : ''; ?>>Últimos 7 días</option>
+                                    <option value="3dias" <?php echo $rango_tipo === '3dias' ? 'selected' : ''; ?>>Ãšltimos 3 dÃ­as</option>
+                                    <option value="7dias" <?php echo $rango_tipo === '7dias' ? 'selected' : ''; ?>>Ãšltimos 7 dÃ­as</option>
                                     <option value="personalizado" <?php echo $rango_tipo === 'personalizado' ? 'selected' : ''; ?>>Personalizado</option>
                                 </select>
 
@@ -195,7 +195,7 @@ $allowed_zones_json = json_encode($allowed_zones);
                                         <line x1="12" y1="8" x2="12" y2="12"></line>
                                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                                     </svg>
-                                    <p id="msg-sin-datos">Sin marcaciones con ubicación para esta fecha</p>
+                                    <p id="msg-sin-datos">Sin marcaciones con ubicaciÃ³n para esta fecha</p>
                                 </div>
                             </div>
 
@@ -216,7 +216,7 @@ $allowed_zones_json = json_encode($allowed_zones);
                 <polyline points="16 17 21 12 16 7"></polyline>
                 <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
-            Cerrar Sesión
+            Cerrar SesiÃ³n
         </a>
     </footer>
 </div>
@@ -236,13 +236,13 @@ $allowed_zones_json = json_encode($allowed_zones);
         const msgSin = document.getElementById('msg-sin-datos');
         const overlaySin = document.getElementById('overlay-sin-datos');
         if (msgSin && overlaySin) {
-            msgSin.textContent = 'No se pudo cargar Leaflet (mapa). Revisa conexión/CDN.';
+            msgSin.textContent = 'No se pudo cargar Leaflet (mapa). Revisa conexiÃ³n/CDN.';
             overlaySin.style.display = 'flex';
         }
         return;
     }
 
-    // ── Inicializar mapa ─────────────────────────────────────────────
+    // â”€â”€ Inicializar mapa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const JAEN_CENTER = window.JAEN_CENTER || [37.7860, -3.7825];
     const JAEN_BOUNDS = window.JAEN_BOUNDS || [[37.0, -4.5], [38.8, -3.5]];
     const ALLOWED_ZONES = Array.isArray(window.ALLOWED_ZONES) ? window.ALLOWED_ZONES : [];
@@ -263,7 +263,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         }
     ).addTo(map);
 
-    // ── Dibujar límites de Jaén ─────────────────────────────────────
+    // â”€â”€ Dibujar lÃ­mites de JaÃ©n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const rectangle = L.rectangle(JAEN_BOUNDS, {
         color: '#0284c7',
         weight: 2,
@@ -274,14 +274,14 @@ $allowed_zones_json = json_encode($allowed_zones);
         dashArray: '5, 5',
     }).addTo(map);
 
-    // Tooltip para mostrar qué es el rectángulo
-    rectangle.bindTooltip('Límite aproximado de la provincia de Jaén', {
+    // Tooltip para mostrar quÃ© es el rectÃ¡ngulo
+    rectangle.bindTooltip('LÃ­mite aproximado de la provincia de JaÃ©n', {
         permanent: false,
         direction: 'center',
         offset: [0, 0]
     });
 
-    // Dibujar 1-3 zonas permitidas de marcación
+    // Dibujar 1-3 zonas permitidas de marcaciÃ³n
     const zonesLayer = L.layerGroup().addTo(map);
     ALLOWED_ZONES.forEach(function (zone) {
         if (typeof zone.lat !== 'number' || typeof zone.lng !== 'number') {
@@ -300,7 +300,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         );
     });
 
-    // ── Estado ───────────────────────────────────────────────────────
+    // â”€â”€ Estado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const layerGroup    = L.layerGroup().addTo(map);
     const overlayLoad   = document.getElementById('overlay-cargando');
     const overlaySin    = document.getElementById('overlay-sin-datos');
@@ -313,7 +313,7 @@ $allowed_zones_json = json_encode($allowed_zones);
     const badgeFecha    = document.getElementById('badge-fecha');
     const controlesPerso = document.getElementById('controles-personalizado');
 
-    // ── Crear icono de marcador ──────────────────────────────────────
+    // â”€â”€ Crear icono de marcador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function crearIcono(tipo) {
         return L.divIcon({
             className: '',
@@ -324,7 +324,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         });
     }
 
-    // ── Construir HTML del popup ─────────────────────────────────────
+    // â”€â”€ Construir HTML del popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function popupHtml(item, tipo) {
         const horaKey  = tipo === 'entrada' ? item.hora_entrada : item.hora_salida;
         const badgeClass = 'popup-badge--' + tipo;
@@ -338,7 +338,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         if (fechaLabel) {
             html += '<div class="popup-fila"><span>Fecha</span><span>' + fechaLabel + '</span></div>';
         }
-        html += '<div class="popup-fila"><span>' + horaLabel + '</span><span>' + (horaKey || '—') + '</span></div>';
+        html += '<div class="popup-fila"><span>' + horaLabel + '</span><span>' + (horaKey || 'â€”') + '</span></div>';
 
         if (tipo === 'entrada' && item.hora_salida) {
             html += '<div class="popup-fila"><span>Hora salida</span><span>' + item.hora_salida + '</span></div>';
@@ -358,7 +358,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         return html;
     }
 
-    // ── Comparar coords para evitar marcador duplicado ───────────────
+    // â”€â”€ Comparar coords para evitar marcador duplicado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function coordsIguales(item) {
         if (item.lat_salida === null) return false;
         return (
@@ -367,7 +367,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         );
     }
 
-    // ── Actualizar badge con rango de fechas ─────────────────────────
+    // â”€â”€ Actualizar badge con rango de fechas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function actualizarBadgeFecha(desde, hasta) {
         const fromDate = new Date(desde + 'T00:00:00Z');
         const toDate = new Date(hasta + 'T00:00:00Z');
@@ -376,11 +376,11 @@ $allowed_zones_json = json_encode($allowed_zones);
         if (desde === hasta) {
             badgeFecha.textContent = formatter.format(fromDate);
         } else {
-            badgeFecha.textContent = formatter.format(fromDate) + ' — ' + formatter.format(toDate);
+            badgeFecha.textContent = formatter.format(fromDate) + ' â€” ' + formatter.format(toDate);
         }
     }
 
-    // ── Cargar marcaciones desde la API ─────────────────────────────
+    // â”€â”€ Cargar marcaciones desde la API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function cargarMarcaciones(desde, hasta) {
         overlayLoad.style.display = 'flex';
         overlaySin.style.display  = 'none';
@@ -399,7 +399,7 @@ $allowed_zones_json = json_encode($allowed_zones);
 
                 if (!json.ok || !json.data || json.data.length === 0) {
                     overlaySin.style.display  = 'flex';
-                    msgSin.textContent = 'Sin marcaciones con ubicación en este rango';
+                    msgSin.textContent = 'Sin marcaciones con ubicaciÃ³n en este rango';
                     return;
                 }
 
@@ -412,7 +412,7 @@ $allowed_zones_json = json_encode($allowed_zones);
                     if (item.lat_entrada !== null && item.lng_entrada !== null) {
                         const marker = L.marker([item.lat_entrada, item.lng_entrada], {
                             icon: crearIcono('entrada'),
-                            title: item.nombre + ' — Entrada',
+                            title: item.nombre + ' â€” Entrada',
                         });
                         marker.bindPopup(popupHtml(item, 'entrada'));
                         layerGroup.addLayer(marker);
@@ -424,7 +424,7 @@ $allowed_zones_json = json_encode($allowed_zones);
                     if (item.lat_salida !== null && item.lng_salida !== null && !coordsIguales(item)) {
                         const marker = L.marker([item.lat_salida, item.lng_salida], {
                             icon: crearIcono('salida'),
-                            title: item.nombre + ' — Salida',
+                            title: item.nombre + ' â€” Salida',
                         });
                         marker.bindPopup(popupHtml(item, 'salida'));
                         layerGroup.addLayer(marker);
@@ -432,7 +432,7 @@ $allowed_zones_json = json_encode($allowed_zones);
                     }
                 });
 
-                // Enfocar prioritariamente donde se marcan entradas válidas.
+                // Enfocar prioritariamente donde se marcan entradas vÃ¡lidas.
                 if (boundsEntrada.length > 0) {
                     map.fitBounds(boundsEntrada, { padding: [40, 40], maxZoom: 17 });
                 } else if (boundsTodos.length > 0) {
@@ -444,7 +444,7 @@ $allowed_zones_json = json_encode($allowed_zones);
                 const totalMarcadores = layerGroup.getLayers().length;
                 contador.textContent =
                     items.length + ' empleado' + (items.length !== 1 ? 's' : '') +
-                    ' con ubicación · ' +
+                    ' con ubicaciÃ³n Â· ' +
                     totalMarcadores + ' marcador' + (totalMarcadores !== 1 ? 'es' : '');
             })
             .catch(function (err) {
@@ -455,7 +455,7 @@ $allowed_zones_json = json_encode($allowed_zones);
             });
     }
 
-    // ── Mostrar/ocultar controles personalizados ─────────────────────
+    // â”€â”€ Mostrar/ocultar controles personalizados â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     rangoTipo.addEventListener('change', function () {
         if (this.value === 'personalizado') {
             controlesPerso.style.display = 'flex';
@@ -464,7 +464,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         }
     });
 
-    // ── Botón ver ────────────────────────────────────────────────────
+    // â”€â”€ BotÃ³n ver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     btnVer.addEventListener('click', function () {
         let desde = '<?php echo $fecha_hoy; ?>';
         let hasta = '<?php echo $fecha_hoy; ?>';
@@ -473,7 +473,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         if (tipo === 'hoy') {
             desde = hasta = '<?php echo $fecha_hoy; ?>';
         } else if (tipo === '3dias') {
-            // El servidor calcula esto, pero enviamos el mismo parámetro
+            // El servidor calcula esto, pero enviamos el mismo parÃ¡metro
             desde = new Date();
             desde.setDate(desde.getDate() - 2);
             desde = desde.toISOString().split('T')[0];
@@ -509,7 +509,7 @@ $allowed_zones_json = json_encode($allowed_zones);
         if (e.key === 'Enter') btnVer.click();
     });
 
-    // ── Carga inicial ────────────────────────────────────────────────
+    // â”€â”€ Carga inicial â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const fechaInicial_desde = '<?php echo $fecha_desde; ?>';
     const fechaInicial_hasta = '<?php echo $fecha_hasta; ?>';
     actualizarBadgeFecha(fechaInicial_desde, fechaInicial_hasta);
@@ -522,3 +522,4 @@ $allowed_zones_json = json_encode($allowed_zones);
 </script>
 </body>
 </html>
+

@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
-// Solo el dueño puede procesar estas acciones
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño' || $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: dueño.php');
+// Solo el dueÃ±o puede procesar estas acciones
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o' || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: dueÃ±o.php');
     exit;
 }
 
@@ -41,7 +41,7 @@ try {
             $marcacion = $stmt_marcacion->fetch(PDO::FETCH_ASSOC);
 
             if (!$marcacion) {
-                die('Marcación no encontrada.');
+                die('MarcaciÃ³n no encontrada.');
             }
 
             $fecha_base = date('Y-m-d', strtotime($marcacion['entrada']));

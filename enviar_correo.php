@@ -95,6 +95,13 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
 
             <div id="preview"></div>
 
+            <div class="form-group">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal;">
+                    <input type="checkbox" name="priority" value="1" id="priority_check" style="width:18px; height:18px; cursor:pointer;">
+                    <span>⚡ <strong>Envío prioritario</strong> — estos correos saltan al inicio de la cola</span>
+                </label>
+            </div>
+
             <button type="submit" class="btn btn-primary">Enviar Correos</button>
         </form>
 

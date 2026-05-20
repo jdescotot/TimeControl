@@ -1,8 +1,8 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     http_response_code(403);
     echo 'Acceso no autorizado';
     exit;
@@ -25,11 +25,11 @@ function esc_historial_pdf($value)
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-$dueño_id = (int)$_SESSION['user_id'];
+$dueÃ±o_id = (int)$_SESSION['user_id'];
 $empleado_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $stmt = $pdo->prepare("SELECT username, nombre, created_at FROM usuarios WHERE id = ? AND rol = 'empleado' AND propietario_id = ?");
-$stmt->execute([$empleado_id, $dueño_id]);
+$stmt->execute([$empleado_id, $dueÃ±o_id]);
 $empleado = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$empleado) {
@@ -45,13 +45,13 @@ if (!empty($empleado['created_at'])) {
     $fecha_inicio = new DateTime($empleado['created_at']);
     $fecha_actual = new DateTime();
     $diferencia = $fecha_inicio->diff($fecha_actual);
-    $años = $diferencia->y;
+    $aÃ±os = $diferencia->y;
     $meses = $diferencia->m;
 
-    if ($años > 0 && $meses > 0) {
-        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
-    } elseif ($años > 0) {
-        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '');
+    if ($aÃ±os > 0 && $meses > 0) {
+        $antiguedad_texto = $aÃ±os . ' aÃ±o' . ($aÃ±os > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
+    } elseif ($aÃ±os > 0) {
+        $antiguedad_texto = $aÃ±os . ' aÃ±o' . ($aÃ±os > 1 ? 's' : '');
     } else {
         $antiguedad_texto = $meses . ' mes' . ($meses > 1 ? 'es' : '');
     }
@@ -181,7 +181,7 @@ ob_start();
                 $fecha_base = $fila['fecha'];
                 $entrada_calcular_dt = $entrada_ajustada ? new DateTime($fecha_base . ' ' . $entrada_ajustada) : $entrada_dt;
                 $salida_calcular_dt = $salida_ajustada ? new DateTime($fecha_base . ' ' . $salida_ajustada) : $salida_dt;
-                $horas = '—';
+                $horas = 'â€”';
 
                 if ($entrada_calcular_dt && $salida_calcular_dt) {
                     if ($salida_calcular_dt < $entrada_calcular_dt) {
@@ -195,22 +195,22 @@ ob_start();
                     <td><?php echo esc_historial_pdf($fila['fecha']); ?></td>
                     <td>
                         <?php if (!empty($entrada_ajustada)): ?>
-                            <div class="original"><?php echo esc_historial_pdf($entrada ?: '—'); ?></div>
+                            <div class="original"><?php echo esc_historial_pdf($entrada ?: 'â€”'); ?></div>
                             <div class="adjusted"><?php echo esc_historial_pdf(substr($entrada_ajustada, 0, 5)); ?></div>
                         <?php else: ?>
-                            <?php echo esc_historial_pdf($entrada ?: '—'); ?>
+                            <?php echo esc_historial_pdf($entrada ?: 'â€”'); ?>
                         <?php endif; ?>
                     </td>
                     <td>
                         <?php if (!empty($salida_ajustada)): ?>
-                            <div class="original"><?php echo esc_historial_pdf($salida ?: '—'); ?></div>
+                            <div class="original"><?php echo esc_historial_pdf($salida ?: 'â€”'); ?></div>
                             <div class="adjusted"><?php echo esc_historial_pdf(substr($salida_ajustada, 0, 5)); ?></div>
                         <?php else: ?>
-                            <?php echo esc_historial_pdf($salida ?: '—'); ?>
+                            <?php echo esc_historial_pdf($salida ?: 'â€”'); ?>
                         <?php endif; ?>
                     </td>
                     <td><?php echo esc_historial_pdf($horas); ?></td>
-                    <td><?php echo esc_historial_pdf($fila['motivo'] ?: '—'); ?></td>
+                    <td><?php echo esc_historial_pdf($fila['motivo'] ?: 'â€”'); ?></td>
                 </tr>
             <?php endforeach; ?>
         <?php endif; ?>
@@ -232,3 +232,4 @@ $dompdf->loadHtml($html, 'UTF-8');
 $dompdf->render();
 $dompdf->stream('historial_empleado_' . $empleado_id . '.pdf', ['Attachment' => true]);
 exit;
+

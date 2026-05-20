@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     echo json_encode(['success' => false, 'error' => 'No autorizado']);
     exit;
 }
@@ -12,10 +12,10 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
 $empleado_id = $_POST['empleado_id'] ?? null;
 $fecha_descanso = $_POST['fecha_descanso'] ?? null;
 $semana = $_POST['semana'] ?? null;
-$año = $_POST['año'] ?? null;
+$aÃ±o = $_POST['aÃ±o'] ?? null;
 $accion = $_POST['accion'] ?? 'agregar'; // 'agregar' o 'eliminar'
 
-if (!$empleado_id || !$fecha_descanso || !$semana || !$año) {
+if (!$empleado_id || !$fecha_descanso || !$semana || !$aÃ±o) {
     echo json_encode(['success' => false, 'error' => 'Datos incompletos']);
     exit;
 }
@@ -23,13 +23,13 @@ if (!$empleado_id || !$fecha_descanso || !$semana || !$año) {
 // Validar formato de fecha
 $fecha = DateTime::createFromFormat('Y-m-d', $fecha_descanso);
 if (!$fecha) {
-    echo json_encode(['success' => false, 'error' => 'Formato de fecha inválido']);
+    echo json_encode(['success' => false, 'error' => 'Formato de fecha invÃ¡lido']);
     exit;
 }
 
 try {
     if ($accion === 'eliminar') {
-        // Eliminar el día de descanso
+        // Eliminar el dÃ­a de descanso
         $stmt = $pdo->prepare("
             DELETE FROM horarios_semanales 
             WHERE empleado_id = ? AND fecha_descanso = ?
@@ -46,12 +46,12 @@ try {
         if (!$stmt_check->fetch()) {
             // Solo insertar si no existe
             $stmt = $pdo->prepare("
-                INSERT INTO horarios_semanales (empleado_id, fecha_descanso, semana_año, año) 
+                INSERT INTO horarios_semanales (empleado_id, fecha_descanso, semana_aÃ±o, aÃ±o) 
                 VALUES (?, ?, ?, ?)
             ");
-            $stmt->execute([$empleado_id, $fecha_descanso, $semana, $año]);
+            $stmt->execute([$empleado_id, $fecha_descanso, $semana, $aÃ±o]);
         } else {
-            // Ya existe, considerarlo como éxito
+            // Ya existe, considerarlo como Ã©xito
             echo json_encode(['success' => true, 'message' => 'Ya existe']);
             exit;
         }
@@ -69,7 +69,7 @@ try {
             'empleado_id' => $empleado_id,
             'fecha_descanso' => $fecha_descanso,
             'semana' => $semana,
-            'año' => $año
+            'aÃ±o' => $aÃ±o
         ]
     ]);
 }

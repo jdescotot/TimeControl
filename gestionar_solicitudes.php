@@ -1,21 +1,21 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
-// Verificación de seguridad similar a la de dueño.php
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+// VerificaciÃ³n de seguridad similar a la de dueÃ±o.php
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     header('Location: index.php');
     exit;
 }
 
-// Mensaje de éxito si viene de procesar una solicitud
+// Mensaje de Ã©xito si viene de procesar una solicitud
 $mensaje_exito = '';
 if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'procesado_ok') {
     $mensaje_exito = 'Solicitud procesada correctamente';
 }
 
-// Consulta para obtener solicitudes pendientes solo de empleados del dueño actual
-$dueño_id = $_SESSION['user_id'];
+// Consulta para obtener solicitudes pendientes solo de empleados del dueÃ±o actual
+$dueÃ±o_id = $_SESSION['user_id'];
 $query = "
     SELECT 
         s.id,
@@ -40,7 +40,7 @@ $query = "
 
 try {
     $stmt = $pdo->prepare($query);
-    $stmt->execute([$dueño_id]);
+    $stmt->execute([$dueÃ±o_id]);
     $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     die("Error al obtener solicitudes: " . $e->getMessage());
@@ -71,15 +71,15 @@ try {
                     <span>Control Horario</span>
                 </div>
                 <div class="user-info">
-                    <span class="welcome-text">Gestión de Solicitudes</span>
+                    <span class="welcome-text">GestiÃ³n de Solicitudes</span>
                     <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
                 </div>
             </div>
         </header>
 
         <main class="main-content">
-            <!-- Botón de regreso -->
-            <a href="dueño.php" class="back-button" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-bottom: 20px;">
+            <!-- BotÃ³n de regreso -->
+            <a href="dueÃ±o.php" class="back-button" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-bottom: 20px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5"></path>
                     <polyline points="12 19 5 12 12 5"></polyline>
@@ -87,7 +87,7 @@ try {
                 Volver al Panel
             </a>
 
-            <!-- Mensaje de éxito -->
+            <!-- Mensaje de Ã©xito -->
             <?php if ($mensaje_exito): ?>
             <div class="status-message success" style="margin-bottom: 20px;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -130,13 +130,13 @@ try {
                                         <td data-label="Fecha"><?php echo date('d/m/Y', strtotime($s['fecha'])); ?></td>
                                         <td data-label="Horario Original">
                                             <small>
-                                                <strong>E:</strong> <?php echo $s['entrada_original'] ? date('H:i', strtotime($s['entrada_original'])) : '—'; ?><br>
-                                                <strong>S:</strong> <?php echo $s['salida_original'] ? date('H:i', strtotime($s['salida_original'])) : '—'; ?>
+                                                <strong>E:</strong> <?php echo $s['entrada_original'] ? date('H:i', strtotime($s['entrada_original'])) : 'â€”'; ?><br>
+                                                <strong>S:</strong> <?php echo $s['salida_original'] ? date('H:i', strtotime($s['salida_original'])) : 'â€”'; ?>
                                             </small>
                                         </td>
                                         <td data-label="Horario Solicitado" class="horario-highlight">
-                                            <strong>E:</strong> <?php echo !empty($s['nueva_hora_entrada']) ? substr($s['nueva_hora_entrada'], 0, 5) : '—'; ?><br>
-                                            <strong>S:</strong> <?php echo !empty($s['nueva_hora_salida']) ? substr($s['nueva_hora_salida'], 0, 5) : '—'; ?>
+                                            <strong>E:</strong> <?php echo !empty($s['nueva_hora_entrada']) ? substr($s['nueva_hora_entrada'], 0, 5) : 'â€”'; ?><br>
+                                            <strong>S:</strong> <?php echo !empty($s['nueva_hora_salida']) ? substr($s['nueva_hora_salida'], 0, 5) : 'â€”'; ?>
                                         </td>
                                         <td data-label="Motivo" class="motivo-cell"><?php echo htmlspecialchars($s['motivo']); ?></td>
                                         <td data-label="Estado">
@@ -202,7 +202,7 @@ try {
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                Cerrar Sesión
+                Cerrar SesiÃ³n
             </a>
         </footer>
     </div>

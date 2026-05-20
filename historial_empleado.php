@@ -1,18 +1,18 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     header('Location: index.php');
     exit;
 }
 
 $empleado_id = $_GET['id'] ?? 0;
-$dueño_id = (int)$_SESSION['user_id'];
+$dueÃ±o_id = (int)$_SESSION['user_id'];
 
-// Validar que el empleado exista y pertenezca al dueño autenticado
+// Validar que el empleado exista y pertenezca al dueÃ±o autenticado
 $stmt = $pdo->prepare("SELECT username, nombre, created_at FROM usuarios WHERE id = ? AND rol = 'empleado' AND propietario_id = ?");
-$stmt->execute([$empleado_id, $dueño_id]);
+$stmt->execute([$empleado_id, $dueÃ±o_id]);
 $empleado = $stmt->fetch();
 
 if (!$empleado) {
@@ -22,20 +22,20 @@ if (!$empleado) {
 $username = $empleado['username'];
 $nombre_mostrar = !empty($empleado['nombre']) ? $empleado['nombre'] : $empleado['username'];
 
-// Calcular antigüedad
+// Calcular antigÃ¼edad
 $antiguedad_texto = '';
 if (!empty($empleado['created_at'])) {
     $fecha_inicio = new DateTime($empleado['created_at']);
     $fecha_actual = new DateTime();
     $diferencia = $fecha_inicio->diff($fecha_actual);
     
-    $años = $diferencia->y;
+    $aÃ±os = $diferencia->y;
     $meses = $diferencia->m;
     
-    if ($años > 0 && $meses > 0) {
-        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
-    } elseif ($años > 0) {
-        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '');
+    if ($aÃ±os > 0 && $meses > 0) {
+        $antiguedad_texto = $aÃ±os . ' aÃ±o' . ($aÃ±os > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
+    } elseif ($aÃ±os > 0) {
+        $antiguedad_texto = $aÃ±os . ' aÃ±o' . ($aÃ±os > 1 ? 's' : '');
     } else {
         $antiguedad_texto = $meses . ' mes' . ($meses > 1 ? 'es' : '');
     }
@@ -77,9 +77,9 @@ $marcaciones = $stmt->fetchAll();
                 <div class="user-info">
                     <?php 
                     $mes_param = $_GET['mes'] ?? null;
-                    $año_param = $_GET['año'] ?? null;
-                    $back_url = ($mes_param && $año_param) ? "reporte_mensual.php?mes=$mes_param&año=$año_param" : "dueño.php";
-                    $back_text = ($mes_param && $año_param) ? "Volver al Reporte" : "Volver al Panel";
+                    $aÃ±o_param = $_GET['aÃ±o'] ?? null;
+                    $back_url = ($mes_param && $aÃ±o_param) ? "reporte_mensual.php?mes=$mes_param&aÃ±o=$aÃ±o_param" : "dueÃ±o.php";
+                    $back_text = ($mes_param && $aÃ±o_param) ? "Volver al Reporte" : "Volver al Panel";
                     $pdf_query = http_build_query(['id' => (int)$empleado_id]);
                     ?>
                     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end;">
@@ -87,7 +87,7 @@ $marcaciones = $stmt->fetchAll();
                             Historial de <?php echo htmlspecialchars($nombre_mostrar); ?>
                             <?php if ($antiguedad_texto): ?>
                                 <span style="color: #667eea; font-weight: 600; margin-left: 12px; font-size: 14px;">
-                                    • Trabaja aquí: <?php echo $antiguedad_texto; ?>
+                                    â€¢ Trabaja aquÃ­: <?php echo $antiguedad_texto; ?>
                                 </span>
                             <?php endif; ?>
                         </span>
@@ -146,7 +146,7 @@ $marcaciones = $stmt->fetchAll();
                                         $tiene_ajuste_entrada = !empty($entrada_ajustada);
                                         $tiene_ajuste_salida = !empty($salida_ajustada);
                                         
-                                        // Usar horas ajustadas para cálculos si existen (día de inicio)
+                                        // Usar horas ajustadas para cÃ¡lculos si existen (dÃ­a de inicio)
                                         $fecha_base = $fila['fecha'];
                                         $entrada_calcular_dt = $entrada_ajustada ? new DateTime($fecha_base . ' ' . $entrada_ajustada) : $entrada_dt;
                                         if ($salida_ajustada) {
@@ -155,7 +155,7 @@ $marcaciones = $stmt->fetchAll();
                                             $salida_calcular_dt = $salida_dt;
                                         }
                                         
-                                        $horas = '—';
+                                        $horas = 'â€”';
                                         if ($entrada_calcular_dt && $salida_calcular_dt) {
                                             if ($salida_calcular_dt < $entrada_calcular_dt) {
                                                 $salida_calcular_dt->modify('+1 day');
@@ -170,7 +170,7 @@ $marcaciones = $stmt->fetchAll();
                                                 <?php if ($tiene_ajuste_entrada): ?>
                                                     <div style="display: flex; flex-direction: column; gap: 4px;">
                                                         <span style="text-decoration: line-through; opacity: 0.5; font-size: 12px;">
-                                                            <?= $entrada ? substr($entrada, 0, 5) : '—' ?>
+                                                            <?= $entrada ? substr($entrada, 0, 5) : 'â€”' ?>
                                                         </span>
                                                         <div>
                                                             <strong style="color: #667eea; font-size: 15px;"><?= substr($entrada_ajustada, 0, 5) ?></strong>
@@ -178,14 +178,14 @@ $marcaciones = $stmt->fetchAll();
                                                         </div>
                                                     </div>
                                                 <?php else: ?>
-                                                    <?= $entrada ? substr($entrada, 0, 5) : '—' ?>
+                                                    <?= $entrada ? substr($entrada, 0, 5) : 'â€”' ?>
                                                 <?php endif; ?>
                                             </td>
                                             <td data-label="Salida">
                                                 <?php if ($tiene_ajuste_salida): ?>
                                                     <div style="display: flex; flex-direction: column; gap: 4px;">
                                                         <span style="text-decoration: line-through; opacity: 0.5; font-size: 12px;">
-                                                            <?= $salida ? substr($salida, 0, 5) : '—' ?>
+                                                            <?= $salida ? substr($salida, 0, 5) : 'â€”' ?>
                                                         </span>
                                                         <div>
                                                             <strong style="color: #667eea; font-size: 15px;"><?= substr($salida_ajustada, 0, 5) ?></strong>
@@ -193,7 +193,7 @@ $marcaciones = $stmt->fetchAll();
                                                         </div>
                                                     </div>
                                                 <?php else: ?>
-                                                    <?= $salida ? substr($salida, 0, 5) : '—' ?>
+                                                    <?= $salida ? substr($salida, 0, 5) : 'â€”' ?>
                                                 <?php endif; ?>
                                             </td>
                                             <td data-label="Horas"><?= $horas ?></td>

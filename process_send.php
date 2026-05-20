@@ -24,6 +24,7 @@ try {
 $subject = trim($_POST['subject'] ?? '');
 $body = trim($_POST['body'] ?? '');
 $recipients_source = $_POST['recipients_source'] ?? 'all_employees';
+$priority = isset($_POST['priority']) && $_POST['priority'] === '1' ? 10 : 0;
 
 if ($subject === '' || $body === '') {
     die('Asunto y cuerpo son obligatorios.');
@@ -77,7 +78,7 @@ if (!empty($_FILES['inline_images'])) {
     }
 }
 
-$insert_stmt = $pdo->prepare("INSERT INTO email_queue (recipient_email, recipient_name, subject, body, attachments, status, attempts, created_at) VALUES (?, ?, ?, ?, ?, 'queued', 0, NOW())");
+$insert_stmt = $pdo->prepare("INSERT INTO email_queue (recipient_email, recipient_name, subject, body, attachments, status, attempts, priority, created_at) VALUES (?, ?, ?, ?, ?, 'queued', 0, ?, NOW())");
 
 $enqueued = 0;
 if (!empty($inline_map)) {
@@ -93,7 +94,7 @@ if ($recipients_source === 'csv' && isset($_FILES['csv_file']) && $_FILES['csv_f
     while (($row = fgetcsv($csv)) !== false) {
         $email = trim($row[0] ?? '');
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
-        $insert_stmt->execute([$email, null, $subject, $body, $attachments_json]);
+        $insert_stmt->execute([$email, null, $subject, $body, $attachments_json, $priority]);
         $enqueued++;
     }
     fclose($csv);
@@ -108,7 +109,7 @@ if ($recipients_source === 'csv' && isset($_FILES['csv_file']) && $_FILES['csv_f
         $email = trim($candidate);
         if ($email === '') continue;
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
-        $insert_stmt->execute([$email, null, $subject, $body, $attachments_json]);
+        $insert_stmt->execute([$email, null, $subject, $body, $attachments_json, $priority]);
         $enqueued++;
     }
 
@@ -123,7 +124,7 @@ if ($recipients_source === 'csv' && isset($_FILES['csv_file']) && $_FILES['csv_f
         $email = trim($row['email']);
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
         $name = trim(($row['nombre'] ?? '') . ' ' . ($row['apellidos'] ?? ''));
-        $insert_stmt->execute([$email, $name, $subject, $body, $attachments_json]);
+        $insert_stmt->execute([$email, $name, $subject, $body, $attachments_json, $priority]);
         $enqueued++;
     }
 }

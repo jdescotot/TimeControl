@@ -1,33 +1,33 @@
-<?php
+﻿<?php
 /**
- * SCRIPT DE DIAGNÓSTICO: Verifica la configuración del mapa de marcaciones
+ * SCRIPT DE DIAGNÃ“STICO: Verifica la configuraciÃ³n del mapa de marcaciones
  * 
  * Muestra:
  * - Datos GPS guardados en BD
  * - Empleados sin GPS
  * - Zonas permitidas
- * - Estadísticas de marcaciones
+ * - EstadÃ­sticas de marcaciones
  */
 session_start();
 require_once 'config.php';
 require_once 'jaen_geocoder.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
-    die('❌ Acceso denegado. Solo para dueños.');
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
+    die('âŒ Acceso denegado. Solo para dueÃ±os.');
 }
 
-$dueño_id = (int)$_SESSION['user_id'];
+$dueÃ±o_id = (int)$_SESSION['user_id'];
 $hoy = date('Y-m-d');
 $hace_3_dias = date('Y-m-d', strtotime('-2 days'));
 
-echo "<h1>🔍 Diagnóstico - Mapa de Marcaciones</h1>";
+echo "<h1>ðŸ” DiagnÃ³stico - Mapa de Marcaciones</h1>";
 echo "<hr>";
 
-// ── 1. VERIFICAR ZONAS PERMITIDAS ────────────────────────────────────
-echo "<h2>📍 Zonas Permitidas de Marcación</h2>";
+// â”€â”€ 1. VERIFICAR ZONAS PERMITIDAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+echo "<h2>ðŸ“ Zonas Permitidas de MarcaciÃ³n</h2>";
 $allowed = getAllowedMarkingLocations();
 if (empty($allowed)) {
-    echo "<p style='color: red;'>⚠️ <b>NO hay zonas permitidas configuradas</b></p>";
+    echo "<p style='color: red;'>âš ï¸ <b>NO hay zonas permitidas configuradas</b></p>";
 } else {
     echo "<ul>";
     foreach ($allowed as $zone) {
@@ -36,8 +36,8 @@ if (empty($allowed)) {
     echo "</ul>";
 }
 
-// ── 2. ESTADÍSTICAS DE MARCACIONES ────────────────────────────────────
-echo "<h2>📊 Estadísticas de Marcaciones (últimos 3 días)</h2>";
+// â”€â”€ 2. ESTADÃSTICAS DE MARCACIONES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+echo "<h2>ðŸ“Š EstadÃ­sticas de Marcaciones (Ãºltimos 3 dÃ­as)</h2>";
 
 try {
     $stmt = $pdo->prepare("
@@ -50,31 +50,31 @@ try {
         INNER JOIN usuarios u ON m.empleado_id = u.id
         WHERE u.propietario_id = ? AND DATE(m.entrada) BETWEEN ? AND ?
     ");
-    $stmt->execute([$dueño_id, $hace_3_dias, $hoy]);
+    $stmt->execute([$dueÃ±o_id, $hace_3_dias, $hoy]);
     $stats = $stmt->fetch(PDO::FETCH_ASSOC);
     
     echo "<table border='1' cellpadding='10'>";
     echo "<tr><td><b>Total Marcaciones</b></td><td>{$stats['total']}</td></tr>";
     echo "<tr><td><b>Con GPS Entrada</b></td><td>{$stats['entrada_gps']}</td></tr>";
     echo "<tr><td><b>Con GPS Salida</b></td><td>{$stats['salida_gps']}</td></tr>";
-    echo "<tr><td><b>Con Alguna Ubicación</b></td><td style='background-color: #d4edda;'><b>{$stats['con_ubicacion']}</b></td></tr>";
+    echo "<tr><td><b>Con Alguna UbicaciÃ³n</b></td><td style='background-color: #d4edda;'><b>{$stats['con_ubicacion']}</b></td></tr>";
     echo "</table>";
     
     if ($stats['con_ubicacion'] == 0) {
-        echo "<p style='color: red; font-weight: bold;'>⚠️ PROBLEMA: Ninguna marcación tiene coordenadas GPS</p>";
+        echo "<p style='color: red; font-weight: bold;'>âš ï¸ PROBLEMA: Ninguna marcaciÃ³n tiene coordenadas GPS</p>";
         echo "<p>Posibles causas:</p>";
         echo "<ul>";
         echo "<li>Los empleados no tienen GPS habilitado en el navegador</li>";
-        echo "<li>Los empleados están fuera de las zonas permitidas</li>";
-        echo "<li>El formulario de marcación no está enviando las coordenadas</li>";
+        echo "<li>Los empleados estÃ¡n fuera de las zonas permitidas</li>";
+        echo "<li>El formulario de marcaciÃ³n no estÃ¡ enviando las coordenadas</li>";
         echo "</ul>";
     }
 } catch (Exception $e) {
-    echo "<p style='color: red;'>❌ Error: " . $e->getMessage() . "</p>";
+    echo "<p style='color: red;'>âŒ Error: " . $e->getMessage() . "</p>";
 }
 
-// ── 3. EMPLEADOS Y SUS MARCACIONES CON GPS ────────────────────────────
-echo "<h2>👥 Detalle por Empleado</h2>";
+// â”€â”€ 3. EMPLEADOS Y SUS MARCACIONES CON GPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+echo "<h2>ðŸ‘¥ Detalle por Empleado</h2>";
 
 try {
     $stmt = $pdo->prepare("
@@ -92,7 +92,7 @@ try {
         GROUP BY u.id
         ORDER BY u.nombre, u.apellido
     ");
-    $stmt->execute([$hace_3_dias, $hoy, $dueño_id]);
+    $stmt->execute([$hace_3_dias, $hoy, $dueÃ±o_id]);
     $empleados = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo "<table border='1' cellpadding='8'>";
@@ -102,10 +102,10 @@ try {
     
     foreach ($empleados as $emp) {
         $status = $emp['entrada_gps'] > 0 || $emp['salida_gps'] > 0 ? 
-            "✅ OK" : 
-            ($emp['total_marcaciones'] > 0 ? "⚠️ Sin GPS" : "⏸️ Sin marcar");
-        $status_color = strpos($status, '✅') !== false ? 'lightgreen' : 
-                       (strpos($status, '⚠️') !== false ? 'lightyellow' : 'lightgray');
+            "âœ… OK" : 
+            ($emp['total_marcaciones'] > 0 ? "âš ï¸ Sin GPS" : "â¸ï¸ Sin marcar");
+        $status_color = strpos($status, 'âœ…') !== false ? 'lightgreen' : 
+                       (strpos($status, 'âš ï¸') !== false ? 'lightyellow' : 'lightgray');
         
         echo "<tr>";
         echo "<td>{$emp['nombre']} {$emp['apellido']} ({$emp['username']})</td>";
@@ -117,11 +117,11 @@ try {
     }
     echo "</table>";
 } catch (Exception $e) {
-    echo "<p style='color: red;'>❌ Error: " . $e->getMessage() . "</p>";
+    echo "<p style='color: red;'>âŒ Error: " . $e->getMessage() . "</p>";
 }
 
-// ── 4. MUESTRA DE DATOS RAW ────────────────────────────────────
-echo "<h2>🔬 Muestra de Datos (Últimas 5 Marcaciones)</h2>";
+// â”€â”€ 4. MUESTRA DE DATOS RAW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+echo "<h2>ðŸ”¬ Muestra de Datos (Ãšltimas 5 Marcaciones)</h2>";
 
 try {
     $stmt = $pdo->prepare("
@@ -141,11 +141,11 @@ try {
         ORDER BY m.entrada DESC
         LIMIT 5
     ");
-    $stmt->execute([$dueño_id, $hace_3_dias, $hoy]);
+    $stmt->execute([$dueÃ±o_id, $hace_3_dias, $hoy]);
     $samples = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($samples)) {
-        echo "<p>No hay marcaciones en los últimos 3 días</p>";
+        echo "<p>No hay marcaciones en los Ãºltimos 3 dÃ­as</p>";
     } else {
         echo "<table border='1' cellpadding='8' style='font-size: 12px;'>";
         echo "<tr style='background-color: #f0f0f0;'>";
@@ -157,29 +157,29 @@ try {
             echo "<td>{$row['id']}</td>";
             echo "<td>{$row['nombre']} {$row['apellido']}</td>";
             echo "<td>{$row['entrada']}</td>";
-            echo "<td>" . ($row['lat_entrada'] ? number_format($row['lat_entrada'], 6) : '—') . "</td>";
-            echo "<td>" . ($row['lng_entrada'] ? number_format($row['lng_entrada'], 6) : '—') . "</td>";
+            echo "<td>" . ($row['lat_entrada'] ? number_format($row['lat_entrada'], 6) : 'â€”') . "</td>";
+            echo "<td>" . ($row['lng_entrada'] ? number_format($row['lng_entrada'], 6) : 'â€”') . "</td>";
             echo "<td>{$row['salida']}</td>";
-            echo "<td>" . ($row['lat_salida'] ? number_format($row['lat_salida'], 6) : '—') . "</td>";
-            echo "<td>" . ($row['lng_salida'] ? number_format($row['lng_salida'], 6) : '—') . "</td>";
+            echo "<td>" . ($row['lat_salida'] ? number_format($row['lat_salida'], 6) : 'â€”') . "</td>";
+            echo "<td>" . ($row['lng_salida'] ? number_format($row['lng_salida'], 6) : 'â€”') . "</td>";
             echo "</tr>";
         }
         echo "</table>";
     }
 } catch (Exception $e) {
-    echo "<p style='color: red;'>❌ Error: " . $e->getMessage() . "</p>";
+    echo "<p style='color: red;'>âŒ Error: " . $e->getMessage() . "</p>";
 }
 
-// ── 5. RECOMENDACIONES ────────────────────────────────────────────────
-echo "<h2>📋 Recomendaciones</h2>";
+// â”€â”€ 5. RECOMENDACIONES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+echo "<h2>ðŸ“‹ Recomendaciones</h2>";
 echo "<ol>";
-echo "<li><a href='mapa_marcaciones.php?rango=3dias'>Ver Mapa - Últimos 3 días</a></li>";
-echo "<li><a href='mapa_marcaciones.php?rango=7dias'>Ver Mapa - Últimos 7 días</a></li>";
+echo "<li><a href='mapa_marcaciones.php?rango=3dias'>Ver Mapa - Ãšltimos 3 dÃ­as</a></li>";
+echo "<li><a href='mapa_marcaciones.php?rango=7dias'>Ver Mapa - Ãšltimos 7 dÃ­as</a></li>";
 echo "<li>Si no hay datos con GPS:
     <ul>
-    <li>Verifica que los empleados marquen entrada/salida en <b>empleado.php</b> (debe solicitar ubicación)</li>
+    <li>Verifica que los empleados marquen entrada/salida en <b>empleado.php</b> (debe solicitar ubicaciÃ³n)</li>
     <li>Revisa que los empleados tengan GPS habilitado en el navegador</li>
-    <li>Comprueba que estén dentro de una zona permitida</li>
+    <li>Comprueba que estÃ©n dentro de una zona permitida</li>
     </ul>
 </li>";
 echo "</ol>";
@@ -206,3 +206,4 @@ td, th {
     text-align: left;
 }
 </style>
+

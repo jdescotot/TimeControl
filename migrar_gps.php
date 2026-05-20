@@ -1,14 +1,14 @@
-<?php
+﻿<?php
 /**
- * SCRIPT DE MIGRACIÓN — ejecutar UNA SOLA VEZ y luego eliminar.
- * Añade las columnas de coordenadas GPS a la tabla marcaciones.
+ * SCRIPT DE MIGRACIÃ“N â€” ejecutar UNA SOLA VEZ y luego eliminar.
+ * AÃ±ade las columnas de coordenadas GPS a la tabla marcaciones.
  */
 session_start();
 require_once 'config.php';
 
-// Solo accesible si hay sesión de dueño (protección mínima)
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
-    die('Acceso denegado. Debes iniciar sesión como dueño.');
+// Solo accesible si hay sesiÃ³n de dueÃ±o (protecciÃ³n mÃ­nima)
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
+    die('Acceso denegado. Debes iniciar sesiÃ³n como dueÃ±o.');
 }
 
 $errores = [];
@@ -32,7 +32,7 @@ foreach ($columnas as $nombre => $sql) {
     $check->execute([$nombre]);
 
     if ((int)$check->fetchColumn() > 0) {
-        $ok[] = "Columna <strong>{$nombre}</strong>: ya existía (sin cambios).";
+        $ok[] = "Columna <strong>{$nombre}</strong>: ya existÃ­a (sin cambios).";
         continue;
     }
 
@@ -49,7 +49,7 @@ foreach ($columnas as $nombre => $sql) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Migración GPS — Control Horario</title>
+    <title>MigraciÃ³n GPS â€” Control Horario</title>
     <style>
         body { font-family: system-ui, sans-serif; max-width: 640px; margin: 60px auto; padding: 20px; }
         h1   { font-size: 1.4rem; margin-bottom: 20px; }
@@ -60,21 +60,22 @@ foreach ($columnas as $nombre => $sql) {
     </style>
 </head>
 <body>
-    <h1>Migración GPS — Tabla <code>marcaciones</code></h1>
+    <h1>MigraciÃ³n GPS â€” Tabla <code>marcaciones</code></h1>
 
     <?php foreach ($ok as $msg): ?>
-        <div class="ok">✔ <?= $msg ?></div>
+        <div class="ok">âœ” <?= $msg ?></div>
     <?php endforeach; ?>
 
     <?php foreach ($errores as $msg): ?>
-        <div class="err">✖ <?= $msg ?></div>
+        <div class="err">âœ– <?= $msg ?></div>
     <?php endforeach; ?>
 
     <div class="warn">
-        ⚠️ <strong>Importante:</strong> Una vez comprobado que todo es correcto, <strong>elimina este archivo</strong>
+        âš ï¸ <strong>Importante:</strong> Una vez comprobado que todo es correcto, <strong>elimina este archivo</strong>
         (<code>migrar_gps.php</code>) del servidor para evitar que sea accedido de nuevo.
     </div>
 
-    <p style="margin-top:20px;"><a href="dueño.php">← Volver al panel</a></p>
+    <p style="margin-top:20px;"><a href="dueÃ±o.php">â† Volver al panel</a></p>
 </body>
 </html>
+

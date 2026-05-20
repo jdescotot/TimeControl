@@ -1,22 +1,22 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     header('Location: index.php');
     exit;
 }
 
 $hoy = date('Y-m-d');
 $mes_actual = (int)date('n');
-$año_actual = (int)date('Y');
+$aÃ±o_actual = (int)date('Y');
 $pdf_mes_query = http_build_query([
     'mes' => $mes_actual,
-    'año' => $año_actual,
+    'aÃ±o' => $aÃ±o_actual,
 ]);
 
-// Obtener número de solicitudes pendientes solo de empleados del dueño actual
-$dueño_id = $_SESSION['user_id'];
+// Obtener nÃºmero de solicitudes pendientes solo de empleados del dueÃ±o actual
+$dueÃ±o_id = $_SESSION['user_id'];
 try {
     $stmt_pendientes = $pdo->prepare("
         SELECT COUNT(*) as total 
@@ -24,7 +24,7 @@ try {
         INNER JOIN usuarios u ON sc.empleado_id = u.id
         WHERE sc.estado IN ('pendiente', 'rechazado_empleado') AND u.propietario_id = ?
     ");
-    $stmt_pendientes->execute([$dueño_id]);
+    $stmt_pendientes->execute([$dueÃ±o_id]);
     $resultado = $stmt_pendientes->fetch(PDO::FETCH_ASSOC);
     $num_solicitudes = (int) ($resultado['total'] ?? 0);
 } catch (Exception $e) {
@@ -32,7 +32,7 @@ try {
     error_log("Error al obtener solicitudes: " . $e->getMessage());
 }
 
-// Obtener todos los empleados (excluyendo al dueño) - con mejor manejo de charset
+// Obtener todos los empleados (excluyendo al dueÃ±o) - con mejor manejo de charset
 $stmt_empleados = $pdo->prepare("
     SELECT id, username, nombre
     FROM usuarios 
@@ -40,18 +40,18 @@ $stmt_empleados = $pdo->prepare("
     AND propietario_id = ? 
     ORDER BY nombre IS NULL OR nombre = '', nombre, username
 ");
-$stmt_empleados->execute([$dueño_id]);
+$stmt_empleados->execute([$dueÃ±o_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
-// DEBUG: Descomentar para verificar cuántos empleados se obtienen
+// DEBUG: Descomentar para verificar cuÃ¡ntos empleados se obtienen
 // echo "<!-- Total empleados encontrados: " . count($empleados) . " -->";
 
-// Preparar estadísticas del día
+// Preparar estadÃ­sticas del dÃ­a
 $total_empleados = count($empleados);
 $entraron_hoy = 0;
 $en_jornada = 0;
 
-// Obtener días de descanso para hoy
+// Obtener dÃ­as de descanso para hoy
 $stmt_descansos = $pdo->prepare("SELECT empleado_id FROM horarios_semanales WHERE fecha_descanso = ?");
 $stmt_descansos->execute([$hoy]);
 $empleados_con_descanso = [];
@@ -59,14 +59,14 @@ foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
     $empleados_con_descanso[] = $d['empleado_id'];
 }
 
-// Obtener ausencias marcadas hoy (solo empleados del dueño)
+// Obtener ausencias marcadas hoy (solo empleados del dueÃ±o)
 $stmt_ausencias_hoy = $pdo->prepare("
     SELECT ae.empleado_id, ae.tipo_ausencia
     FROM ausencias_empleados ae
     INNER JOIN usuarios u ON ae.empleado_id = u.id
     WHERE u.propietario_id = ? AND ae.fecha = ?
 ");
-$stmt_ausencias_hoy->execute([$dueño_id, $hoy]);
+$stmt_ausencias_hoy->execute([$dueÃ±o_id, $hoy]);
 $ausencias_hoy = [];
 foreach ($stmt_ausencias_hoy->fetchAll(PDO::FETCH_ASSOC) as $a) {
     $ausencias_hoy[$a['empleado_id']] = $a['tipo_ausencia'];
@@ -77,7 +77,7 @@ $empleado_ids = array_column($empleados, 'id');
 $marcaciones_por_emp = [];
 
 if (!empty($empleado_ids)) {
-    // Crear placeholders dinámicos para la consulta IN
+    // Crear placeholders dinÃ¡micos para la consulta IN
     $placeholders = implode(',', array_fill(0, count($empleado_ids), '?'));
     
     $stmt_marcaciones = $pdo->prepare("
@@ -103,11 +103,11 @@ if (!empty($empleado_ids)) {
 // Para cada empleado, asignar datos obtenidos
 if (!empty($empleados)) {
     foreach ($empleados as $key => $emp) {
-        // Verificar si tiene día de descanso
+        // Verificar si tiene dÃ­a de descanso
         $empleados[$key]['tiene_descanso'] = in_array($emp['id'], $empleados_con_descanso);
         $empleados[$key]['ausencia_hoy'] = $ausencias_hoy[$emp['id']] ?? null;
         
-        // Usar datos obtenidos en la query única
+        // Usar datos obtenidos en la query Ãºnica
         $registro = $marcaciones_por_emp[$emp['id']] ?? null;
         
         $empleados[$key]['entrada'] = $registro['entrada'] ?? null;
@@ -127,7 +127,7 @@ if (!empty($empleados)) {
     }
 }
 
-// Restar empleados con descanso del total de pendientes y evitar números negativos
+// Restar empleados con descanso del total de pendientes y evitar nÃºmeros negativos
 $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_descanso));
 ?>
 <!DOCTYPE html>
@@ -136,11 +136,11 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del Dueño - Control Horario</title>
+    <title>Panel del DueÃ±o - Control Horario</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-utilities.min.css">
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="solicitudes_cambio.css">
-    <link rel="stylesheet" href="dueño.css">
+    <link rel="stylesheet" href="dueÃ±o.css">
 </head>
 
 <body class="owner-dashboard">
@@ -194,7 +194,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Mensaje de éxito al crear empleado -->
+            <!-- Mensaje de Ã©xito al crear empleado -->
             <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'empleado_creado'): ?>
                 <div class="status-message success">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -218,7 +218,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                 </div>
             <?php endif; ?>
 
-            <!-- Notificación de Solicitudes Pendientes -->
+            <!-- NotificaciÃ³n de Solicitudes Pendientes -->
             <?php if ($num_solicitudes > 0): ?>
                 <div class="card notification-card">
                     <div class="card-body">
@@ -235,7 +235,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                 <strong>Solicitudes Pendientes</strong>
                                 <p>Tienes <?php echo $num_solicitudes; ?>
                                     <?php echo $num_solicitudes === 1 ? 'solicitud' : 'solicitudes'; ?> de cambio de horario
-                                    pendiente<?php echo $num_solicitudes === 1 ? '' : 's'; ?> de revisión.</p>
+                                    pendiente<?php echo $num_solicitudes === 1 ? '' : 's'; ?> de revisiÃ³n.</p>
                             </div>
                             <a href="gestionar_solicitudes.php" class="btn btn-notification">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -250,7 +250,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                 </div>
             <?php endif; ?>
 
-            <!-- Resumen del día -->
+            <!-- Resumen del dÃ­a -->
             <div class="card">
                 <div class="card-header">
                     <h2>Actividad de Hoy</h2>
@@ -311,7 +311,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                     <th>Empleado</th>
                                     <th>Estado Hoy</th>
                                     <th>Horas Trabajadas</th>
-                                    <th>Acción</th>
+                                    <th>AcciÃ³n</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -348,7 +348,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                             <line x1="8" y1="2" x2="8" y2="6"></line>
                                                             <line x1="3" y1="10" x2="21" y2="10"></line>
                                                         </svg>
-                                                        Día Libre
+                                                        DÃ­a Libre
                                                     </span>
                                                 <?php elseif ($emp['ausencia_hoy']): ?>
                                                     <?php
@@ -374,33 +374,33 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                 <?php elseif ($emp['entrada'] && !$emp['salida']): ?>
                                                     <?php if ($emp['tiene_ajuste']): ?>
                                                         <span class="status-inline status-inline--warning">En jornada (desde
-                                                            <span class="time-original"><?php echo $emp['entrada_hora'] ?? '—'; ?></span>
+                                                            <span class="time-original"><?php echo $emp['entrada_hora'] ?? 'â€”'; ?></span>
                                                             <strong class="time-adjusted"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong>
                                                             <span class="badge-adjusted">Ajustado</span>)
                                                         </span>
                                                     <?php else: ?>
                                                         <span class="status-inline status-inline--warning">En jornada (desde
-                                                            <?php echo $emp['entrada_hora'] ?? '—'; ?>)</span>
+                                                            <?php echo $emp['entrada_hora'] ?? 'â€”'; ?>)</span>
                                                     <?php endif; ?>
                                                 <?php else: ?>
                                                     <span class="status-inline status-inline--success">Completado</span><br>
                                                     <?php if ($emp['tiene_ajuste']): ?>
                                                         <small class="status-detail">
-                                                            Entrada: <span class="time-original"><?php echo $emp['entrada_hora'] ?? '—'; ?></span>
+                                                            Entrada: <span class="time-original"><?php echo $emp['entrada_hora'] ?? 'â€”'; ?></span>
                                                             <strong class="time-adjusted"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong> |
-                                                            Salida: <span class="time-original"><?php echo $emp['salida_hora'] ?? '—'; ?></span>
+                                                            Salida: <span class="time-original"><?php echo $emp['salida_hora'] ?? 'â€”'; ?></span>
                                                             <strong class="time-adjusted"><?php echo substr($emp['hora_salida_ajustada'], 0, 5); ?></strong>
                                                             <span class="badge-adjusted badge-adjusted--sm">Ajustado</span>
                                                         </small>
                                                     <?php else: ?>
-                                                        <small class="status-detail">Entrada: <?php echo $emp['entrada_hora'] ?? '—'; ?> | Salida:
-                                                            <?php echo $emp['salida_hora'] ?? '—'; ?></small>
+                                                        <small class="status-detail">Entrada: <?php echo $emp['entrada_hora'] ?? 'â€”'; ?> | Salida:
+                                                            <?php echo $emp['salida_hora'] ?? 'â€”'; ?></small>
                                                     <?php endif; ?>
                                                 <?php endif; ?>
                                             </td>
                                             <td data-label="Horas">
                                                 <?php
-                                                // Usar horas ajustadas si existen, de lo contrario usar originales (día de inicio)
+                                                // Usar horas ajustadas si existen, de lo contrario usar originales (dÃ­a de inicio)
                                                 $fecha_base = $emp['entrada'] ? date('Y-m-d', strtotime($emp['entrada'])) : $hoy;
                                                 $entrada_usar_dt = $emp['hora_entrada_ajustada'] ? new DateTime($fecha_base . ' ' . $emp['hora_entrada_ajustada']) : ($emp['entrada'] ? new DateTime($emp['entrada']) : null);
                                                 if ($emp['hora_salida_ajustada']) {
@@ -420,14 +420,14 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                             echo ' <span class="hours-adjusted-mark">*</span>';
                                                         }
                                                     } catch (Exception $e) {
-                                                        echo '—';
+                                                        echo 'â€”';
                                                     }
                                                 } else {
-                                                    echo '—';
+                                                    echo 'â€”';
                                                 }
                                                 ?>
                                             </td>
-                                            <td data-label="Acción">
+                                            <td data-label="AcciÃ³n">
                                                 <div class="d-flex flex-wrap gap-2">
                                                     <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn btn-history">
                                                         Ver Historial
@@ -457,14 +457,14 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                     <div class="form-group">
                         <label for="nombre">Nombre del Empleado:</label>
                         <input type="text" name="nombre" id="nombre" required minlength="2" maxlength="100"
-                            placeholder="Ej: Juan Pérez García" autocomplete="off">
+                            placeholder="Ej: Juan PÃ©rez GarcÃ­a" autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="username">DNI / NIE / NIF / Pasaporte:</label>
                         <input type="text" name="username" id="username" required minlength="3" maxlength="50"
                             placeholder="Ej: X1234567L" autocomplete="off">
                         <small class="form-help">
-                            Se convertirá automáticamente a minúsculas sin espacios
+                            Se convertirÃ¡ automÃ¡ticamente a minÃºsculas sin espacios
                         </small>
                     </div>
                     <div class="form-group">
@@ -472,18 +472,18 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                         <input type="date" name="fecha_inicio" id="fecha_inicio" required
                             value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
                         <small class="form-help">
-                            Fecha en que el empleado comenzó a trabajar
+                            Fecha en que el empleado comenzÃ³ a trabajar
                         </small>
                     </div>
                     <div class="form-group">
-                        <label for="password">Contraseña Temporal:</label>
+                        <label for="password">ContraseÃ±a Temporal:</label>
                         <div class="password-wrapper">
                             <input type="password" name="password" id="password" required minlength="6"
-                                placeholder="Mínimo 6 caracteres sin espacios" autocomplete="new-password"
+                                placeholder="MÃ­nimo 6 caracteres sin espacios" autocomplete="new-password"
                                 class="input-with-eye">
                             <button type="button" onclick="togglePassword('password', this)" 
                                 class="btn-eye"
-                                aria-label="Mostrar contraseña">
+                                aria-label="Mostrar contraseÃ±a">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>
@@ -491,18 +491,18 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                             </button>
                         </div>
                         <small class="form-help">
-                            No se permiten espacios. El empleado deberá cambiarla en su primer inicio de sesión
+                            No se permiten espacios. El empleado deberÃ¡ cambiarla en su primer inicio de sesiÃ³n
                         </small>
                     </div>
                     <div class="form-group">
-                        <label for="confirmar_password">Confirmar Contraseña:</label>
+                        <label for="confirmar_password">Confirmar ContraseÃ±a:</label>
                         <div class="password-wrapper">
                             <input type="password" name="confirmar_password" id="confirmar_password" required minlength="6"
-                                placeholder="Repite la contraseña" autocomplete="new-password"
+                                placeholder="Repite la contraseÃ±a" autocomplete="new-password"
                                 class="input-with-eye">
                             <button type="button" onclick="togglePassword('confirmar_password', this)" 
                                 class="btn-eye"
-                                aria-label="Mostrar contraseña">
+                                aria-label="Mostrar contraseÃ±a">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>
@@ -537,7 +537,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                Cerrar Sesión
+                Cerrar SesiÃ³n
             </a>
         </footer>
     </div>
@@ -556,7 +556,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
             }
         }
 
-        // Sugerencia llamativa para formatear el usuario sin espacios ni mayúsculas
+        // Sugerencia llamativa para formatear el usuario sin espacios ni mayÃºsculas
         function sanitizeUsername(value) {
             return value.toLowerCase().replace(/[^a-z0-9]/g, '');
         }
@@ -573,12 +573,12 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                         <path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
                     </svg>
                     <div>
-                        <div class="username-popup-title">No se permiten espacios ni mayúsculas</div>
+                        <div class="username-popup-title">No se permiten espacios ni mayÃºsculas</div>
                         <div class="username-popup-subtitle">Ingresaste: <strong>${original}</strong></div>
                     </div>
                 </div>
                 <div class="username-popup-preview">
-                    Podemos usar esta versión: <strong>${sanitized}</strong>
+                    Podemos usar esta versiÃ³n: <strong>${sanitized}</strong>
                 </div>
                 <div class="username-popup-actions">
                     <button id="useSanitized" class="username-popup-btn username-popup-btn--primary">Usar ${sanitized}</button>
@@ -642,13 +642,13 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
             }
         }
 
-        // Validación de contraseñas coincidentes
+        // ValidaciÃ³n de contraseÃ±as coincidentes
         document.getElementById('confirmar_password')?.addEventListener('input', function () {
             const password = document.getElementById('password').value;
             const confirmar = this.value;
 
             if (confirmar && password !== confirmar) {
-                this.setCustomValidity('Las contraseñas no coinciden');
+                this.setCustomValidity('Las contraseÃ±as no coinciden');
             } else {
                 this.setCustomValidity('');
             }

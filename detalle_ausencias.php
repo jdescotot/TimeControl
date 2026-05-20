@@ -1,16 +1,16 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     header('Location: index.php');
     exit;
 }
 
-// Obtener parámetros
+// Obtener parÃ¡metros
 $tipo = isset($_GET['tipo']) ? $_GET['tipo'] : '';
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
-$año = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
+$aÃ±o = isset($_GET['aÃ±o']) ? (int)$_GET['aÃ±o'] : (int)date('Y');
 
 // Validar tipo de ausencia
 $tipos_validos = ['vacaciones_ley', 'enfermedad', 'emergencia_familiar', 'fuerza_mayor'];
@@ -28,14 +28,14 @@ $tipo_labels = [
 
 $tipo_legible = $tipo_labels[$tipo];
 
-// Obtener el ID del dueño
-$dueño_id = $_SESSION['user_id'];
+// Obtener el ID del dueÃ±o
+$dueÃ±o_id = $_SESSION['user_id'];
 
-// Calcular primer y último día del mes
-$primer_dia = "$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
-$ultimo_dia = date('Y-m-d', strtotime("$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
+// Calcular primer y Ãºltimo dÃ­a del mes
+$primer_dia = "$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
+$ultimo_dia = date('Y-m-d', strtotime("$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
 
-// Obtener ausencias del tipo específico
+// Obtener ausencias del tipo especÃ­fico
 $stmt = $pdo->prepare("
     SELECT 
         ae.fecha,
@@ -49,7 +49,7 @@ $stmt = $pdo->prepare("
     AND u.propietario_id = ?
     ORDER BY ae.fecha ASC, u.username ASC
 ");
-$stmt->execute([$tipo, $primer_dia, $ultimo_dia, $dueño_id]);
+$stmt->execute([$tipo, $primer_dia, $ultimo_dia, $dueÃ±o_id]);
 $ausencias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Agrupar ausencias por empleado
@@ -67,7 +67,7 @@ foreach ($ausencias as $ausencia) {
     $ausencias_por_empleado[$emp_id]['cantidad']++;
 }
 
-// Nombres de meses en español
+// Nombres de meses en espaÃ±ol
 $meses = [
     1 => 'Enero',
     2 => 'Febrero',
@@ -83,7 +83,7 @@ $meses = [
     12 => 'Diciembre'
 ];
 
-// Configuración por tipo de ausencia
+// ConfiguraciÃ³n por tipo de ausencia
 $config_tipo = [
     'vacaciones_ley' => [
         'color' => '#feebc8',
@@ -113,7 +113,7 @@ $config_tipo = [
 
 $config = $config_tipo[$tipo];
 
-// Función para formatear fechas
+// FunciÃ³n para formatear fechas
 function formatearFecha($fecha) {
     $meses_cortos = [
         1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
@@ -124,7 +124,7 @@ function formatearFecha($fecha) {
     return (int)$partes[2] . ' ' . $meses_cortos[(int)$partes[1]];
 }
 
-// Función para agrupar fechas consecutivas
+// FunciÃ³n para agrupar fechas consecutivas
 function agruparFechas($fechas) {
     if (empty($fechas)) return [];
     
@@ -347,7 +347,7 @@ function agruparFechas($fechas) {
                 </div>
                 <div class="user-info">
                     <span class="welcome-text">Detalle de Ausencias</span>
-                    <a href="reporte_mensual.php?mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="btn-back">
+                    <a href="reporte_mensual.php?mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5"></path>
                             <polyline points="12 19 5 12 12 5"></polyline>
@@ -370,19 +370,19 @@ function agruparFechas($fechas) {
                     </div>
                     <div class="detalle-info">
                         <h1><?php echo htmlspecialchars($tipo_legible); ?></h1>
-                        <p><?php echo $meses[$mes]; ?> <?php echo $año; ?></p>
+                        <p><?php echo $meses[$mes]; ?> <?php echo $aÃ±o; ?></p>
                     </div>
                 </div>
             </div>
 
-            <!-- Estadísticas rápidas -->
+            <!-- EstadÃ­sticas rÃ¡pidas -->
             <div class="stats-mini">
                 <div class="stat-mini">
                     <span class="stat-mini-label">Total de Empleados</span>
                     <span class="stat-mini-value"><?php echo count($ausencias_por_empleado); ?></span>
                 </div>
                 <div class="stat-mini">
-                    <span class="stat-mini-label">Total de Días</span>
+                    <span class="stat-mini-label">Total de DÃ­as</span>
                     <span class="stat-mini-value"><?php echo count($ausencias); ?></span>
                 </div>
                 <div class="stat-mini">
@@ -408,7 +408,7 @@ function agruparFechas($fechas) {
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
                             </svg>
                             <h3>No hay registros</h3>
-                            <p>No se encontraron ausencias de tipo "<?php echo htmlspecialchars($tipo_legible); ?>" en <?php echo $meses[$mes]; ?> <?php echo $año; ?></p>
+                            <p>No se encontraron ausencias de tipo "<?php echo htmlspecialchars($tipo_legible); ?>" en <?php echo $meses[$mes]; ?> <?php echo $aÃ±o; ?></p>
                         </div>
                     </div>
                 </div>
@@ -424,7 +424,7 @@ function agruparFechas($fechas) {
                                 <?php echo htmlspecialchars($datos['nombre']); ?>
                             </div>
                             <div class="empleado-card-badge">
-                                <?php echo $datos['cantidad']; ?> <?php echo $datos['cantidad'] == 1 ? 'día' : 'días'; ?>
+                                <?php echo $datos['cantidad']; ?> <?php echo $datos['cantidad'] == 1 ? 'dÃ­a' : 'dÃ­as'; ?>
                             </div>
                         </div>
                         <div class="fechas-container">
@@ -456,7 +456,7 @@ function agruparFechas($fechas) {
                                         <polyline points="12 5 19 12 12 19"></polyline>
                                     </svg>
                                     <?php echo formatearFecha($grupo[count($grupo) - 1]); ?>
-                                    <span style="font-size: 0.75rem; opacity: 0.8;">(<?php echo count($grupo); ?> días)</span>
+                                    <span style="font-size: 0.75rem; opacity: 0.8;">(<?php echo count($grupo); ?> dÃ­as)</span>
                                 </div>
                             <?php 
                                 endif;
@@ -470,3 +470,4 @@ function agruparFechas($fechas) {
     </div>
 </body>
 </html>
+

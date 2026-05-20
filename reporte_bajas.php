@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 require_once 'config_correos.php';
@@ -7,13 +7,13 @@ require_once 'config_correos.php';
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Verificar autenticación (solo dueño)
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+// Verificar autenticaciÃ³n (solo dueÃ±o)
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     header('Location: index.php');
     exit;
 }
 
-// Obtener año del filtro (por defecto el año actual)
+// Obtener aÃ±o del filtro (por defecto el aÃ±o actual)
 $anio_filtro = isset($_GET['anio']) ? (int)$_GET['anio'] : date('Y');
 
 // Exportar a Excel si se solicita
@@ -52,19 +52,19 @@ $stmt = $pdo_correos->prepare($query);
 $stmt->execute([$anio_filtro]);
 $bajas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Si es exportación a Excel, solo mostrar la tabla
+// Si es exportaciÃ³n a Excel, solo mostrar la tabla
 if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     echo '<table border="1">';
     echo '<thead>';
     echo '<tr>';
-    echo '<th>Razón Social</th>';
+    echo '<th>RazÃ³n Social</th>';
     echo '<th>Fecha Alta</th>';
     echo '<th>Fecha Baja</th>';
-    echo '<th>Teléfono</th>';
+    echo '<th>TelÃ©fono</th>';
     echo '<th>Email</th>';
     echo '<th>NIF</th>';
     echo '<th>Nombre Comercial</th>';
-    echo '<th>Dirección</th>';
+    echo '<th>DirecciÃ³n</th>';
     echo '<th>CP</th>';
     echo '<th>Municipio</th>';
     echo '<th>Provincia</th>';
@@ -93,7 +93,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     exit;
 }
 
-// Obtener años disponibles
+// Obtener aÃ±os disponibles
 $stmt_anios = $pdo_correos->query("SELECT DISTINCT YEAR(fechabaja) as anio FROM tb_cuentas WHERE fechabaja IS NOT NULL ORDER BY anio DESC");
 $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
 ?>
@@ -128,7 +128,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                     <span>Reporte de Bajas</span>
                 </div>
                 <div class="actions">
-                    <a href="dueño.php" class="btn btn-secondary">
+                    <a href="dueÃ±o.php" class="btn btn-secondary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                         </svg>
@@ -142,7 +142,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
             <div class="card">
                 <div class="card-header no-print">
                     <div class="header-left">
-                        <h1>Reporte de Bajas - Año <?php echo $anio_filtro; ?></h1>
+                        <h1>Reporte de Bajas - AÃ±o <?php echo $anio_filtro; ?></h1>
                         <p class="subtitle">Total de registros: <?php echo count($bajas); ?></p>
                     </div>
                     <div class="header-actions">
@@ -180,14 +180,14 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Razón Social</th>
+                                        <th>RazÃ³n Social</th>
                                         <th>Fecha Alta</th>
                                         <th>Fecha Baja</th>
-                                        <th>Teléfono</th>
+                                        <th>TelÃ©fono</th>
                                         <th>Email</th>
                                         <th>NIF</th>
                                         <th>Nombre Comercial</th>
-                                        <th>Dirección</th>
+                                        <th>DirecciÃ³n</th>
                                         <th>CP</th>
                                         <th>Municipio</th>
                                         <th>Provincia</th>
@@ -196,17 +196,17 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                                 <tbody>
                                     <?php foreach ($bajas as $baja): ?>
                                         <tr>
-                                            <td data-label="Razón Social"><?php echo htmlspecialchars($baja['razonsocial'] ?? '—'); ?></td>
-                                            <td data-label="Fecha Alta"><?php echo $baja['fechaalta'] ? date('d/m/Y', strtotime($baja['fechaalta'])) : '—'; ?></td>
-                                            <td data-label="Fecha Baja"><?php echo $baja['fechabaja'] ? date('d/m/Y', strtotime($baja['fechabaja'])) : '—'; ?></td>
-                                            <td data-label="Teléfono"><?php echo htmlspecialchars($baja['telefono'] ?? '—'); ?></td>
-                                            <td data-label="Email"><?php echo htmlspecialchars($baja['email'] ?? '—'); ?></td>
-                                            <td data-label="NIF"><?php echo htmlspecialchars($baja['nif'] ?? '—'); ?></td>
-                                            <td data-label="Nombre Comercial"><?php echo htmlspecialchars($baja['nombrecomercial'] ?? '—'); ?></td>
-                                            <td data-label="Dirección"><?php echo htmlspecialchars($baja['direccion'] ?? '—'); ?></td>
-                                            <td data-label="CP"><?php echo htmlspecialchars($baja['cp'] ?? '—'); ?></td>
-                                            <td data-label="Municipio"><?php echo htmlspecialchars($baja['municipio'] ?? '—'); ?></td>
-                                            <td data-label="Provincia"><?php echo htmlspecialchars($baja['provincia'] ?? '—'); ?></td>
+                                            <td data-label="RazÃ³n Social"><?php echo htmlspecialchars($baja['razonsocial'] ?? 'â€”'); ?></td>
+                                            <td data-label="Fecha Alta"><?php echo $baja['fechaalta'] ? date('d/m/Y', strtotime($baja['fechaalta'])) : 'â€”'; ?></td>
+                                            <td data-label="Fecha Baja"><?php echo $baja['fechabaja'] ? date('d/m/Y', strtotime($baja['fechabaja'])) : 'â€”'; ?></td>
+                                            <td data-label="TelÃ©fono"><?php echo htmlspecialchars($baja['telefono'] ?? 'â€”'); ?></td>
+                                            <td data-label="Email"><?php echo htmlspecialchars($baja['email'] ?? 'â€”'); ?></td>
+                                            <td data-label="NIF"><?php echo htmlspecialchars($baja['nif'] ?? 'â€”'); ?></td>
+                                            <td data-label="Nombre Comercial"><?php echo htmlspecialchars($baja['nombrecomercial'] ?? 'â€”'); ?></td>
+                                            <td data-label="DirecciÃ³n"><?php echo htmlspecialchars($baja['direccion'] ?? 'â€”'); ?></td>
+                                            <td data-label="CP"><?php echo htmlspecialchars($baja['cp'] ?? 'â€”'); ?></td>
+                                            <td data-label="Municipio"><?php echo htmlspecialchars($baja['municipio'] ?? 'â€”'); ?></td>
+                                            <td data-label="Provincia"><?php echo htmlspecialchars($baja['provincia'] ?? 'â€”'); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -219,7 +219,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
                             </svg>
-                            <p>No hay registros de bajas para el año <?php echo $anio_filtro; ?></p>
+                            <p>No hay registros de bajas para el aÃ±o <?php echo $anio_filtro; ?></p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -228,3 +228,4 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
     </div>
 </body>
 </html>
+

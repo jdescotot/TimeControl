@@ -13,6 +13,10 @@ $from = $mail_config['from'] ?? ['email'=>'noreply@localhost','name'=>'No Reply'
 $batch = $mail_config['batch_size'] ?? 50;
 $pause = $mail_config['pause_seconds'] ?? 30;
 
+// Rotación de cuentas SMTP
+$smtp_accounts = $mail_config['smtp_accounts'] ?? null;
+$account_count  = $smtp_accounts ? count($smtp_accounts) : 0;
+
 try {
     $pdo = new PDO("mysql:host={$db['host']};dbname={$db['name']};charset=utf8", $db['user'], $db['pass']);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -28,7 +32,7 @@ use PHPMailer\PHPMailer\Exception;
 while (true) {
     // Obtener batch
     $pdo->beginTransaction();
-    $sel = $pdo->prepare("SELECT * FROM email_queue WHERE status = 'queued' ORDER BY id ASC LIMIT ? FOR UPDATE");
+    $sel = $pdo->prepare("SELECT * FROM email_queue WHERE status = 'queued' ORDER BY priority DESC, id ASC LIMIT ? FOR UPDATE");
     $sel->bindValue(1, (int)$batch, PDO::PARAM_INT);
     $sel->execute();
     $rows = $sel->fetchAll(PDO::FETCH_ASSOC);
@@ -46,18 +50,28 @@ while (true) {
     $pdo->commit();
 
     foreach ($rows as $row) {
+        // Seleccionar cuenta SMTP en round-robin según el ID del correo
+        if ($account_count > 0) {
+            $account    = $smtp_accounts[$row['id'] % $account_count];
+            $row_smtp   = $account;
+            $row_from   = ['email' => $account['from_email'], 'name' => $account['from_name']];
+        } else {
+            $row_smtp = $smtp;
+            $row_from = $from;
+        }
+
         $mail = new PHPMailer(true);
         $debug_log = [];
         try {
             // Configurar SMTP
             $mail->CharSet = 'UTF-8';
             $mail->isSMTP();
-            $mail->Host = $smtp['host'];
+            $mail->Host = $row_smtp['host'];
             $mail->SMTPAuth = true;
-            $mail->Username = $smtp['user'];
-            $mail->Password = $smtp['pass'];
-            $mail->SMTPSecure = $smtp['secure'] ?? 'tls';
-            $mail->Port = $smtp['port'] ?? 587;
+            $mail->Username = $row_smtp['user'];
+            $mail->Password = $row_smtp['pass'];
+            $mail->SMTPSecure = $row_smtp['secure'] ?? 'tls';
+            $mail->Port = $row_smtp['port'] ?? 587;
             
             // Debug SMTP para terminal
             $mail->SMTPDebug = 2;
@@ -66,7 +80,7 @@ while (true) {
                 echo $str; // También mostrar en consola
             };
 
-            $mail->setFrom($from['email'], $from['name']);
+            $mail->setFrom($row_from['email'], $row_from['name']);
             $mail->addAddress($row['recipient_email'], $row['recipient_name']);
             $mail->isHTML(true);
             $mail->Subject = $row['subject'];

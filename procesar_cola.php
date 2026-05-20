@@ -68,10 +68,14 @@ $total_enviados = 0;
 $total_errores = 0;
 $resultados = [];
 
+// Rotación de cuentas SMTP
+$smtp_accounts = $mail_config['smtp_accounts'] ?? null;
+$account_count  = $smtp_accounts ? count($smtp_accounts) : 0;
+
 for ($lote = 0; $lote < $lotes; $lote++) {
     // Obtener batch de correos en cola
     $pdo->beginTransaction();
-    $sel = $pdo->prepare("SELECT * FROM email_queue WHERE status = 'queued' ORDER BY id ASC LIMIT ? FOR UPDATE");
+    $sel = $pdo->prepare("SELECT * FROM email_queue WHERE status = 'queued' ORDER BY priority DESC, id ASC LIMIT ? FOR UPDATE");
     $sel->bindValue(1, $batch_size, PDO::PARAM_INT);
     $sel->execute();
     $rows = $sel->fetchAll(PDO::FETCH_ASSOC);
@@ -94,18 +98,29 @@ for ($lote = 0; $lote < $lotes; $lote++) {
 
     // CREAR UNA SOLA INSTANCIA DE PHPMAILER PARA TODO EL LOTE
     // Esto mantiene la conexión SMTP abierta y evita bloqueos por volumen
+
+    // Seleccionar cuenta SMTP en round-robin según el número de lote
+    if ($account_count > 0) {
+        $account       = $smtp_accounts[$lote % $account_count];
+        $lote_smtp     = $account;
+        $lote_from     = ['email' => $account['from_email'], 'name' => $account['from_name']];
+    } else {
+        $lote_smtp = $smtp;
+        $lote_from = $from;
+    }
+
     $mail = new PHPMailer(true);
     $mail->CharSet = 'UTF-8';
     $mail->isSMTP();
-    $mail->Host = $smtp['host'];
+    $mail->Host = $lote_smtp['host'];
     $mail->SMTPAuth = true;
-    $mail->Username = $smtp['user'];
-    $mail->Password = $smtp['pass'];
-    $mail->SMTPSecure = $smtp['secure'] ?? 'tls';
-    $mail->Port = $smtp['port'] ?? 587;
+    $mail->Username = $lote_smtp['user'];
+    $mail->Password = $lote_smtp['pass'];
+    $mail->SMTPSecure = $lote_smtp['secure'] ?? 'tls';
+    $mail->Port = $lote_smtp['port'] ?? 587;
     $mail->Timeout = 15;
     $mail->SMTPKeepAlive = true; // MANTENER CONEXIÓN ABIERTA
-    $mail->setFrom($from['email'], $from['name']);
+    $mail->setFrom($lote_from['email'], $lote_from['name']);
 
     foreach ($rows as $row) {
         $debug_log = [];

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * exportar_empleados.php
  * Exporta los empleados de TimeControl como sentencias SQL INSERT
@@ -12,13 +12,13 @@
 session_start();
 require_once 'config.php';
 
-// Solo el dueño puede exportar
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+// Solo el dueÃ±o puede exportar
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     header('Location: index.php');
     exit;
 }
 
-// ── Detectar qué columnas opcionales existen en la tabla usuarios ──────────
+// â”€â”€ Detectar quÃ© columnas opcionales existen en la tabla usuarios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $stmt = $pdo->query("
     SELECT COLUMN_NAME
     FROM information_schema.COLUMNS
@@ -32,7 +32,7 @@ $tiene_telefono  = in_array('telefono',  $columnas_existentes, true);
 $tiene_correo    = in_array('correo',    $columnas_existentes, true);
 $tiene_email     = in_array('email',     $columnas_existentes, true);
 
-// Construir SELECT dinámico
+// Construir SELECT dinÃ¡mico
 $campos_select = ['id', 'username', 'nombre', 'requiere_cambio_password'];
 if ($tiene_apellido)                  $campos_select[] = 'apellido';
 if ($tiene_telefono)                  $campos_select[] = 'telefono';
@@ -50,32 +50,32 @@ $stmt = $pdo->prepare($sql_select);
 $stmt->execute([$propietario_id]);
 $empleados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Generar PIN por defecto: últimos 4 dígitos numéricos del DNI/NIE ───────
+// â”€â”€ Generar PIN por defecto: Ãºltimos 4 dÃ­gitos numÃ©ricos del DNI/NIE â”€â”€â”€â”€â”€â”€â”€
 function generarPin(string $username): string {
     preg_match_all('/\d/', $username, $matches);
     $digitos = implode('', $matches[0]);
     if (strlen($digitos) >= 4) {
         return substr($digitos, -4);
     }
-    // Fallback: PIN numérico de 4 dígitos basado en un hash
+    // Fallback: PIN numÃ©rico de 4 dÃ­gitos basado en un hash
     return str_pad((string)(crc32($username) % 10000), 4, '0', STR_PAD_LEFT);
 }
 
-// ── Formatear valor para SQL ────────────────────────────────────────────────
+// â”€â”€ Formatear valor para SQL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function sqlVal(?string $v): string {
     if ($v === null || $v === '') return 'NULL';
     $v = str_replace("'", "''", $v);
     return "'" . $v . "'";
 }
 
-// ── Decidir formato de salida ───────────────────────────────────────────────
+// â”€â”€ Decidir formato de salida â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $formato = $_GET['formato'] ?? 'html';  // html | sql | csv
 
 if ($formato === 'sql') {
     header('Content-Type: text/plain; charset=utf-8');
     header('Content-Disposition: attachment; filename="empleados_export_' . date('Ymd_His') . '.sql"');
 
-    echo "-- Exportación de empleados desde TimeControl\n";
+    echo "-- ExportaciÃ³n de empleados desde TimeControl\n";
     echo "-- Generado: " . date('Y-m-d H:i:s') . "\n";
     echo "-- Tabla destino: empleados\n\n";
 
@@ -150,7 +150,7 @@ if ($formato === 'csv') {
     exit;
 }
 
-// ── Vista HTML de previsualización ─────────────────────────────────────────
+// â”€â”€ Vista HTML de previsualizaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -189,12 +189,12 @@ if ($formato === 'csv') {
     <div class="acciones">
         <a href="?formato=sql" class="btn btn-primary">Descargar SQL (.sql)</a>
         <a href="?formato=csv" class="btn btn-green">Descargar CSV (.csv)</a>
-        <a href="dueño.php"   class="btn btn-gray">Volver al panel</a>
+        <a href="dueÃ±o.php"   class="btn btn-gray">Volver al panel</a>
     </div>
 
     <p class="pin-nota">
-        El PIN se genera automáticamente con los últimos 4 dígitos numéricos del DNI/NIE del empleado.
-        Puedes comunicárselo manualmente una vez importado en el otro sistema.
+        El PIN se genera automÃ¡ticamente con los Ãºltimos 4 dÃ­gitos numÃ©ricos del DNI/NIE del empleado.
+        Puedes comunicÃ¡rselo manualmente una vez importado en el otro sistema.
     </p>
 
     <table>
@@ -246,3 +246,4 @@ if ($formato === 'csv') {
     </table>
 </body>
 </html>
+

@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'La contraseña no puede contener espacios';
     } else {
         // Búsqueda case-insensitive de usuario
-        $stmt = $pdo->prepare("SELECT id, username, password, rol, requiere_cambio_password FROM usuarios WHERE LOWER(username) = ?");
+        $stmt = $pdo->prepare("SELECT id, username, password, rol, requiere_cambio_password, propietario_id, es_gerente FROM usuarios WHERE LOWER(username) = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = strtolower($user['username']);
             $_SESSION['rol'] = $user['rol'];
+            $_SESSION['es_gerente'] = (int)($user['es_gerente'] ?? 0);
+            $_SESSION['propietario_id'] = isset($user['propietario_id']) ? (int)$user['propietario_id'] : null;
 
             // Si requiere cambio de contraseña, redirigir a cambiar_password.php
             if ($user['requiere_cambio_password'] == 1) {
@@ -40,6 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } elseif ($user['rol'] === 'hacienda') {
                 header('Location: hacienda.php');
+                exit;
+            } elseif ($user['rol'] === 'empleado' && (int)($user['es_gerente'] ?? 0) === 1) {
+                header('Location: dueño.php');
                 exit;
             } else {
                 header('Location: empleado.php');

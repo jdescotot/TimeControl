@@ -77,6 +77,11 @@ $cathedrals = [
         "styles" => "Late Gothic, Renaissance, and Baroque.",
         "note" => "Built over the ancient Great Mosque, it stands out for its monumental staircase and theatrical Baroque facade.",
         "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Jerez_de_la_Frontera_01.jpg?width=600",
+        "map_url" => "https://maps.app.goo.gl/krkJUHP4ooH5Xd1H8",
+        "map_embed" => "https://www.google.com/maps?q=Catedral+de+Jerez+de+la+Frontera&output=embed",
+        "extra_images" => [
+            "http://googleusercontent.com/image_collection/image_retrieval/15549194740894862683"
+        ],
         "keywords" => ["Keywords coming soon", "Historical continuity", "Baroque transformation"],
         "timeline" => [
             ["period" => "1264-1265", "event" => "Organization of the collegiate chapter after the Christian conquest of Jerez."],
@@ -95,6 +100,9 @@ $cathedrals = [
         "styles" => "Umayyad, Mudéjar, and Renaissance.",
         "note" => "A masterpiece of historical superposition, inserting Renaissance vaults within an Islamic forest of arches.",
         "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Gran_Mezquita_de_Córdoba_-_España.jpg?width=600",
+        "extra_images" => [
+            "http://googleusercontent.com/image_collection/image_retrieval/1148901468158272317"
+        ],
         "keywords" => ["Keywords coming soon", "Layered heritage", "Many patrons"],
         "timeline" => [
             ["period" => "786-788", "event" => "Initial construction of the mosque under Abd al-Rahman I."],
@@ -115,6 +123,9 @@ $cathedrals = [
         "styles" => "Renaissance and Baroque.",
         "note" => "Features Diego de Siloé's revolutionary circular floor plan and Alonso Cano's spectacular tripartite facade.",
         "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Granada_frontal_y_torre_vertical.jpg?width=600",
+        "extra_images" => [
+            "http://googleusercontent.com/image_collection/image_retrieval/17542407163589895706"
+        ],
         "keywords" => ["Keywords coming soon", "Renaissance project", "Royal symbolism"],
         "timeline" => [
             ["period" => "1505-1506", "event" => "Planning and first Gothic project by Enrique Egas under Cardinal Cisneros."],
@@ -134,6 +145,9 @@ $cathedrals = [
         "styles" => "Renaissance and Classicist Baroque.",
         "note" => "Popularly known as \"La Manquita\" (The One-Armed Lady) due to its unfinished south tower.",
         "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Málaga.jpg?width=600",
+        "extra_images" => [
+            "http://googleusercontent.com/image_collection/image_retrieval/11823727683971010523"
+        ],
         "keywords" => ["Keywords coming soon", "Unfinished tower", "Urban icon"],
         "timeline" => [
             ["period" => "Timeline pending", "event" => "Detailed milestones will be added soon."]
@@ -147,6 +161,9 @@ $cathedrals = [
         "styles" => "Pure Renaissance and Baroque.",
         "note" => "Andrés de Vandelvira's masterpiece and an architectural model for many Latin American cathedrals.",
         "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Jaén_-_Vista_General.jpg?width=600",
+        "extra_images" => [
+            "http://googleusercontent.com/image_collection/image_retrieval/617200277061308974"
+        ],
         "keywords" => ["Keywords coming soon", "Vandelvira", "Renaissance model"],
         "timeline" => [
             ["period" => "1246-1249", "event" => "After the Christian conquest, the former mosque becomes a church and episcopal see."],
@@ -180,6 +197,9 @@ $cathedrals = [
         "styles" => "Neo-Gothic (Valencian Gothic style).",
         "note" => "A sober contemporary reconstruction accompanied by the historic freestanding bell tower, \"El Fadrí\".",
         "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Concatedral_y_Fadrí_de_Castellón.jpg?width=600",
+        "extra_images" => [
+            "http://googleusercontent.com/image_collection/image_retrieval/14189546867147014510"
+        ],
         "keywords" => ["Keywords coming soon", "Reconstruction", "El Fadri"],
         "timeline" => [
             ["period" => "Timeline pending", "event" => "Detailed milestones will be added soon."]
@@ -193,6 +213,9 @@ $cathedrals = [
         "styles" => "Mission Revival / Neo-colonial.",
         "note" => "A robust reinforced concrete structure with tall stained glass windows, designed for the tropical climate.",
         "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/San_Pedro_Sula_cathedral.jpg?width=600",
+        "extra_images" => [
+            "http://googleusercontent.com/image_collection/image_retrieval/3498046817768547905"
+        ],
         "keywords" => ["Keywords coming soon", "Tropical climate", "Reinforced concrete"],
         "timeline" => [
             ["period" => "Timeline pending", "event" => "Detailed milestones will be added soon."]
@@ -331,6 +354,33 @@ $cathedrals = [
             font-size: .93rem;
             color: #212529;
         }
+        .cathedral-gallery {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+        .cathedral-gallery .carousel-item img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+        .cathedral-gallery .carousel-control-prev-icon,
+        .cathedral-gallery .carousel-control-next-icon {
+            background-color: rgba(0, 0, 0, 0.45);
+            border-radius: 50%;
+            width: 2.2rem;
+            height: 2.2rem;
+            background-size: 60% 60%;
+        }
+        .map-frame-wrap {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        .map-frame {
+            border: 0;
+        }
         @media (max-width: 767.98px) {
             .timeline-wrap {
                 padding-left: 8.4rem;
@@ -343,6 +393,9 @@ $cathedrals = [
             .timeline-label,
             .timeline-year {
                 width: 4.7rem;
+            }
+            .cathedral-gallery .carousel-item img {
+                height: 230px;
             }
         }
     </style>
@@ -402,7 +455,16 @@ $cathedrals = [
     </main>
 
     <?php foreach ($cathedrals as $index => $cathedral): ?>
-        <?php $timelineLayout = buildTimelineLayout($cathedral['timeline'], (int) date('Y')); ?>
+        <?php
+            $timelineLayout = buildTimelineLayout($cathedral['timeline'], (int) date('Y'));
+            $galleryImages = [(string) ($cathedral['image'] ?? '')];
+            if (!empty($cathedral['extra_images']) && is_array($cathedral['extra_images'])) {
+                foreach ($cathedral['extra_images'] as $extraImage) {
+                    $galleryImages[] = (string) $extraImage;
+                }
+            }
+            $galleryImages = array_values(array_unique(array_filter($galleryImages)));
+        ?>
         <div class="modal fade" id="cathedralModal<?= $index ?>" tabindex="-1" aria-labelledby="cathedralModalLabel<?= $index ?>" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
@@ -414,6 +476,57 @@ $cathedrals = [
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <h6 class="fw-bold mb-3">Gallery</h6>
+                        <div id="cathedralCarousel<?= $index ?>" class="carousel slide cathedral-gallery mb-4" data-bs-ride="carousel">
+                            <?php if (count($galleryImages) > 1): ?>
+                                <div class="carousel-indicators">
+                                    <?php foreach ($galleryImages as $galleryIndex => $_): ?>
+                                        <button type="button" data-bs-target="#cathedralCarousel<?= $index ?>" data-bs-slide-to="<?= $galleryIndex ?>" class="<?= $galleryIndex === 0 ? 'active' : '' ?>" aria-current="<?= $galleryIndex === 0 ? 'true' : 'false' ?>" aria-label="Slide <?= $galleryIndex + 1 ?>"></button>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="carousel-inner">
+                                <?php foreach ($galleryImages as $galleryIndex => $galleryImage): ?>
+                                    <div class="carousel-item <?= $galleryIndex === 0 ? 'active' : '' ?>">
+                                        <img src="<?= htmlspecialchars($galleryImage) ?>" alt="<?= htmlspecialchars($cathedral['name']) ?> image <?= $galleryIndex + 1 ?>" loading="lazy">
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <?php if (count($galleryImages) > 1): ?>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#cathedralCarousel<?= $index ?>" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#cathedralCarousel<?= $index ?>" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if (!empty($cathedral['map_embed']) || !empty($cathedral['map_url'])): ?>
+                            <h6 class="fw-bold mb-3">Interactive Map</h6>
+                            <?php if (!empty($cathedral['map_embed'])): ?>
+                                <div class="ratio ratio-16x9 map-frame-wrap mb-2">
+                                    <iframe
+                                        class="map-frame"
+                                        src="<?= htmlspecialchars((string) $cathedral['map_embed']) ?>"
+                                        title="Map of <?= htmlspecialchars($cathedral['name']) ?>"
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($cathedral['map_url'])): ?>
+                                <a href="<?= htmlspecialchars((string) $cathedral['map_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark btn-sm mb-4">
+                                    Open Full Map in Google Maps
+                                </a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
                         <h6 class="fw-bold mb-3">Keywords</h6>
                         <div class="mb-4">
                             <?php foreach ($cathedral['keywords'] as $keyword): ?>

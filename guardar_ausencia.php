@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     echo json_encode(['success' => false, 'error' => 'No autorizado']);
     exit;
 }

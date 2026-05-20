@@ -1,29 +1,29 @@
-<?php
+﻿<?php
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     header('Location: index.php');
     exit;
 }
 
-// Obtener mes y año actual
+// Obtener mes y aÃ±o actual
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
-$año = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
+$aÃ±o = isset($_GET['aÃ±o']) ? (int)$_GET['aÃ±o'] : (int)date('Y');
 
 // Validar mes
 if ($mes < 1) {
     $mes = 12;
-    $año--;
+    $aÃ±o--;
 } elseif ($mes > 12) {
     $mes = 1;
-    $año++;
+    $aÃ±o++;
 }
 
-// Obtener el ID del dueño
-$dueño_id = $_SESSION['user_id'];
+// Obtener el ID del dueÃ±o
+$dueÃ±o_id = $_SESSION['user_id'];
 
-// Obtener todos los empleados del dueño
+// Obtener todos los empleados del dueÃ±o
 $stmt_empleados = $pdo->prepare("
     SELECT id, username, nombre 
     FROM usuarios 
@@ -31,12 +31,12 @@ $stmt_empleados = $pdo->prepare("
     AND propietario_id = ? 
     ORDER BY username
 ");
-$stmt_empleados->execute([$dueño_id]);
+$stmt_empleados->execute([$dueÃ±o_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
-// Calcular primer y último día del mes
-$primer_dia = "$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
-$ultimo_dia = date('Y-m-d', strtotime("$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
+// Calcular primer y Ãºltimo dÃ­a del mes
+$primer_dia = "$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
+$ultimo_dia = date('Y-m-d', strtotime("$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
 
 // Obtener datos de marcaciones del mes
 $stmt_marcaciones = $pdo->prepare("
@@ -51,7 +51,7 @@ $stmt_marcaciones = $pdo->prepare("
     )
     GROUP BY empleado_id
 ");
-$stmt_marcaciones->execute([$primer_dia, $ultimo_dia, $dueño_id]);
+$stmt_marcaciones->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
 $marcaciones_data = [];
 foreach ($stmt_marcaciones->fetchAll(PDO::FETCH_ASSOC) as $m) {
     $marcaciones_data[$m['empleado_id']] = $m;
@@ -69,7 +69,7 @@ $stmt_ausencias = $pdo->prepare("
     )
     GROUP BY empleado_id, tipo_ausencia
 ");
-$stmt_ausencias->execute([$primer_dia, $ultimo_dia, $dueño_id]);
+$stmt_ausencias->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
 $ausencias_data = [];
 foreach ($stmt_ausencias->fetchAll(PDO::FETCH_ASSOC) as $a) {
     if (!isset($ausencias_data[$a['empleado_id']])) {
@@ -78,7 +78,7 @@ foreach ($stmt_ausencias->fetchAll(PDO::FETCH_ASSOC) as $a) {
     $ausencias_data[$a['empleado_id']][$a['tipo_ausencia']] = $a['cantidad'];
 }
 
-// Obtener días de descanso del mes (para excluirlos del cálculo de asistencia)
+// Obtener dÃ­as de descanso del mes (para excluirlos del cÃ¡lculo de asistencia)
 $stmt_descansos = $pdo->prepare("
     SELECT 
         empleado_id,
@@ -89,7 +89,7 @@ $stmt_descansos = $pdo->prepare("
     )
     GROUP BY empleado_id
 ");
-$stmt_descansos->execute([$primer_dia, $ultimo_dia, $dueño_id]);
+$stmt_descansos->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
 $descansos_data = [];
 foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
     $descansos_data[$d['empleado_id']] = $d['dias_descanso'];
@@ -109,13 +109,13 @@ $stmt_horas = $pdo->prepare("
     )
     GROUP BY empleado_id
 ");
-$stmt_horas->execute([$primer_dia, $ultimo_dia, $dueño_id]);
+$stmt_horas->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
 $horas_data = [];
 foreach ($stmt_horas->fetchAll(PDO::FETCH_ASSOC) as $h) {
     $horas_data[$h['empleado_id']] = $h['total_horas'];
 }
 
-// Nombres de meses en español
+// Nombres de meses en espaÃ±ol
 $meses = [
     1 => 'Enero',
     2 => 'Febrero',
@@ -133,22 +133,22 @@ $meses = [
 
 // Calcular mes anterior y siguiente
 $mes_anterior = $mes - 1;
-$año_anterior = $año;
+$aÃ±o_anterior = $aÃ±o;
 if ($mes_anterior < 1) {
     $mes_anterior = 12;
-    $año_anterior--;
+    $aÃ±o_anterior--;
 }
 
 $mes_siguiente = $mes + 1;
-$año_siguiente = $año;
+$aÃ±o_siguiente = $aÃ±o;
 if ($mes_siguiente > 12) {
     $mes_siguiente = 1;
-    $año_siguiente++;
+    $aÃ±o_siguiente++;
 }
 
 $export_query_params = [
     'mes' => $mes,
-    'año' => $año,
+    'aÃ±o' => $aÃ±o,
 ];
 $export_pdf_query = http_build_query($export_query_params);
 ?>
@@ -176,7 +176,7 @@ $export_pdf_query = http_build_query($export_query_params);
                 </div>
                 <div class="user-info">
                     <span class="welcome-text">Reporte Mensual</span>
-                    <a href="dueño.php" class="btn-back">
+                    <a href="dueÃ±o.php" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5"></path>
                             <polyline points="12 19 5 12 12 5"></polyline>
@@ -193,15 +193,15 @@ $export_pdf_query = http_build_query($export_query_params);
             <div class="card">
                 <div class="card-body">
                     <div class="month-selector">
-                        <a href="?mes=<?php echo $mes_anterior; ?>&año=<?php echo $año_anterior; ?>" class="btn-nav-month">
+                        <a href="?mes=<?php echo $mes_anterior; ?>&aÃ±o=<?php echo $aÃ±o_anterior; ?>" class="btn-nav-month">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="15 18 9 12 15 6"></polyline>
                             </svg>
                         </a>
                         <div class="month-display">
-                            <h2><?php echo $meses[$mes]; ?> <?php echo $año; ?></h2>
+                            <h2><?php echo $meses[$mes]; ?> <?php echo $aÃ±o; ?></h2>
                         </div>
-                        <a href="?mes=<?php echo $mes_siguiente; ?>&año=<?php echo $año_siguiente; ?>" class="btn-nav-month">
+                        <a href="?mes=<?php echo $mes_siguiente; ?>&aÃ±o=<?php echo $aÃ±o_siguiente; ?>" class="btn-nav-month">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 18 15 12 9 6"></polyline>
                             </svg>
@@ -240,7 +240,7 @@ $export_pdf_query = http_build_query($export_query_params);
                                 </svg>
                             </div>
                             <div class="summary-text">
-                                <span class="summary-label">Días Laborables</span>
+                                <span class="summary-label">DÃ­as Laborables</span>
                                 <span class="summary-value"><?php echo (int)((strtotime($ultimo_dia) - strtotime($primer_dia)) / 86400) + 1; ?></span>
                             </div>
                         </div>
@@ -262,7 +262,7 @@ $export_pdf_query = http_build_query($export_query_params);
                                         $promedio = ($total_marcaciones / count($empleados)) / (((strtotime($ultimo_dia) - strtotime($primer_dia)) / 86400) + 1) * 100;
                                         echo number_format($promedio, 1) . '%';
                                     } else {
-                                        echo '—';
+                                        echo 'â€”';
                                     }
                                     ?>
                                 </span>
@@ -292,7 +292,7 @@ $export_pdf_query = http_build_query($export_query_params);
                             <thead>
                                 <tr>
                                     <th>Empleado</th>
-                                    <th>Días Trabajados</th>
+                                    <th>DÃ­as Trabajados</th>
                                     <th>Horas Totales</th>
                                     <th>Vacaciones Ley</th>
                                     <th>Enfermedad</th>
@@ -320,7 +320,7 @@ $export_pdf_query = http_build_query($export_query_params);
                                         $export_emp_query = http_build_query([
                                             'empleado_id' => (int)$emp['id'],
                                             'mes' => $mes,
-                                            'año' => $año,
+                                            'aÃ±o' => $aÃ±o,
                                         ]);
                                         $marcaciones = $marcaciones_data[$emp['id']] ?? ['dias_trabajados' => 0];
                                         $ausencias = $ausencias_data[$emp['id']] ?? [];
@@ -335,13 +335,13 @@ $export_pdf_query = http_build_query($export_query_params);
                                         $fuerza_mayor = $ausencias['fuerza_mayor'] ?? 0;
                                         $faltas_justificadas = $emergencia + $fuerza_mayor;
                                         
-                                        // Restar días de descanso y vacaciones del total esperado
+                                        // Restar dÃ­as de descanso y vacaciones del total esperado
                                         $dias_esperados = $dias_mes - $vacaciones - $dias_descanso;
                                         $asistencia = $dias_esperados > 0 ? ($dias_registrados / $dias_esperados * 100) : 0;
                                     ?>
                                     <tr>
                                         <td data-label="Empleado">
-                                            <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                            <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                                                class="empleado-name"
                                                style="color: #667eea; text-decoration: none; font-weight: 500; cursor: pointer; transition: all 0.2s;"
                                                onmouseover="this.style.color='#764ba2'; this.style.textDecoration='underline';"
@@ -354,8 +354,8 @@ $export_pdf_query = http_build_query($export_query_params);
                                                 PDF
                                             </a>
                                         </td>
-                                        <td data-label="Días Trabajados">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                        <td data-label="DÃ­as Trabajados">
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                                                class="badge badge-blue" 
                                                style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
                                                onmouseover="this.style.transform='scale(1.1)'"
@@ -364,7 +364,7 @@ $export_pdf_query = http_build_query($export_query_params);
                                             </a>
                                         </td>
                                         <td data-label="Horas Totales">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                                                class="badge badge-green" 
                                                style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
                                                onmouseover="this.style.transform='scale(1.1)'"
@@ -373,7 +373,7 @@ $export_pdf_query = http_build_query($export_query_params);
                                             </a>
                                         </td>
                                         <td data-label="Vacaciones Ley">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                                                class="badge badge-yellow" 
                                                style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
                                                onmouseover="this.style.transform='scale(1.1)'"
@@ -382,7 +382,7 @@ $export_pdf_query = http_build_query($export_query_params);
                                             </a>
                                         </td>
                                         <td data-label="Enfermedad">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                                                class="badge badge-orange" 
                                                style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
                                                onmouseover="this.style.transform='scale(1.1)'"
@@ -391,7 +391,7 @@ $export_pdf_query = http_build_query($export_query_params);
                                             </a>
                                         </td>
                                         <td data-label="Faltas Justificadas">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                                                class="badge badge-purple" 
                                                style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
                                                onmouseover="this.style.transform='scale(1.1)'"
@@ -414,7 +414,7 @@ $export_pdf_query = http_build_query($export_query_params);
                 </div>
             </div>
 
-            <!-- Gráfico de Ausencias por Tipo -->
+            <!-- GrÃ¡fico de Ausencias por Tipo -->
             <div class="card">
                 <div class="card-header">
                     <h3>Resumen de Ausencias por Tipo</h3>
@@ -448,11 +448,11 @@ $export_pdf_query = http_build_query($export_query_params);
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Faltas Justificadas</span>
-                                <span class="absence-count"><?php echo $total_faltas_justificadas; ?> días</span>
+                                <span class="absence-count"><?php echo $total_faltas_justificadas; ?> dÃ­as</span>
                                 <small style="color: #718096; display: block;">Incluye emergencia familiar y fuerza mayor</small>
                             </div>
                         </div>
-                        <a href="detalle_ausencias.php?tipo=vacaciones_ley&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                        <a href="detalle_ausencias.php?tipo=vacaciones_ley&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                            class="absence-item" 
                            style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
@@ -465,10 +465,10 @@ $export_pdf_query = http_build_query($export_query_params);
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Vacaciones Ley</span>
-                                <span class="absence-count"><?php echo $total_vacaciones; ?> días</span>
+                                <span class="absence-count"><?php echo $total_vacaciones; ?> dÃ­as</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=enfermedad&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                        <a href="detalle_ausencias.php?tipo=enfermedad&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                            class="absence-item" 
                            style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
@@ -480,10 +480,10 @@ $export_pdf_query = http_build_query($export_query_params);
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Enfermedad</span>
-                                <span class="absence-count"><?php echo $total_enfermedad; ?> días</span>
+                                <span class="absence-count"><?php echo $total_enfermedad; ?> dÃ­as</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=emergencia_familiar&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                        <a href="detalle_ausencias.php?tipo=emergencia_familiar&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                            class="absence-item" 
                            style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
@@ -496,10 +496,10 @@ $export_pdf_query = http_build_query($export_query_params);
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Emergencia Familiar</span>
-                                <span class="absence-count"><?php echo $total_emergencia; ?> días</span>
+                                <span class="absence-count"><?php echo $total_emergencia; ?> dÃ­as</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=fuerza_mayor&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" 
+                        <a href="detalle_ausencias.php?tipo=fuerza_mayor&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
                            class="absence-item" 
                            style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
@@ -513,7 +513,7 @@ $export_pdf_query = http_build_query($export_query_params);
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Fuerza Mayor</span>
-                                <span class="absence-count"><?php echo $total_fuerza_mayor; ?> días</span>
+                                <span class="absence-count"><?php echo $total_fuerza_mayor; ?> dÃ­as</span>
                             </div>
                         </a>
                     </div>
@@ -523,3 +523,4 @@ $export_pdf_query = http_build_query($export_query_params);
     </div>
 </body>
 </html>
+

@@ -49,8 +49,9 @@ function perfil_incompleto(PDO $pdo, int $usuario_id): bool {
     return false;
 }
 
-// MODIFICACIÓN: Permitir acceso a dueños y empleados
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['rol'], ['empleado', 'dueño'])) {
+// Permitir acceso a dueños, empleados y gerentes (empleado con es_gerente = 1)
+$es_gerente_session = (($_SESSION['rol'] ?? '') === 'empleado' && (int)($_SESSION['es_gerente'] ?? 0) === 1);
+if (!isset($_SESSION['user_id']) || (!in_array($_SESSION['rol'], ['empleado', 'dueño']) && $_SESSION['rol'] !== 'hacienda')) {
     header('Location: index.php');
     exit;
 }
@@ -98,10 +99,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $destino = 'politica_datos.php';
 
-                if ($_SESSION['rol'] === 'empleado') {
+                if ($_SESSION['rol'] === 'empleado' && !$es_gerente_session) {
                     $destino = perfil_incompleto($pdo, (int)$_SESSION['user_id'])
                         ? 'completar_perfil.php'
                         : 'empleado.php';
+                } elseif ($es_gerente_session) {
+                    $destino = 'dueño.php';
                 } elseif ($_SESSION['rol'] === 'dueño' || $_SESSION['rol'] === 'dueno') {
                     $destino = rawurlencode('dueño.php');
                 } elseif ($_SESSION['rol'] === 'hacienda') {

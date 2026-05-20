@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 /**
- * API privada: marcaciones con coordenadas GPS para el mapa del dueño.
+ * API privada: marcaciones con coordenadas GPS para el mapa del dueÃ±o.
  * GET api_mapa.php?fecha=YYYY-MM-DD o ?fecha_desde=YYYY-MM-DD&fecha_hasta=YYYY-MM-DD
- * Solo accesible con sesión de rol 'dueño'.
- * Filtra resultados para mostrar solo marcaciones dentro de Jaén
- * y dentro de zonas permitidas de marcación.
+ * Solo accesible con sesiÃ³n de rol 'dueÃ±o'.
+ * Filtra resultados para mostrar solo marcaciones dentro de JaÃ©n
+ * y dentro de zonas permitidas de marcaciÃ³n.
  */
 session_start();
 require_once 'config.php';
@@ -12,16 +12,16 @@ require_once 'jaen_geocoder.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Guard de sesión
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueño') {
+// Guard de sesiÃ³n
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Acceso denegado']);
     exit;
 }
 
-$dueño_id = (int)$_SESSION['user_id'];
+$dueÃ±o_id = (int)$_SESSION['user_id'];
 
-// Validar parámetros de fecha - permite rango o fecha única
+// Validar parÃ¡metros de fecha - permite rango o fecha Ãºnica
 $fecha_raw = $_GET['fecha'] ?? '';
 $fecha_desde_raw = $_GET['fecha_desde'] ?? '';
 $fecha_hasta_raw = $_GET['fecha_hasta'] ?? '';
@@ -30,20 +30,20 @@ $fecha_desde = date('Y-m-d');
 $fecha_hasta = date('Y-m-d');
 
 if ($fecha_raw) {
-    // Parámetro de fecha única
+    // ParÃ¡metro de fecha Ãºnica
     if (!preg_match('/^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/', $fecha_raw)) {
         http_response_code(400);
-        echo json_encode(['ok' => false, 'error' => 'Parámetro fecha inválido']);
+        echo json_encode(['ok' => false, 'error' => 'ParÃ¡metro fecha invÃ¡lido']);
         exit;
     }
     $fecha_desde = $fecha_raw;
     $fecha_hasta = $fecha_raw;
 } elseif ($fecha_desde_raw && $fecha_hasta_raw) {
-    // Parámetros de rango
+    // ParÃ¡metros de rango
     if (!preg_match('/^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/', $fecha_desde_raw) ||
         !preg_match('/^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/', $fecha_hasta_raw)) {
         http_response_code(400);
-        echo json_encode(['ok' => false, 'error' => 'Parámetros de rango inválidos']);
+        echo json_encode(['ok' => false, 'error' => 'ParÃ¡metros de rango invÃ¡lidos']);
         exit;
     }
     $fecha_desde = $fecha_desde_raw;
@@ -53,8 +53,8 @@ if ($fecha_raw) {
 
 try {
     // Traer marcaciones del rango de fechas con al menos un par de coords (entrada o salida)
-    // filtradas por empleados que pertenecen al dueño autenticado
-    // Límite a 200 marcadores para no sobrecargar el mapa
+    // filtradas por empleados que pertenecen al dueÃ±o autenticado
+    // LÃ­mite a 200 marcadores para no sobrecargar el mapa
     $stmt = $pdo->prepare("
         SELECT
             m.id,
@@ -81,11 +81,11 @@ try {
         ORDER BY m.entrada DESC
         LIMIT 200
     ");
-    $stmt->execute([$dueño_id, $fecha_desde, $fecha_hasta]);
+    $stmt->execute([$dueÃ±o_id, $fecha_desde, $fecha_hasta]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Formatear datos: convertir strings de coords a float, nombre legible
-    // Filtrar solo marcaciones dentro de Jaén
+    // Filtrar solo marcaciones dentro de JaÃ©n
     $data = [];
     foreach ($rows as $row) {
         $nombre_completo = trim(
@@ -111,7 +111,7 @@ try {
         $salida_valida = isInJaen($lat_salida, $lng_salida)
             && isNearAllowedLocation($lat_salida, $lng_salida, $zona_salida, $dist_salida);
 
-        // Mantener en respuesta solo puntos válidos
+        // Mantener en respuesta solo puntos vÃ¡lidos
         if (!$entrada_valida) {
             $lat_entrada = null;
             $lng_entrada = null;
@@ -126,9 +126,9 @@ try {
             $dist_salida = null;
         }
 
-        // Filtrar: si no hay entrada/salida válida, no mostrar en el mapa
+        // Filtrar: si no hay entrada/salida vÃ¡lida, no mostrar en el mapa
         if ($lat_entrada === null && $lat_salida === null) {
-            continue; // Saltar esta marcación, no está en Jaén
+            continue; // Saltar esta marcaciÃ³n, no estÃ¡ en JaÃ©n
         }
 
         $data[] = [
@@ -159,3 +159,4 @@ try {
     echo json_encode(['ok' => false, 'error' => 'Error interno del servidor']);
     error_log('api_mapa.php error: ' . $e->getMessage());
 }
+
