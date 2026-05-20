@@ -4,7 +4,7 @@ require_once 'config.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
+if (!es_dueno_o_gerente()) {
     echo json_encode(['success' => false, 'error' => 'No autorizado']);
     exit;
 }

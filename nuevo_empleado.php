@@ -1,10 +1,8 @@
 ﻿<?php
 session_start();
+require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+$owner_id = require_dueno_o_gerente($pdo);
 ?>
 
 <!DOCTYPE html>
@@ -43,6 +41,15 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
                         value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
                     <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
                         Fecha en que el empleado comenzÃ³ a trabajar
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px; font-weight:600;">
+                        <input type="checkbox" name="es_gerente" value="1">
+                        Conceder permisos de gerente
+                    </label>
+                    <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
+                        El dueÃ±o podrÃ¡ revocarlo despuÃ©s desde el panel
                     </small>
                 </div>
                 <div class="form-group">

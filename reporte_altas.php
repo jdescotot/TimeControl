@@ -8,10 +8,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Verificar autenticaciÃ³n (solo dueÃ±o)
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+require_dueno_o_gerente($pdo);
 
 // Obtener aÃ±o del filtro (por defecto el aÃ±o actual)
 $anio_filtro = isset($_GET['anio']) ? (int)$_GET['anio'] : date('Y');

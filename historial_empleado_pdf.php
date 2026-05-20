@@ -2,7 +2,7 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
+if (!es_dueno_o_gerente()) {
     http_response_code(403);
     echo 'Acceso no autorizado';
     exit;
@@ -25,11 +25,11 @@ function esc_historial_pdf($value)
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-$dueÃ±o_id = (int)$_SESSION['user_id'];
+$dueno_id = owner_scope_id($pdo);
 $empleado_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $stmt = $pdo->prepare("SELECT username, nombre, created_at FROM usuarios WHERE id = ? AND rol = 'empleado' AND propietario_id = ?");
-$stmt->execute([$empleado_id, $dueÃ±o_id]);
+$stmt->execute([$empleado_id, $dueno_id]);
 $empleado = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$empleado) {

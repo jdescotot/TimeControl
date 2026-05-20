@@ -2,11 +2,8 @@
 session_start();
 require_once 'config.php';
 
-// VerificaciÃ³n de seguridad similar a la de dueÃ±o.php
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+// Verificación de seguridad
+require_dueno_o_gerente($pdo);
 
 // Mensaje de Ã©xito si viene de procesar una solicitud
 $mensaje_exito = '';
@@ -15,7 +12,7 @@ if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'procesado_ok') {
 }
 
 // Consulta para obtener solicitudes pendientes solo de empleados del dueÃ±o actual
-$dueÃ±o_id = $_SESSION['user_id'];
+$dueno_id = owner_scope_id($pdo);
 $query = "
     SELECT 
         s.id,
@@ -40,7 +37,7 @@ $query = "
 
 try {
     $stmt = $pdo->prepare($query);
-    $stmt->execute([$dueÃ±o_id]);
+    $stmt->execute([$dueno_id]);
     $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     die("Error al obtener solicitudes: " . $e->getMessage());

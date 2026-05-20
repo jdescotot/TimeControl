@@ -2,9 +2,9 @@
 session_start();
 require_once 'config.php';
 
-// Solo el dueÃ±o puede procesar estas acciones
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o' || $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: dueÃ±o.php');
+// Solo el dueño o gerente puede procesar estas acciones
+if (!es_dueno_o_gerente() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: index.php');
     exit;
 }
 

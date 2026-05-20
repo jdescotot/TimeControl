@@ -12,14 +12,14 @@ require_once 'jaen_geocoder.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Guard de sesiÃ³n
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
+// Guard de sesión
+if (!es_dueno_o_gerente()) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Acceso denegado']);
     exit;
 }
 
-$dueÃ±o_id = (int)$_SESSION['user_id'];
+$dueno_id = owner_scope_id($pdo);
 
 // Validar parÃ¡metros de fecha - permite rango o fecha Ãºnica
 $fecha_raw = $_GET['fecha'] ?? '';
@@ -81,7 +81,7 @@ try {
         ORDER BY m.entrada DESC
         LIMIT 200
     ");
-    $stmt->execute([$dueÃ±o_id, $fecha_desde, $fecha_hasta]);
+    $stmt->execute([$dueno_id, $fecha_desde, $fecha_hasta]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Formatear datos: convertir strings de coords a float, nombre legible

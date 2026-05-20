@@ -6,8 +6,8 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    die('âŒ Acceso denegado. Solo para dueÃ±os.');
+if (!es_dueno_o_gerente()) {
+    die('Acceso denegado.');
 }
 
 echo "<h1>ðŸ” VerificaciÃ³n de Estructura GPS en BD</h1>";

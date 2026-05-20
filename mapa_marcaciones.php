@@ -3,10 +3,7 @@ session_start();
 require_once 'config.php';
 require_once 'jaen_geocoder.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+require_dueno_o_gerente($pdo);
 
 $fecha_hoy    = date('Y-m-d');
 $fecha_inicio = date('Y-m-d', strtotime('-90 days')); // lÃ­mite del date picker

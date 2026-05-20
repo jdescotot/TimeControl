@@ -2,10 +2,7 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+require_dueno_o_gerente($pdo);
 
 // Obtener mes y aÃ±o actual
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
@@ -20,8 +17,8 @@ if ($mes < 1) {
     $aÃ±o++;
 }
 
-// Obtener el ID del dueÃ±o
-$dueÃ±o_id = $_SESSION['user_id'];
+// Obtener el ID del dueño
+$dueno_id = owner_scope_id($pdo);
 
 // Obtener todos los empleados del dueÃ±o
 $stmt_empleados = $pdo->prepare("
@@ -31,7 +28,7 @@ $stmt_empleados = $pdo->prepare("
     AND propietario_id = ? 
     ORDER BY username
 ");
-$stmt_empleados->execute([$dueÃ±o_id]);
+$stmt_empleados->execute([$dueno_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
 // Calcular primer y Ãºltimo dÃ­a del mes
@@ -51,7 +48,7 @@ $stmt_marcaciones = $pdo->prepare("
     )
     GROUP BY empleado_id
 ");
-$stmt_marcaciones->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+$stmt_marcaciones->execute([$primer_dia, $ultimo_dia, $dueno_id]);
 $marcaciones_data = [];
 foreach ($stmt_marcaciones->fetchAll(PDO::FETCH_ASSOC) as $m) {
     $marcaciones_data[$m['empleado_id']] = $m;
@@ -69,7 +66,7 @@ $stmt_ausencias = $pdo->prepare("
     )
     GROUP BY empleado_id, tipo_ausencia
 ");
-$stmt_ausencias->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+$stmt_ausencias->execute([$primer_dia, $ultimo_dia, $dueno_id]);
 $ausencias_data = [];
 foreach ($stmt_ausencias->fetchAll(PDO::FETCH_ASSOC) as $a) {
     if (!isset($ausencias_data[$a['empleado_id']])) {
@@ -89,7 +86,7 @@ $stmt_descansos = $pdo->prepare("
     )
     GROUP BY empleado_id
 ");
-$stmt_descansos->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+$stmt_descansos->execute([$primer_dia, $ultimo_dia, $dueno_id]);
 $descansos_data = [];
 foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
     $descansos_data[$d['empleado_id']] = $d['dias_descanso'];
@@ -109,7 +106,7 @@ $stmt_horas = $pdo->prepare("
     )
     GROUP BY empleado_id
 ");
-$stmt_horas->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+$stmt_horas->execute([$primer_dia, $ultimo_dia, $dueno_id]);
 $horas_data = [];
 foreach ($stmt_horas->fetchAll(PDO::FETCH_ASSOC) as $h) {
     $horas_data[$h['empleado_id']] = $h['total_horas'];

@@ -83,17 +83,17 @@ try {
 
     // Crear el nuevo empleado
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
-    $dueño_actual_id = (int)$_SESSION['user_id'];
+    $dueno_actual_id = (int)$_SESSION['user_id'];
     $stmt = $pdo->prepare("
         INSERT INTO usuarios (username, password, rol, nombre, requiere_cambio_password, propietario_id, created_at) 
         VALUES (?, ?, 'empleado', ?, 1, ?, ?)
     ");
-    $stmt->execute([$username, $password_hash, $nombre, $dueño_actual_id, $fecha_inicio]);
+    $stmt->execute([$username, $password_hash, $nombre, $dueno_actual_id, $fecha_inicio]);
 
     if ($es_gerente === 1) {
         $empleado_id = (int)$pdo->lastInsertId();
         $stmt_gerente = $pdo->prepare("UPDATE usuarios SET es_gerente = 1 WHERE id = ? AND propietario_id = ? AND rol = 'empleado'");
-        $stmt_gerente->execute([$empleado_id, $dueño_actual_id]);
+        $stmt_gerente->execute([$empleado_id, $dueno_actual_id]);
     }
 
     // Redirigir con Ã©xito

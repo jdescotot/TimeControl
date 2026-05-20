@@ -12,11 +12,8 @@
 session_start();
 require_once 'config.php';
 
-// Solo el dueÃ±o puede exportar
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+// Solo el dueño o gerente puede exportar
+require_dueno_o_gerente($pdo);
 
 // â”€â”€ Detectar quÃ© columnas opcionales existen en la tabla usuarios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 $stmt = $pdo->query("
@@ -39,7 +36,7 @@ if ($tiene_telefono)                  $campos_select[] = 'telefono';
 if ($tiene_correo)                    $campos_select[] = 'correo';
 elseif ($tiene_email)                 $campos_select[] = 'email';
 
-$propietario_id = (int) $_SESSION['user_id'];
+$propietario_id = owner_scope_id($pdo);
 $sql_select = "SELECT " . implode(', ', $campos_select) . "
                FROM usuarios
                WHERE rol = 'empleado'

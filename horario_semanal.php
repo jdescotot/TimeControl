@@ -2,10 +2,7 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+require_dueno_o_gerente($pdo);
 
 $hoy = date('Y-m-d');
 
@@ -44,7 +41,7 @@ for ($i = 0; $i < 7; $i++) {
 }
 
 // Obtener empleados
-$dueÃ±o_id = $_SESSION['user_id'];
+$dueno_id = owner_scope_id($pdo);
 $stmt_empleados = $pdo->prepare("
     SELECT id, username, nombre
     FROM usuarios 
@@ -52,7 +49,7 @@ $stmt_empleados = $pdo->prepare("
     AND propietario_id = ? 
     ORDER BY nombre IS NULL OR nombre = '', nombre, username
 ");
-$stmt_empleados->execute([$dueÃ±o_id]);
+$stmt_empleados->execute([$dueno_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
 // Obtener horarios de descanso de la semana (filtrar por rango de fechas en lugar de semana)

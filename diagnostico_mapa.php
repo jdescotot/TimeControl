@@ -12,11 +12,11 @@ session_start();
 require_once 'config.php';
 require_once 'jaen_geocoder.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    die('âŒ Acceso denegado. Solo para dueÃ±os.');
+if (!es_dueno_o_gerente()) {
+    die('Acceso denegado.');
 }
 
-$dueÃ±o_id = (int)$_SESSION['user_id'];
+$dueno_id = owner_scope_id($pdo);
 $hoy = date('Y-m-d');
 $hace_3_dias = date('Y-m-d', strtotime('-2 days'));
 
@@ -50,7 +50,7 @@ try {
         INNER JOIN usuarios u ON m.empleado_id = u.id
         WHERE u.propietario_id = ? AND DATE(m.entrada) BETWEEN ? AND ?
     ");
-    $stmt->execute([$dueÃ±o_id, $hace_3_dias, $hoy]);
+    $stmt->execute([$dueno_id, $hace_3_dias, $hoy]);
     $stats = $stmt->fetch(PDO::FETCH_ASSOC);
     
     echo "<table border='1' cellpadding='10'>";
@@ -92,7 +92,7 @@ try {
         GROUP BY u.id
         ORDER BY u.nombre, u.apellido
     ");
-    $stmt->execute([$hace_3_dias, $hoy, $dueÃ±o_id]);
+    $stmt->execute([$hace_3_dias, $hoy, $dueno_id]);
     $empleados = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo "<table border='1' cellpadding='8'>";
@@ -141,7 +141,7 @@ try {
         ORDER BY m.entrada DESC
         LIMIT 5
     ");
-    $stmt->execute([$dueÃ±o_id, $hace_3_dias, $hoy]);
+    $stmt->execute([$dueno_id, $hace_3_dias, $hoy]);
     $samples = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($samples)) {

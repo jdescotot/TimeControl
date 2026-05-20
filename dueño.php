@@ -2,10 +2,7 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+$dueno_id = require_dueno_o_gerente($pdo);
 
 $hoy = date('Y-m-d');
 $mes_actual = (int)date('n');
@@ -16,7 +13,6 @@ $pdf_mes_query = http_build_query([
 ]);
 
 // Obtener nÃºmero de solicitudes pendientes solo de empleados del dueÃ±o actual
-$dueÃ±o_id = $_SESSION['user_id'];
 try {
     $stmt_pendientes = $pdo->prepare("
         SELECT COUNT(*) as total 
@@ -24,7 +20,7 @@ try {
         INNER JOIN usuarios u ON sc.empleado_id = u.id
         WHERE sc.estado IN ('pendiente', 'rechazado_empleado') AND u.propietario_id = ?
     ");
-    $stmt_pendientes->execute([$dueÃ±o_id]);
+    $stmt_pendientes->execute([$dueno_id]);
     $resultado = $stmt_pendientes->fetch(PDO::FETCH_ASSOC);
     $num_solicitudes = (int) ($resultado['total'] ?? 0);
 } catch (Exception $e) {
@@ -33,14 +29,14 @@ try {
 }
 
 // Obtener todos los empleados (excluyendo al dueÃ±o) - con mejor manejo de charset
-$stmt_empleados = $pdo->prepare("
-    SELECT id, username, nombre
+$stmt_empleados = $pdo->prepare(" 
+    SELECT id, username, nombre, es_gerente
     FROM usuarios 
     WHERE rol = 'empleado' 
     AND propietario_id = ? 
     ORDER BY nombre IS NULL OR nombre = '', nombre, username
 ");
-$stmt_empleados->execute([$dueÃ±o_id]);
+$stmt_empleados->execute([$dueno_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
 // DEBUG: Descomentar para verificar cuÃ¡ntos empleados se obtienen
@@ -66,7 +62,7 @@ $stmt_ausencias_hoy = $pdo->prepare("
     INNER JOIN usuarios u ON ae.empleado_id = u.id
     WHERE u.propietario_id = ? AND ae.fecha = ?
 ");
-$stmt_ausencias_hoy->execute([$dueÃ±o_id, $hoy]);
+$stmt_ausencias_hoy->execute([$dueno_id, $hoy]);
 $ausencias_hoy = [];
 foreach ($stmt_ausencias_hoy->fetchAll(PDO::FETCH_ASSOC) as $a) {
     $ausencias_hoy[$a['empleado_id']] = $a['tipo_ausencia'];
@@ -311,13 +307,14 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                     <th>Empleado</th>
                                     <th>Estado Hoy</th>
                                     <th>Horas Trabajadas</th>
+                                    <th>Permiso</th>
                                     <th>AcciÃ³n</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($empleados)): ?>
                                     <tr>
-                                        <td colspan="4" class="empty-state">
+                                        <td colspan="5" class="empty-state">
                                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
                                                 stroke="currentColor" stroke-width="2">
                                                 <circle cx="12" cy="12" r="10"></circle>
@@ -337,6 +334,9 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                     echo htmlspecialchars($nombre_mostrar); 
                                                     ?>
                                                 </a>
+                                                <?php if (!empty($emp['es_gerente'])): ?>
+                                                    <span class="badge-adjusted" style="margin-left:8px;">Gerente</span>
+                                                <?php endif; ?>
                                                 <!-- DEBUG: ID = <?php echo $emp['id']; ?> -->
                                             </td>
                                             <td data-label="Estado">
@@ -427,6 +427,13 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                 }
                                                 ?>
                                             </td>
+                                            <td data-label="Permiso">
+                                                <?php if (!empty($emp['es_gerente'])): ?>
+                                                    <span class="status-inline status-inline--success">Con permisos</span>
+                                                <?php else: ?>
+                                                    <span class="status-inline status-inline--danger">Empleado</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td data-label="AcciÃ³n">
                                                 <div class="d-flex flex-wrap gap-2">
                                                     <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn btn-history">
@@ -435,6 +442,15 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                     <a href="historial_empleado_pdf.php?id=<?php echo $emp['id']; ?>" class="btn btn-history" style="background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%); color: white;">
                                                         PDF
                                                     </a>
+                                                    <?php if (es_dueno()): ?>
+                                                        <form action="actualizar_gerente.php" method="POST" style="display:inline-flex; gap:6px; align-items:center;">
+                                                            <input type="hidden" name="empleado_id" value="<?php echo $emp['id']; ?>">
+                                                            <input type="hidden" name="es_gerente" value="<?php echo empty($emp['es_gerente']) ? 1 : 0; ?>">
+                                                            <button type="submit" class="btn btn-history" style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); color: white;">
+                                                                <?php echo empty($emp['es_gerente']) ? 'Hacer gerente' : 'Quitar gerente'; ?>
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>

@@ -2,10 +2,7 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+require_dueno_o_gerente($pdo);
 
 // Obtener parÃ¡metros
 $tipo = isset($_GET['tipo']) ? $_GET['tipo'] : '';
@@ -28,8 +25,8 @@ $tipo_labels = [
 
 $tipo_legible = $tipo_labels[$tipo];
 
-// Obtener el ID del dueÃ±o
-$dueÃ±o_id = $_SESSION['user_id'];
+// Obtener el ID del dueño
+$dueno_id = owner_scope_id($pdo);
 
 // Calcular primer y Ãºltimo dÃ­a del mes
 $primer_dia = "$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
@@ -49,7 +46,7 @@ $stmt = $pdo->prepare("
     AND u.propietario_id = ?
     ORDER BY ae.fecha ASC, u.username ASC
 ");
-$stmt->execute([$tipo, $primer_dia, $ultimo_dia, $dueÃ±o_id]);
+$stmt->execute([$tipo, $primer_dia, $ultimo_dia, $dueno_id]);
 $ausencias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Agrupar ausencias por empleado

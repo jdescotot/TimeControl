@@ -2,7 +2,7 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
+if (!es_dueno_o_gerente()) {
     http_response_code(403);
     echo 'Acceso no autorizado';
     exit;
@@ -48,7 +48,7 @@ function calc_horas_dia($entradaBase, $salidaBase, $nuevaEntrada, $nuevaSalida, 
     }
 }
 
-$dueÃ±o_id = (int)$_SESSION['user_id'];
+$dueno_id = owner_scope_id($pdo);
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
 $aÃ±o = isset($_GET['aÃ±o']) ? (int)$_GET['aÃ±o'] : (isset($_GET['anio']) ? (int)$_GET['anio'] : (int)date('Y'));
 
@@ -154,7 +154,7 @@ ob_start();
 <?php
 if ($empleado_id) {
     $stmt_check = $pdo->prepare("SELECT id, username, nombre FROM usuarios WHERE id = ? AND rol = 'empleado' AND propietario_id = ?");
-    $stmt_check->execute([$empleado_id, $dueÃ±o_id]);
+    $stmt_check->execute([$empleado_id, $dueno_id]);
     $empleado = $stmt_check->fetch(PDO::FETCH_ASSOC);
 
     if (!$empleado) {
@@ -213,32 +213,32 @@ if ($empleado_id) {
     }
 } else {
     $stmt_empleados = $pdo->prepare("\n        SELECT id, username, nombre\n        FROM usuarios\n        WHERE rol = 'empleado' AND propietario_id = ?\n        ORDER BY username\n    ");
-    $stmt_empleados->execute([$dueÃ±o_id]);
+    $stmt_empleados->execute([$dueno_id]);
     $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
     $stmt_marc = $pdo->prepare("\n        SELECT empleado_id, COUNT(DISTINCT DATE(entrada)) AS dias_trabajados\n        FROM marcaciones\n        WHERE DATE(entrada) BETWEEN ? AND ?\n          AND empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n        GROUP BY empleado_id\n    ");
-    $stmt_marc->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+    $stmt_marc->execute([$primer_dia, $ultimo_dia, $dueno_id]);
     $marcaciones = [];
     foreach ($stmt_marc->fetchAll(PDO::FETCH_ASSOC) as $m) {
         $marcaciones[$m['empleado_id']] = (int)$m['dias_trabajados'];
     }
 
     $stmt_horas = $pdo->prepare("\n        SELECT empleado_id, SEC_TO_TIME(SUM(TIMESTAMPDIFF(SECOND, entrada, salida))) AS total_horas\n        FROM marcaciones\n        WHERE DATE(entrada) BETWEEN ? AND ?\n          AND entrada IS NOT NULL AND salida IS NOT NULL\n          AND empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n        GROUP BY empleado_id\n    ");
-    $stmt_horas->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+    $stmt_horas->execute([$primer_dia, $ultimo_dia, $dueno_id]);
     $horas = [];
     foreach ($stmt_horas->fetchAll(PDO::FETCH_ASSOC) as $h) {
         $horas[$h['empleado_id']] = $h['total_horas'];
     }
 
     $stmt_desc = $pdo->prepare("\n        SELECT empleado_id, COUNT(*) AS dias_descanso\n        FROM horarios_semanales\n        WHERE fecha_descanso BETWEEN ? AND ?\n          AND empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n        GROUP BY empleado_id\n    ");
-    $stmt_desc->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+    $stmt_desc->execute([$primer_dia, $ultimo_dia, $dueno_id]);
     $descanso = [];
     foreach ($stmt_desc->fetchAll(PDO::FETCH_ASSOC) as $d) {
         $descanso[$d['empleado_id']] = (int)$d['dias_descanso'];
     }
 
     $stmt_aus = $pdo->prepare("\n        SELECT empleado_id, tipo_ausencia, COUNT(*) AS cantidad\n        FROM ausencias_empleados\n        WHERE fecha BETWEEN ? AND ?\n          AND empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n        GROUP BY empleado_id, tipo_ausencia\n    ");
-    $stmt_aus->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+    $stmt_aus->execute([$primer_dia, $ultimo_dia, $dueno_id]);
     $aus = [];
     foreach ($stmt_aus->fetchAll(PDO::FETCH_ASSOC) as $a) {
         $eid = $a['empleado_id'];
@@ -249,7 +249,7 @@ if ($empleado_id) {
     }
 
     $stmt_adj = $pdo->prepare("\n        SELECT sc.empleado_id, COUNT(*) AS ajustes\n        FROM solicitudes_cambio sc\n        INNER JOIN marcaciones m ON m.id = sc.marcacion_id\n        WHERE sc.estado = 'aprobado'\n          AND DATE(m.entrada) BETWEEN ? AND ?\n          AND sc.empleado_id IN (SELECT id FROM usuarios WHERE rol='empleado' AND propietario_id = ?)\n        GROUP BY sc.empleado_id\n    ");
-    $stmt_adj->execute([$primer_dia, $ultimo_dia, $dueÃ±o_id]);
+    $stmt_adj->execute([$primer_dia, $ultimo_dia, $dueno_id]);
     $ajustes = [];
     foreach ($stmt_adj->fetchAll(PDO::FETCH_ASSOC) as $aj) {
         $ajustes[$aj['empleado_id']] = (int)$aj['ajustes'];
@@ -263,7 +263,7 @@ if ($empleado_id) {
     $total_adj = 0;
     ?>
     <div class="sheet-title">Reporte Mensual por Empleado</div>
-    <div class="sheet-subtitle">Periodo: <?php echo esc($mes); ?>/<?php echo esc($aÃ±o); ?> | DueÃ±o ID: <?php echo esc($dueÃ±o_id); ?></div>
+    <div class="sheet-subtitle">Periodo: <?php echo esc($mes); ?>/<?php echo esc($aÃ±o); ?> | Dueño ID: <?php echo esc($dueno_id); ?></div>
 
     <div class="summary">
         <strong>Rango:</strong> <?php echo esc($primer_dia); ?> a <?php echo esc($ultimo_dia); ?><br>

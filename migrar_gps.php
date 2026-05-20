@@ -7,8 +7,8 @@ session_start();
 require_once 'config.php';
 
 // Solo accesible si hay sesiÃ³n de dueÃ±o (protecciÃ³n mÃ­nima)
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    die('Acceso denegado. Debes iniciar sesiÃ³n como dueÃ±o.');
+if (!es_dueno_o_gerente()) {
+    die('Acceso denegado.');
 }
 
 $errores = [];

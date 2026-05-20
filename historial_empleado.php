@@ -2,17 +2,13 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'dueÃ±o') {
-    header('Location: index.php');
-    exit;
-}
+$dueno_id = require_dueno_o_gerente($pdo);
 
 $empleado_id = $_GET['id'] ?? 0;
-$dueÃ±o_id = (int)$_SESSION['user_id'];
 
 // Validar que el empleado exista y pertenezca al dueÃ±o autenticado
 $stmt = $pdo->prepare("SELECT username, nombre, created_at FROM usuarios WHERE id = ? AND rol = 'empleado' AND propietario_id = ?");
-$stmt->execute([$empleado_id, $dueÃ±o_id]);
+$stmt->execute([$empleado_id, $dueno_id]);
 $empleado = $stmt->fetch();
 
 if (!$empleado) {
