@@ -1,8 +1,8 @@
-﻿<?php
+<?php
 /**
- * API privada: marcaciones con coordenadas GPS para el mapa del dueÃ±o.
+ * API privada: marcaciones con coordenadas GPS para el mapa del dueño.
  * GET api_mapa.php?fecha=YYYY-MM-DD o ?fecha_desde=YYYY-MM-DD&fecha_hasta=YYYY-MM-DD
- * Solo accesible con sesiÃ³n de rol 'dueÃ±o'.
+ * Solo accesible con sesiÃ³n de rol 'dueño'.
  * Filtra resultados para mostrar solo marcaciones dentro de JaÃ©n
  * y dentro de zonas permitidas de marcaciÃ³n.
  */
@@ -53,7 +53,7 @@ if ($fecha_raw) {
 
 try {
     // Traer marcaciones del rango de fechas con al menos un par de coords (entrada o salida)
-    // filtradas por empleados que pertenecen al dueÃ±o autenticado
+    // filtradas por empleados que pertenecen al dueño autenticado
     // LÃ­mite a 200 marcadores para no sobrecargar el mapa
     $stmt = $pdo->prepare("
         SELECT

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -25,61 +25,61 @@ $owner_id = require_dueno_o_gerente($pdo);
                 <div class="form-group">
                     <label for="nombre">Nombre del Empleado:</label>
                     <input type="text" name="nombre" id="nombre" required minlength="2" maxlength="100"
-                        placeholder="Ej: Juan PÃ©rez GarcÃ­a" autocomplete="off">
+                        placeholder="Ej: Juan P&eacute;rez Garc&iacute;a" autocomplete="off">
                 </div>
                 <div class="form-group">
                     <label for="username">DNI / NIE / NIF / Pasaporte:</label>
                     <input type="text" name="username" id="username" required minlength="3" maxlength="50"
                         placeholder="Ej: X1234567L" autocomplete="off">
-                    <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
-                        Se convertirÃ¡ automÃ¡ticamente a minÃºsculas sin espacios
+                    <small class="form-help">
+                        Se convertir&aacute; autom&aacute;ticamente a min&uacute;sculas sin espacios
                     </small>
                 </div>
                 <div class="form-group">
                     <label for="fecha_inicio">Fecha de Inicio:</label>
                     <input type="date" name="fecha_inicio" id="fecha_inicio" required
                         value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
-                    <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
-                        Fecha en que el empleado comenzÃ³ a trabajar
+                    <small class="form-help">
+                        Fecha en que el empleado comenz&oacute; a trabajar
                     </small>
                 </div>
                 <div class="form-group">
-                    <label style="display:flex; align-items:center; gap:10px; font-weight:600;">
+                    <label class="manager-permission-label">
                         <input type="checkbox" name="es_gerente" value="1">
                         Conceder permisos de gerente
                     </label>
-                    <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
-                        El dueÃ±o podrÃ¡ revocarlo despuÃ©s desde el panel
+                    <small class="form-help">
+                        El due&ntilde;o podr&aacute; revocarlo despu&eacute;s desde el panel
                     </small>
                 </div>
                 <div class="form-group">
-                    <label for="password">ContraseÃ±a Temporal:</label>
-                    <div style="position: relative;">
+                    <label for="password">Contrase&ntilde;a Temporal:</label>
+                    <div class="password-field-wrap">
                         <input type="password" name="password" id="password" required minlength="6"
-                            placeholder="MÃ­nimo 6 caracteres sin espacios" autocomplete="new-password"
-                            style="padding-right: 45px;">
+                            placeholder="M&iacute;nimo 6 caracteres sin espacios" autocomplete="new-password"
+                            class="password-input">
                         <button type="button" onclick="togglePassword('password', this)"
-                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
-                            aria-label="Mostrar contraseÃ±a">
+                            class="toggle-password-btn"
+                            aria-label="Mostrar contrase&ntilde;a">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
                         </button>
                     </div>
-                    <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">
-                        No se permiten espacios. El empleado deberÃ¡ cambiarla en su primer inicio de sesiÃ³n
+                    <small class="form-help">
+                        No se permiten espacios. El empleado deber&aacute; cambiarla en su primer inicio de sesi&oacute;n
                     </small>
                 </div>
                 <div class="form-group">
-                    <label for="confirmar_password">Confirmar ContraseÃ±a:</label>
-                    <div style="position: relative;">
+                    <label for="confirmar_password">Confirmar Contrase&ntilde;a:</label>
+                    <div class="password-field-wrap">
                         <input type="password" name="confirmar_password" id="confirmar_password" required minlength="6"
-                            placeholder="Repite la contraseÃ±a" autocomplete="new-password"
-                            style="padding-right: 45px;">
+                            placeholder="Repite la contrase&ntilde;a" autocomplete="new-password"
+                            class="password-input">
                         <button type="button" onclick="togglePassword('confirmar_password', this)"
-                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px; color: #718096;"
-                            aria-label="Mostrar contraseÃ±a">
+                            class="toggle-password-btn"
+                            aria-label="Mostrar contrase&ntilde;a">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
@@ -88,7 +88,7 @@ $owner_id = require_dueno_o_gerente($pdo);
                     </div>
                 </div>
                 <div class="modal-footer page-actions">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <button type="submit" class="btn btn-primary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -98,7 +98,7 @@ $owner_id = require_dueno_o_gerente($pdo);
                         </svg>
                         Crear Empleado
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="window.location.href='dueÃ±o.php'" style="flex: 1;">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='dueño.php'">
                         Cancelar
                     </button>
                 </div>

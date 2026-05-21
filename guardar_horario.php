@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -12,10 +12,10 @@ if (!es_dueno_o_gerente()) {
 $empleado_id = $_POST['empleado_id'] ?? null;
 $fecha_descanso = $_POST['fecha_descanso'] ?? null;
 $semana = $_POST['semana'] ?? null;
-$aÃ±o = $_POST['aÃ±o'] ?? null;
+$año = $_POST['año'] ?? null;
 $accion = $_POST['accion'] ?? 'agregar'; // 'agregar' o 'eliminar'
 
-if (!$empleado_id || !$fecha_descanso || !$semana || !$aÃ±o) {
+if (!$empleado_id || !$fecha_descanso || !$semana || !$año) {
     echo json_encode(['success' => false, 'error' => 'Datos incompletos']);
     exit;
 }
@@ -46,10 +46,10 @@ try {
         if (!$stmt_check->fetch()) {
             // Solo insertar si no existe
             $stmt = $pdo->prepare("
-                INSERT INTO horarios_semanales (empleado_id, fecha_descanso, semana_aÃ±o, aÃ±o) 
+                INSERT INTO horarios_semanales (empleado_id, fecha_descanso, semana_año, año) 
                 VALUES (?, ?, ?, ?)
             ");
-            $stmt->execute([$empleado_id, $fecha_descanso, $semana, $aÃ±o]);
+            $stmt->execute([$empleado_id, $fecha_descanso, $semana, $año]);
         } else {
             // Ya existe, considerarlo como Ã©xito
             echo json_encode(['success' => true, 'message' => 'Ya existe']);
@@ -69,7 +69,7 @@ try {
             'empleado_id' => $empleado_id,
             'fecha_descanso' => $fecha_descanso,
             'semana' => $semana,
-            'aÃ±o' => $aÃ±o
+            'año' => $año
         ]
     ]);
 }

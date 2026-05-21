@@ -1,48 +1,49 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
 require_dueno_o_gerente($pdo);
 
-// Obtener mes y aÃ±o actual
+// Obtener mes y ano actual
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
-$aÃ±o = isset($_GET['aÃ±o']) ? (int)$_GET['aÃ±o'] : (int)date('Y');
+$año = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
 
 // Validar mes
 if ($mes < 1) {
     $mes = 12;
-    $aÃ±o--;
+    $año--;
 } elseif ($mes > 12) {
     $mes = 1;
-    $aÃ±o++;
+    $año++;
 }
 
-// Obtener el ID del dueño
+// Obtener el ID del dueno
 $dueno_id = owner_scope_id($pdo);
 
-// Obtener todos los empleados del dueÃ±o
+// Obtener todos los empleados del dueno
 $stmt_empleados = $pdo->prepare("
-    SELECT id, username, nombre 
-    FROM usuarios 
-    WHERE rol = 'empleado' 
-    AND propietario_id = ? 
+    SELECT id, username, nombre
+    FROM usuarios
+    WHERE rol = 'empleado'
+    AND propietario_id = ?
     ORDER BY username
 ");
 $stmt_empleados->execute([$dueno_id]);
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
-// Calcular primer y Ãºltimo dÃ­a del mes
-$primer_dia = "$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
-$ultimo_dia = date('Y-m-d', strtotime("$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
+// Calcular primer y ultimo dia del mes
+$primer_dia = "$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
+$ultimo_dia = date('Y-m-d', strtotime("$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
+$dias_mes = (int)((strtotime($ultimo_dia) - strtotime($primer_dia)) / 86400) + 1;
 
 // Obtener datos de marcaciones del mes
 $stmt_marcaciones = $pdo->prepare("
-    SELECT 
+    SELECT
         empleado_id,
         COUNT(DISTINCT DATE(entrada)) as dias_trabajados,
         SUM(CASE WHEN entrada IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_entrada,
         SUM(CASE WHEN salida IS NOT NULL THEN 1 ELSE 0 END) as marcaciones_salida
-    FROM marcaciones 
+    FROM marcaciones
     WHERE DATE(entrada) BETWEEN ? AND ? AND empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
     )
@@ -56,11 +57,11 @@ foreach ($stmt_marcaciones->fetchAll(PDO::FETCH_ASSOC) as $m) {
 
 // Obtener ausencias del mes
 $stmt_ausencias = $pdo->prepare("
-    SELECT 
+    SELECT
         empleado_id,
         tipo_ausencia,
         COUNT(*) as cantidad
-    FROM ausencias_empleados 
+    FROM ausencias_empleados
     WHERE fecha BETWEEN ? AND ? AND empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
     )
@@ -75,12 +76,12 @@ foreach ($stmt_ausencias->fetchAll(PDO::FETCH_ASSOC) as $a) {
     $ausencias_data[$a['empleado_id']][$a['tipo_ausencia']] = $a['cantidad'];
 }
 
-// Obtener dÃ­as de descanso del mes (para excluirlos del cÃ¡lculo de asistencia)
+// Obtener dias de descanso del mes
 $stmt_descansos = $pdo->prepare("
-    SELECT 
+    SELECT
         empleado_id,
         COUNT(*) as dias_descanso
-    FROM horarios_semanales 
+    FROM horarios_semanales
     WHERE fecha_descanso BETWEEN ? AND ? AND empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
     )
@@ -94,12 +95,12 @@ foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
 
 // Obtener total de horas trabajadas por empleado
 $stmt_horas = $pdo->prepare("
-    SELECT 
+    SELECT
         empleado_id,
         SEC_TO_TIME(SUM(TIMESTAMPDIFF(SECOND, entrada, salida))) as total_horas
-    FROM marcaciones 
-    WHERE DATE(entrada) BETWEEN ? AND ? 
-    AND entrada IS NOT NULL 
+    FROM marcaciones
+    WHERE DATE(entrada) BETWEEN ? AND ?
+    AND entrada IS NOT NULL
     AND salida IS NOT NULL
     AND empleado_id IN (
         SELECT id FROM usuarios WHERE rol = 'empleado' AND propietario_id = ?
@@ -112,7 +113,7 @@ foreach ($stmt_horas->fetchAll(PDO::FETCH_ASSOC) as $h) {
     $horas_data[$h['empleado_id']] = $h['total_horas'];
 }
 
-// Nombres de meses en espaÃ±ol
+// Nombres de meses
 $meses = [
     1 => 'Enero',
     2 => 'Febrero',
@@ -130,22 +131,22 @@ $meses = [
 
 // Calcular mes anterior y siguiente
 $mes_anterior = $mes - 1;
-$aÃ±o_anterior = $aÃ±o;
+$año_anterior = $año;
 if ($mes_anterior < 1) {
     $mes_anterior = 12;
-    $aÃ±o_anterior--;
+    $año_anterior--;
 }
 
 $mes_siguiente = $mes + 1;
-$aÃ±o_siguiente = $aÃ±o;
+$año_siguiente = $año;
 if ($mes_siguiente > 12) {
     $mes_siguiente = 1;
-    $aÃ±o_siguiente++;
+    $año_siguiente++;
 }
 
 $export_query_params = [
     'mes' => $mes,
-    'aÃ±o' => $aÃ±o,
+    'año' => $año,
 ];
 $export_pdf_query = http_build_query($export_query_params);
 ?>
@@ -156,12 +157,12 @@ $export_pdf_query = http_build_query($export_query_params);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte Mensual - Control Horario</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="reporte_mensual.css">
 </head>
-<body>
-    <div class="container">
-        <!-- Header -->
+<body class="report-page">
+    <div class="container report-container">
         <header class="header">
             <div class="header-content">
                 <div class="logo">
@@ -171,52 +172,48 @@ $export_pdf_query = http_build_query($export_query_params);
                     </svg>
                     <span>Control Horario</span>
                 </div>
-                <div class="user-info">
-                    <span class="welcome-text">Reporte Mensual</span>
-                    <a href="dueÃ±o.php" class="btn-back">
+                <div class="user-info report-header-actions">
+                    <span class="welcome-text">Reporte mensual</span>
+                    <a href="dueño.php" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5"></path>
                             <polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
-                        <span>Volver al Panel</span>
+                        <span>Volver al panel</span>
                     </a>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- Selector de Mes -->
-            <div class="card">
+            <section class="card">
                 <div class="card-body">
                     <div class="month-selector">
-                        <a href="?mes=<?php echo $mes_anterior; ?>&aÃ±o=<?php echo $aÃ±o_anterior; ?>" class="btn-nav-month">
+                        <a href="?mes=<?php echo $mes_anterior; ?>&año=<?php echo $año_anterior; ?>" class="btn-nav-month" aria-label="Mes anterior">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="15 18 9 12 15 6"></polyline>
                             </svg>
                         </a>
                         <div class="month-display">
-                            <h2><?php echo $meses[$mes]; ?> <?php echo $aÃ±o; ?></h2>
+                            <h2><?php echo $meses[$mes]; ?> <?php echo $año; ?></h2>
                         </div>
-                        <a href="?mes=<?php echo $mes_siguiente; ?>&aÃ±o=<?php echo $aÃ±o_siguiente; ?>" class="btn-nav-month">
+                        <a href="?mes=<?php echo $mes_siguiente; ?>&año=<?php echo $año_siguiente; ?>" class="btn-nav-month" aria-label="Mes siguiente">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 18 15 12 9 6"></polyline>
                             </svg>
                         </a>
-                        
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Resumen General del Mes -->
-            <div class="card">
+            <section class="card">
                 <div class="card-header">
-                    <h3>Resumen General</h3>
+                    <h3>Resumen general</h3>
                 </div>
                 <div class="card-body">
                     <div class="summary-grid">
-                        <div class="summary-item">
-                            <div class="summary-icon" style="background-color: #bee3f8;">
+                        <article class="summary-item">
+                            <div class="summary-icon summary-icon--team">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="9" cy="7" r="4"></circle>
@@ -225,30 +222,32 @@ $export_pdf_query = http_build_query($export_query_params);
                                 </svg>
                             </div>
                             <div class="summary-text">
-                                <span class="summary-label">Total Empleados</span>
+                                <span class="summary-label">Total empleados</span>
                                 <span class="summary-value"><?php echo count($empleados); ?></span>
                             </div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-icon" style="background-color: #c6f6d5;">
+                        </article>
+
+                        <article class="summary-item">
+                            <div class="summary-icon summary-icon--days">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                                     <circle cx="12" cy="13" r="4"></circle>
                                 </svg>
                             </div>
                             <div class="summary-text">
-                                <span class="summary-label">DÃ­as Laborables</span>
-                                <span class="summary-value"><?php echo (int)((strtotime($ultimo_dia) - strtotime($primer_dia)) / 86400) + 1; ?></span>
+                                <span class="summary-label">D&iacute;as laborables</span>
+                                <span class="summary-value"><?php echo $dias_mes; ?></span>
                             </div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-icon" style="background-color: #feebc8;">
+                        </article>
+
+                        <article class="summary-item">
+                            <div class="summary-icon summary-icon--attendance">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                                 </svg>
                             </div>
                             <div class="summary-text">
-                                <span class="summary-label">Promedio Asistencia</span>
+                                <span class="summary-label">Promedio asistencia</span>
                                 <span class="summary-value">
                                     <?php
                                     if (count($empleados) > 0) {
@@ -256,51 +255,51 @@ $export_pdf_query = http_build_query($export_query_params);
                                         foreach ($marcaciones_data as $m) {
                                             $total_marcaciones += $m['dias_trabajados'];
                                         }
-                                        $promedio = ($total_marcaciones / count($empleados)) / (((strtotime($ultimo_dia) - strtotime($primer_dia)) / 86400) + 1) * 100;
+                                        $promedio = ($total_marcaciones / count($empleados)) / $dias_mes * 100;
                                         echo number_format($promedio, 1) . '%';
                                     } else {
-                                        echo 'â€”';
+                                        echo '&mdash;';
                                     }
                                     ?>
                                 </span>
                             </div>
-                        </div>
+                        </article>
                     </div>
                 </div>
-            </div>
-            <!-- Tabla de Empleados -->
-            <div class="card">
-                <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                    <h3 style="margin:0;">Detalle por Empleado</h3>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                        <a href="export_reporte_mensual_pdf.php?<?php echo htmlspecialchars($export_pdf_query, ENT_QUOTES, 'UTF-8'); ?>" class="btn"
-                           style="padding:8px 14px; font-size:14px; background:linear-gradient(135deg, #c53030 0%, #9b2c2c 100%); color:white; text-decoration:none; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+            </section>
+
+            <section class="card">
+                <div class="card-header table-header-row">
+                    <h3 class="table-title">Detalle por empleado</h3>
+                    <div class="table-actions">
+                        <a href="export_reporte_mensual_pdf.php?<?php echo htmlspecialchars($export_pdf_query, ENT_QUOTES, 'UTF-8'); ?>" class="btn-export-pdf">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M7 2h8l5 5v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
                                 <path d="M14 2v6h6"></path>
                             </svg>
-                            Generar PDF del Mes
+                            Generar PDF del mes
                         </a>
                     </div>
                 </div>
+
                 <div class="card-body">
                     <div class="table-container">
                         <table class="reporte-table">
                             <thead>
                                 <tr>
                                     <th>Empleado</th>
-                                    <th>DÃ­as Trabajados</th>
-                                    <th>Horas Totales</th>
-                                    <th>Vacaciones Ley</th>
+                                    <th>D&iacute;as trabajados</th>
+                                    <th>Horas totales</th>
+                                    <th>Vacaciones ley</th>
                                     <th>Enfermedad</th>
-                                    <th>Faltas Justificadas</th>
+                                    <th>Faltas justificadas</th>
                                     <th>Asistencia %</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($empleados)): ?>
                                     <tr>
-                                        <td colspan="8" class="empty-state">
+                                        <td colspan="7" class="empty-state">
                                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <circle cx="12" cy="12" r="10"></circle>
                                                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -310,111 +309,90 @@ $export_pdf_query = http_build_query($export_query_params);
                                         </td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php 
-                                    $dias_mes = (int)((strtotime($ultimo_dia) - strtotime($primer_dia)) / 86400) + 1;
-                                    foreach ($empleados as $emp): 
+                                    <?php foreach ($empleados as $emp): ?>
+                                        <?php
                                         $nombre_mostrar = !empty($emp['nombre']) ? $emp['nombre'] : $emp['username'];
                                         $export_emp_query = http_build_query([
                                             'empleado_id' => (int)$emp['id'],
                                             'mes' => $mes,
-                                            'aÃ±o' => $aÃ±o,
+                                            'año' => $año,
                                         ]);
+
                                         $marcaciones = $marcaciones_data[$emp['id']] ?? ['dias_trabajados' => 0];
                                         $ausencias = $ausencias_data[$emp['id']] ?? [];
                                         $horas_totales = $horas_data[$emp['id']] ?? '00:00:00';
                                         $dias_descanso = $descansos_data[$emp['id']] ?? 0;
-                                        
-                                        // Calcular porcentaje de asistencia
+
                                         $dias_registrados = $marcaciones['dias_trabajados'];
                                         $vacaciones = $ausencias['vacaciones_ley'] ?? 0;
                                         $enfermedad = $ausencias['enfermedad'] ?? 0;
                                         $emergencia = $ausencias['emergencia_familiar'] ?? 0;
                                         $fuerza_mayor = $ausencias['fuerza_mayor'] ?? 0;
                                         $faltas_justificadas = $emergencia + $fuerza_mayor;
-                                        
-                                        // Restar dÃ­as de descanso y vacaciones del total esperado
+
                                         $dias_esperados = $dias_mes - $vacaciones - $dias_descanso;
                                         $asistencia = $dias_esperados > 0 ? ($dias_registrados / $dias_esperados * 100) : 0;
-                                    ?>
-                                    <tr>
-                                        <td data-label="Empleado">
-                                            <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                                               class="empleado-name"
-                                               style="color: #667eea; text-decoration: none; font-weight: 500; cursor: pointer; transition: all 0.2s;"
-                                               onmouseover="this.style.color='#764ba2'; this.style.textDecoration='underline';"
-                                               onmouseout="this.style.color='#667eea'; this.style.textDecoration='none';">
-                                                <?php echo htmlspecialchars($nombre_mostrar); ?>
-                                            </a>
-                                            <a href="export_reporte_mensual_pdf.php?<?php echo htmlspecialchars($export_emp_query, ENT_QUOTES, 'UTF-8'); ?>" 
-                                               class="btn"
-                                               style="margin-left:8px; padding:4px 8px; font-size:12px; background:linear-gradient(135deg, #c53030 0%, #9b2c2c 100%); color:white; border-radius:6px; text-decoration:none;">
-                                                PDF
-                                            </a>
-                                        </td>
-                                        <td data-label="DÃ­as Trabajados">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                                               class="badge badge-blue" 
-                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
-                                               onmouseover="this.style.transform='scale(1.1)'"
-                                               onmouseout="this.style.transform='scale(1)'">
-                                                <?php echo $dias_registrados; ?>
-                                            </a>
-                                        </td>
-                                        <td data-label="Horas Totales">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                                               class="badge badge-green" 
-                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
-                                               onmouseover="this.style.transform='scale(1.1)'"
-                                               onmouseout="this.style.transform='scale(1)'">
-                                                <?php echo substr($horas_totales, 0, 5); ?>
-                                            </a>
-                                        </td>
-                                        <td data-label="Vacaciones Ley">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                                               class="badge badge-yellow" 
-                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
-                                               onmouseover="this.style.transform='scale(1.1)'"
-                                               onmouseout="this.style.transform='scale(1)'">
-                                                <?php echo $vacaciones; ?>
-                                            </a>
-                                        </td>
-                                        <td data-label="Enfermedad">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                                               class="badge badge-orange" 
-                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
-                                               onmouseover="this.style.transform='scale(1.1)'"
-                                               onmouseout="this.style.transform='scale(1)'">
-                                                <?php echo $enfermedad; ?>
-                                            </a>
-                                        </td>
-                                        <td data-label="Faltas Justificadas">
-                                            <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                                               class="badge badge-purple" 
-                                               style="text-decoration: none; cursor: pointer; transition: transform 0.2s;"
-                                               onmouseover="this.style.transform='scale(1.1)'"
-                                               onmouseout="this.style.transform='scale(1)'">
-                                                <?php echo $faltas_justificadas; ?>
-                                            </a>
-                                        </td>
-                                        <td data-label="Asistencia %">
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: <?php echo $asistencia; ?>%; background: <?php echo $asistencia >= 80 ? '#48bb78' : ($asistencia >= 60 ? '#ed8936' : '#e53e3e'); ?>;"></div>
-                                            </div>
-                                            <span class="progress-text"><?php echo number_format($asistencia, 1); ?>%</span>
-                                        </td>
-                                    </tr>
+                                        $asistencia_clamp = max(0, min(100, $asistencia));
+                                        $asistencia_class = $asistencia >= 80
+                                            ? 'progress-fill--good'
+                                            : ($asistencia >= 60 ? 'progress-fill--mid' : 'progress-fill--low');
+                                        ?>
+                                        <tr>
+                                            <td data-label="Empleado">
+                                                <div class="employee-cell-content">
+                                                    <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="employee-link">
+                                                        <?php echo htmlspecialchars($nombre_mostrar); ?>
+                                                    </a>
+                                                    <a href="export_reporte_mensual_pdf.php?<?php echo htmlspecialchars($export_emp_query, ENT_QUOTES, 'UTF-8'); ?>" class="employee-pdf-btn">
+                                                        PDF
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td data-label="D&iacute;as trabajados">
+                                                <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="metric-pill metric-pill--blue">
+                                                    <?php echo $dias_registrados; ?>
+                                                </a>
+                                            </td>
+                                            <td data-label="Horas totales">
+                                                <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="metric-pill metric-pill--green">
+                                                    <?php echo substr($horas_totales, 0, 5); ?>
+                                                </a>
+                                            </td>
+                                            <td data-label="Vacaciones ley">
+                                                <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="metric-pill metric-pill--yellow">
+                                                    <?php echo $vacaciones; ?>
+                                                </a>
+                                            </td>
+                                            <td data-label="Enfermedad">
+                                                <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="metric-pill metric-pill--orange">
+                                                    <?php echo $enfermedad; ?>
+                                                </a>
+                                            </td>
+                                            <td data-label="Faltas justificadas">
+                                                <a href="calendario_empleado.php?id=<?php echo $emp['id']; ?>&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="metric-pill metric-pill--purple">
+                                                    <?php echo $faltas_justificadas; ?>
+                                                </a>
+                                            </td>
+                                            <td data-label="Asistencia %">
+                                                <div class="progress-wrap">
+                                                    <div class="progress-bar">
+                                                        <div class="progress-fill <?php echo $asistencia_class; ?>" data-width="<?php echo number_format($asistencia_clamp, 2, '.', ''); ?>"></div>
+                                                    </div>
+                                                    <span class="progress-text"><?php echo number_format($asistencia, 1); ?>%</span>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- GrÃ¡fico de Ausencias por Tipo -->
-            <div class="card">
+            <section class="card">
                 <div class="card-header">
-                    <h3>Resumen de Ausencias por Tipo</h3>
+                    <h3>Resumen de ausencias por tipo</h3>
                 </div>
                 <div class="card-body">
                     <div class="absence-summary">
@@ -424,7 +402,7 @@ $export_pdf_query = http_build_query($export_query_params);
                         $total_emergencia = 0;
                         $total_fuerza_mayor = 0;
                         $total_faltas_justificadas = 0;
-                        
+
                         foreach ($ausencias_data as $ausencias) {
                             $total_vacaciones += $ausencias['vacaciones_ley'] ?? 0;
                             $total_enfermedad += $ausencias['enfermedad'] ?? 0;
@@ -432,76 +410,62 @@ $export_pdf_query = http_build_query($export_query_params);
                             $total_fuerza_mayor += $ausencias['fuerza_mayor'] ?? 0;
                             $total_faltas_justificadas += ($ausencias['emergencia_familiar'] ?? 0) + ($ausencias['fuerza_mayor'] ?? 0);
                         }
-                        
-                        $total_ausencias = $total_vacaciones + $total_enfermedad + $total_emergencia + $total_fuerza_mayor;
                         ?>
-                        <div class="absence-item" 
-                           style="text-decoration: none; color: inherit; cursor: default;">
-                            <div class="absence-badge" style="background-color: #e9d8fd;">
+
+                        <article class="absence-item absence-item--static">
+                            <div class="absence-badge absence-badge--justified">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="9 11 12 14 22 4"></polyline>
                                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                                 </svg>
                             </div>
                             <div class="absence-content">
-                                <span class="absence-label">Faltas Justificadas</span>
-                                <span class="absence-count"><?php echo $total_faltas_justificadas; ?> dÃ­as</span>
-                                <small style="color: #718096; display: block;">Incluye emergencia familiar y fuerza mayor</small>
+                                <span class="absence-label">Faltas justificadas</span>
+                                <span class="absence-count"><?php echo $total_faltas_justificadas; ?> d&iacute;as</span>
+                                <small class="absence-note">Incluye emergencia familiar y fuerza mayor</small>
                             </div>
-                        </div>
-                        <a href="detalle_ausencias.php?tipo=vacaciones_ley&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                           class="absence-item" 
-                           style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
-                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
-                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)';">
-                            <div class="absence-badge" style="background-color: #feebc8;">
+                        </article>
+
+                        <a href="detalle_ausencias.php?tipo=vacaciones_ley&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="absence-item absence-link">
+                            <div class="absence-badge absence-badge--vacation">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                                 </svg>
                             </div>
                             <div class="absence-content">
-                                <span class="absence-label">Vacaciones Ley</span>
-                                <span class="absence-count"><?php echo $total_vacaciones; ?> dÃ­as</span>
+                                <span class="absence-label">Vacaciones ley</span>
+                                <span class="absence-count"><?php echo $total_vacaciones; ?> d&iacute;as</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=enfermedad&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                           class="absence-item" 
-                           style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
-                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
-                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)';">
-                            <div class="absence-badge" style="background-color: #fed7d7;">
+
+                        <a href="detalle_ausencias.php?tipo=enfermedad&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="absence-item absence-link">
+                            <div class="absence-badge absence-badge--sick">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
                                 </svg>
                             </div>
                             <div class="absence-content">
                                 <span class="absence-label">Enfermedad</span>
-                                <span class="absence-count"><?php echo $total_enfermedad; ?> dÃ­as</span>
+                                <span class="absence-count"><?php echo $total_enfermedad; ?> d&iacute;as</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=emergencia_familiar&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                           class="absence-item" 
-                           style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
-                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
-                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)';">
-                            <div class="absence-badge" style="background-color: #bee3f8;">
+
+                        <a href="detalle_ausencias.php?tipo=emergencia_familiar&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="absence-item absence-link">
+                            <div class="absence-badge absence-badge--emergency">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="9 11 12 14 22 4"></polyline>
                                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                                 </svg>
                             </div>
                             <div class="absence-content">
-                                <span class="absence-label">Emergencia Familiar</span>
-                                <span class="absence-count"><?php echo $total_emergencia; ?> dÃ­as</span>
+                                <span class="absence-label">Emergencia familiar</span>
+                                <span class="absence-count"><?php echo $total_emergencia; ?> d&iacute;as</span>
                             </div>
                         </a>
-                        <a href="detalle_ausencias.php?tipo=fuerza_mayor&mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" 
-                           class="absence-item" 
-                           style="text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
-                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)';"
-                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)';">
-                            <div class="absence-badge" style="background-color: #fbb6ce;">
+
+                        <a href="detalle_ausencias.php?tipo=fuerza_mayor&mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="absence-item absence-link">
+                            <div class="absence-badge absence-badge--force">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <line x1="15" y1="9" x2="9" y2="15"></line>
@@ -509,15 +473,28 @@ $export_pdf_query = http_build_query($export_query_params);
                                 </svg>
                             </div>
                             <div class="absence-content">
-                                <span class="absence-label">Fuerza Mayor</span>
-                                <span class="absence-count"><?php echo $total_fuerza_mayor; ?> dÃ­as</span>
+                                <span class="absence-label">Fuerza mayor</span>
+                                <span class="absence-count"><?php echo $total_fuerza_mayor; ?> d&iacute;as</span>
                             </div>
                         </a>
                     </div>
                 </div>
-            </div>
+            </section>
         </main>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var bars = document.querySelectorAll('.progress-fill[data-width]');
+            bars.forEach(function (bar) {
+                var value = Number(bar.getAttribute('data-width'));
+                if (!Number.isFinite(value)) {
+                    return;
+                }
+                var safeValue = Math.max(0, Math.min(100, value));
+                bar.style.width = safeValue + '%';
+            });
+        });
+    </script>
 </body>
 </html>
-

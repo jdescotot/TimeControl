@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * SCRIPT DE MIGRACIÃ“N â€” ejecutar UNA SOLA VEZ y luego eliminar.
  * AÃ±ade las columnas de coordenadas GPS a la tabla marcaciones.
@@ -6,7 +6,7 @@
 session_start();
 require_once 'config.php';
 
-// Solo accesible si hay sesiÃ³n de dueÃ±o (protecciÃ³n mÃ­nima)
+// Solo accesible si hay sesiÃ³n de dueño (protecciÃ³n mÃ­nima)
 if (!es_dueno_o_gerente()) {
     die('Acceso denegado.');
 }
@@ -75,7 +75,7 @@ foreach ($columnas as $nombre => $sql) {
         (<code>migrar_gps.php</code>) del servidor para evitar que sea accedido de nuevo.
     </div>
 
-    <p style="margin-top:20px;"><a href="dueÃ±o.php">â† Volver al panel</a></p>
+    <p style="margin-top:20px;"><a href="dueño.php">â† Volver al panel</a></p>
 </body>
 </html>
 

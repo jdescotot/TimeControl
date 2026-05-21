@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 require_once 'jaen_geocoder.php';
@@ -70,13 +70,13 @@ $allowed_zones_json = json_encode($allowed_zones);
 
     <!-- Estilos propios -->
     <link rel="stylesheet" href="empleado.css">
-    <link rel="stylesheet" href="dueÃ±o.css">
+    <link rel="stylesheet" href="dueño.css">
     <link rel="stylesheet" href="mapa_marcaciones.css">
 </head>
 <body class="owner-dashboard mapa-page">
 <div class="container">
 
-    <!-- â”€â”€ Header (igual que dueÃ±o.php) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- â”€â”€ Header (igual que dueño.php) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <header class="header">
         <div class="header-content">
             <div class="logo">
@@ -88,7 +88,7 @@ $allowed_zones_json = json_encode($allowed_zones);
             </div>
             <div class="user-info">
                 <div class="header-actions">
-                    <a href="dueÃ±o.php" class="btn top-nav-btn top-nav-btn--schedule">
+                    <a href="dueño.php" class="btn top-nav-btn top-nav-btn--schedule">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>

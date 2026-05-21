@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * SCRIPT DE DIAGNÃ“STICO: Verifica la configuraciÃ³n del mapa de marcaciones
  * 

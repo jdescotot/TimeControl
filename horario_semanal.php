@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -6,7 +6,7 @@ require_dueno_o_gerente($pdo);
 
 $hoy = date('Y-m-d');
 
-// Configurar locale para espaÃ±ol si es posible, o usar mapeo manual
+// Configurar locale para español si es posible, o usar mapeo manual
 $dias_semana = [
     1 => 'Lunes',
     2 => 'Martes',
@@ -17,22 +17,22 @@ $dias_semana = [
     7 => 'Domingo'
 ];
 
-// Obtener semana y aÃ±o
+// Obtener semana y año
 $semana = isset($_GET['semana']) ? (int)$_GET['semana'] : (int)date('W');
-$aÃ±o = isset($_GET['aÃ±o']) ? (int)$_GET['aÃ±o'] : (int)date('Y');
+$año = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
 
-// Ajustar semana si es necesario (manejo simple de fin de aÃ±o)
+// Ajustar semana si es necesario (manejo simple de fin de año)
 if ($semana < 1) {
     $semana = 52;
-    $aÃ±o--;
+    $año--;
 } elseif ($semana > 53) {
     $semana = 1;
-    $aÃ±o++;
+    $año++;
 }
 
 // Calcular fechas de la semana
 $dto = new DateTime();
-$dto->setISODate($aÃ±o, $semana);
+$dto->setISODate($año, $semana);
 $inicio_semana = clone $dto;
 $fechas_semana = [];
 for ($i = 0; $i < 7; $i++) {
@@ -101,7 +101,7 @@ foreach ($ausencias_raw as $a) {
                 </div>
                 <div class="user-info">
                     <span class="welcome-text">Horario Semanal</span>
-                    <a href="dueÃ±o.php" class="btn-back">
+                    <a href="dueño.php" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5"></path>
                             <polyline points="12 19 5 12 12 5"></polyline>
@@ -115,17 +115,17 @@ foreach ($ausencias_raw as $a) {
         <main class="main-content">
             <div class="schedule-container">
                 <div class="week-navigation">
-                    <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana-1; ?>, <?php echo $aÃ±o; ?>)">
+                    <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana-1; ?>, <?php echo $año; ?>)">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="15 18 9 12 15 6"></polyline>
                         </svg>
                         Semana Anterior
                     </button>
                     <div class="current-week-title">
-                        Semana <?php echo $semana; ?> (<?php echo $inicio_semana->format('d/m'); ?> - <?php echo (clone $inicio_semana)->modify('+6 days')->format('d/m'); ?>, <?php echo $aÃ±o; ?>)
+                        Semana <?php echo $semana; ?> (<?php echo $inicio_semana->format('d/m'); ?> - <?php echo (clone $inicio_semana)->modify('+6 days')->format('d/m'); ?>, <?php echo $año; ?>)
                         <span id="save-status" class="save-status">Guardando...</span>
                     </div>
-                    <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana+1; ?>, <?php echo $aÃ±o; ?>)">
+                    <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana+1; ?>, <?php echo $año; ?>)">
                         Semana Siguiente
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="9 18 15 12 9 6"></polyline>
@@ -174,7 +174,7 @@ foreach ($ausencias_raw as $a) {
                                                        <?php echo $es_descanso ? 'checked' : ''; ?>
                                                        <?php echo $bloquear_descanso ? 'disabled' : ''; ?>
                                                        title="<?php echo $bloquear_descanso ? 'No editable (fecha pasada/hoy o descanso ya asignado)' : 'Marcar descanso'; ?>"
-                                                       onchange="guardarDescanso(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', <?php echo $semana; ?>, <?php echo $aÃ±o; ?>, this.checked)">
+                                                       onchange="guardarDescanso(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', <?php echo $semana; ?>, <?php echo $año; ?>, this.checked)">
                                                 <span class="rest-day-label">Descanso</span>
                                             </div>
 
@@ -204,7 +204,7 @@ foreach ($ausencias_raw as $a) {
 
     <script>
         function cambiarSemana(s, a) {
-            window.location.href = `horario_semanal.php?semana=${s}&aÃ±o=${a}`;
+            window.location.href = `horario_semanal.php?semana=${s}&año=${a}`;
         }
 
         function showStatus(text, type) {
@@ -216,7 +216,7 @@ foreach ($ausencias_raw as $a) {
             }, 1000);
         }
 
-        function guardarDescanso(empleadoId, fecha, semana, aÃ±o, isChecked) {
+        function guardarDescanso(empleadoId, fecha, semana, año, isChecked) {
             // Validar que la fecha estÃ© dentro del rango de la semana actual
             const fechasSemana = <?php echo json_encode(array_values($fechas_semana)); ?>;
             if (!fechasSemana.includes(fecha)) {
@@ -229,7 +229,7 @@ foreach ($ausencias_raw as $a) {
             formData.append('empleado_id', empleadoId);
             formData.append('fecha_descanso', fecha);
             formData.append('semana', semana);
-            formData.append('aÃ±o', aÃ±o);
+            formData.append('año', año);
             formData.append('accion', isChecked ? 'agregar' : 'eliminar');
 
             fetch('guardar_horario.php', {

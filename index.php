@@ -43,9 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($user['rol'] === 'hacienda') {
                 header('Location: hacienda.php');
                 exit;
-            } elseif ($user['rol'] === 'empleado' && (int)($user['es_gerente'] ?? 0) === 1) {
-                header('Location: dueño.php');
-                exit;
             } else {
                 header('Location: empleado.php');
                 exit;

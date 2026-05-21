@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -6,13 +6,13 @@ $dueno_id = require_dueno_o_gerente($pdo);
 
 $hoy = date('Y-m-d');
 $mes_actual = (int)date('n');
-$aÃ±o_actual = (int)date('Y');
+$año_actual = (int)date('Y');
 $pdf_mes_query = http_build_query([
     'mes' => $mes_actual,
-    'aÃ±o' => $aÃ±o_actual,
+    'año' => $año_actual,
 ]);
 
-// Obtener nÃºmero de solicitudes pendientes solo de empleados del dueÃ±o actual
+// Obtener número de solicitudes pendientes solo de empleados del dueño actual
 try {
     $stmt_pendientes = $pdo->prepare("
         SELECT COUNT(*) as total 
@@ -28,7 +28,7 @@ try {
     error_log("Error al obtener solicitudes: " . $e->getMessage());
 }
 
-// Obtener todos los empleados (excluyendo al dueÃ±o) - con mejor manejo de charset
+// Obtener todos los empleados (excluyendo al dueño) - con mejor manejo de charset
 $stmt_empleados = $pdo->prepare(" 
     SELECT id, username, nombre, es_gerente
     FROM usuarios 
@@ -55,7 +55,7 @@ foreach ($stmt_descansos->fetchAll(PDO::FETCH_ASSOC) as $d) {
     $empleados_con_descanso[] = $d['empleado_id'];
 }
 
-// Obtener ausencias marcadas hoy (solo empleados del dueÃ±o)
+// Obtener ausencias marcadas hoy (solo empleados del dueño)
 $stmt_ausencias_hoy = $pdo->prepare("
     SELECT ae.empleado_id, ae.tipo_ausencia
     FROM ausencias_empleados ae
@@ -123,7 +123,7 @@ if (!empty($empleados)) {
     }
 }
 
-// Restar empleados con descanso del total de pendientes y evitar nÃºmeros negativos
+// Restar empleados con descanso del total de pendientes y evitar números negativos
 $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_descanso));
 ?>
 <!DOCTYPE html>
@@ -132,11 +132,11 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del DueÃ±o - Control Horario</title>
+    <title>Panel del Dueño - Control Horario</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-utilities.min.css">
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="solicitudes_cambio.css">
-    <link rel="stylesheet" href="dueÃ±o.css">
+    <link rel="stylesheet" href="dueño.css">
 </head>
 
 <body class="owner-dashboard">
@@ -308,7 +308,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                     <th>Estado Hoy</th>
                                     <th>Horas Trabajadas</th>
                                     <th>Permiso</th>
-                                    <th>AcciÃ³n</th>
+                                    <th>Acci&oacute;n</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -348,7 +348,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                             <line x1="8" y1="2" x2="8" y2="6"></line>
                                                             <line x1="3" y1="10" x2="21" y2="10"></line>
                                                         </svg>
-                                                        DÃ­a Libre
+                                                        D&iacute;a libre
                                                     </span>
                                                 <?php elseif ($emp['ausencia_hoy']): ?>
                                                     <?php
@@ -374,31 +374,31 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                 <?php elseif ($emp['entrada'] && !$emp['salida']): ?>
                                                     <?php if ($emp['tiene_ajuste']): ?>
                                                         <span class="status-inline status-inline--warning">En jornada (desde
-                                                            <span class="time-original"><?php echo $emp['entrada_hora'] ?? 'â€”'; ?></span>
+                                                            <span class="time-original"><?php echo $emp['entrada_hora'] ?? '&mdash;'; ?></span>
                                                             <strong class="time-adjusted"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong>
                                                             <span class="badge-adjusted">Ajustado</span>)
                                                         </span>
                                                     <?php else: ?>
                                                         <span class="status-inline status-inline--warning">En jornada (desde
-                                                            <?php echo $emp['entrada_hora'] ?? 'â€”'; ?>)</span>
+                                                            <?php echo $emp['entrada_hora'] ?? '&mdash;'; ?>)</span>
                                                     <?php endif; ?>
                                                 <?php else: ?>
                                                     <span class="status-inline status-inline--success">Completado</span><br>
                                                     <?php if ($emp['tiene_ajuste']): ?>
                                                         <small class="status-detail">
-                                                            Entrada: <span class="time-original"><?php echo $emp['entrada_hora'] ?? 'â€”'; ?></span>
+                                                            Entrada: <span class="time-original"><?php echo $emp['entrada_hora'] ?? '&mdash;'; ?></span>
                                                             <strong class="time-adjusted"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong> |
-                                                            Salida: <span class="time-original"><?php echo $emp['salida_hora'] ?? 'â€”'; ?></span>
+                                                            Salida: <span class="time-original"><?php echo $emp['salida_hora'] ?? '&mdash;'; ?></span>
                                                             <strong class="time-adjusted"><?php echo substr($emp['hora_salida_ajustada'], 0, 5); ?></strong>
                                                             <span class="badge-adjusted badge-adjusted--sm">Ajustado</span>
                                                         </small>
                                                     <?php else: ?>
-                                                        <small class="status-detail">Entrada: <?php echo $emp['entrada_hora'] ?? 'â€”'; ?> | Salida:
-                                                            <?php echo $emp['salida_hora'] ?? 'â€”'; ?></small>
+                                                        <small class="status-detail">Entrada: <?php echo $emp['entrada_hora'] ?? '&mdash;'; ?> | Salida:
+                                                            <?php echo $emp['salida_hora'] ?? '&mdash;'; ?></small>
                                                     <?php endif; ?>
                                                 <?php endif; ?>
                                             </td>
-                                            <td data-label="Horas">
+                                            <td data-label="Horas" class="hours-cell">
                                                 <?php
                                                 // Usar horas ajustadas si existen, de lo contrario usar originales (dÃ­a de inicio)
                                                 $fecha_base = $emp['entrada'] ? date('Y-m-d', strtotime($emp['entrada'])) : $hoy;
@@ -420,10 +420,10 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                             echo ' <span class="hours-adjusted-mark">*</span>';
                                                         }
                                                     } catch (Exception $e) {
-                                                        echo 'â€”';
+                                                        echo '&mdash;';
                                                     }
                                                 } else {
-                                                    echo 'â€”';
+                                                    echo '&mdash;';
                                                 }
                                                 ?>
                                             </td>
@@ -434,19 +434,19 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                                                     <span class="status-inline status-inline--danger">Empleado</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td data-label="AcciÃ³n">
-                                                <div class="d-flex flex-wrap gap-2">
+                                            <td data-label="Acci&oacute;n" class="action-cell">
+                                                <div class="action-buttons">
                                                     <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn btn-history">
                                                         Ver Historial
                                                     </a>
-                                                    <a href="historial_empleado_pdf.php?id=<?php echo $emp['id']; ?>" class="btn btn-history" style="background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%); color: white;">
+                                                    <a href="historial_empleado_pdf.php?id=<?php echo $emp['id']; ?>" class="btn btn-history btn-history--pdf">
                                                         PDF
                                                     </a>
                                                     <?php if (es_dueno()): ?>
-                                                        <form action="actualizar_gerente.php" method="POST" style="display:inline-flex; gap:6px; align-items:center;">
+                                                        <form action="actualizar_gerente.php" method="POST" class="manager-form">
                                                             <input type="hidden" name="empleado_id" value="<?php echo $emp['id']; ?>">
                                                             <input type="hidden" name="es_gerente" value="<?php echo empty($emp['es_gerente']) ? 1 : 0; ?>">
-                                                            <button type="submit" class="btn btn-history" style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); color: white;">
+                                                            <button type="submit" class="btn btn-history btn-history--manager">
                                                                 <?php echo empty($emp['es_gerente']) ? 'Hacer gerente' : 'Quitar gerente'; ?>
                                                             </button>
                                                         </form>
@@ -553,7 +553,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                Cerrar SesiÃ³n
+                Cerrar sesi&oacute;n
             </a>
         </footer>
     </div>
@@ -658,7 +658,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
             }
         }
 
-        // ValidaciÃ³n de contraseÃ±as coincidentes
+        // Validación de contraseÃ±as coincidentes
         document.getElementById('confirmar_password')?.addEventListener('input', function () {
             const password = document.getElementById('password').value;
             const confirmar = this.value;

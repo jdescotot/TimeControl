@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -45,13 +45,13 @@ if (!empty($empleado['created_at'])) {
     $fecha_inicio = new DateTime($empleado['created_at']);
     $fecha_actual = new DateTime();
     $diferencia = $fecha_inicio->diff($fecha_actual);
-    $aÃ±os = $diferencia->y;
+    $años = $diferencia->y;
     $meses = $diferencia->m;
 
-    if ($aÃ±os > 0 && $meses > 0) {
-        $antiguedad_texto = $aÃ±os . ' aÃ±o' . ($aÃ±os > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
-    } elseif ($aÃ±os > 0) {
-        $antiguedad_texto = $aÃ±os . ' aÃ±o' . ($aÃ±os > 1 ? 's' : '');
+    if ($años > 0 && $meses > 0) {
+        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
+    } elseif ($años > 0) {
+        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '');
     } else {
         $antiguedad_texto = $meses . ' mes' . ($meses > 1 ? 'es' : '');
     }

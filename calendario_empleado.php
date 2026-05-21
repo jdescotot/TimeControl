@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -6,7 +6,7 @@ require_dueno_o_gerente($pdo);
 
 $empleado_id = $_GET['id'] ?? 0;
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
-$aÃ±o = isset($_GET['aÃ±o']) ? (int)$_GET['aÃ±o'] : (int)date('Y');
+$año = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
 
 // Validar que el empleado exista
 $stmt = $pdo->prepare("SELECT username FROM usuarios WHERE id = ? AND rol = 'empleado'");
@@ -20,8 +20,8 @@ if (!$empleado) {
 $username = $empleado['username'];
 
 // Calcular primer y Ãºltimo dÃ­a del mes
-$primer_dia = "$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
-$ultimo_dia = date('Y-m-d', strtotime("$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
+$primer_dia = "$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
+$ultimo_dia = date('Y-m-d', strtotime("$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
 
 // Obtener todas las marcaciones del mes con ajustes aprobados
 $stmt_marcaciones = $pdo->prepare("
@@ -74,7 +74,7 @@ foreach ($stmt_descansos->fetchAll() as $d) {
     $dias_descanso[] = $d['fecha_descanso'];
 }
 
-// Nombres de meses en espaÃ±ol
+// Nombres de meses en español
 $meses = [
     1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
     5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
@@ -88,17 +88,17 @@ $dias_en_mes = (int)$primer_dia_mes->format('t');
 
 // Calcular mes anterior y siguiente
 $mes_anterior = $mes - 1;
-$aÃ±o_anterior = $aÃ±o;
+$año_anterior = $año;
 if ($mes_anterior < 1) {
     $mes_anterior = 12;
-    $aÃ±o_anterior--;
+    $año_anterior--;
 }
 
 $mes_siguiente = $mes + 1;
-$aÃ±o_siguiente = $aÃ±o;
+$año_siguiente = $año;
 if ($mes_siguiente > 12) {
     $mes_siguiente = 1;
-    $aÃ±o_siguiente++;
+    $año_siguiente++;
 }
 ?>
 <!DOCTYPE html>
@@ -408,7 +408,7 @@ if ($mes_siguiente > 12) {
                 </div>
                 <div class="user-info">
                     <span class="welcome-text">Calendario de <?php echo htmlspecialchars($username); ?></span>
-                    <a href="reporte_mensual.php?mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" class="btn-back">
+                    <a href="reporte_mensual.php?mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5"></path>
                             <polyline points="12 19 5 12 12 5"></polyline>
@@ -473,16 +473,16 @@ if ($mes_siguiente > 12) {
             <!-- Calendario -->
             <div class="calendar-container">
                 <div class="calendar-header">
-                    <div class="calendar-title"><?php echo $meses[$mes] . ' ' . $aÃ±o; ?></div>
+                    <div class="calendar-title"><?php echo $meses[$mes] . ' ' . $año; ?></div>
                     <div class="calendar-nav">
-                        <a href="?id=<?php echo $empleado_id; ?>&mes=<?php echo $mes_anterior; ?>&aÃ±o=<?php echo $aÃ±o_anterior; ?>" 
+                        <a href="?id=<?php echo $empleado_id; ?>&mes=<?php echo $mes_anterior; ?>&año=<?php echo $año_anterior; ?>" 
                            class="calendar-nav-btn">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="15 18 9 12 15 6"></polyline>
                             </svg>
                             Anterior
                         </a>
-                        <a href="?id=<?php echo $empleado_id; ?>&mes=<?php echo $mes_siguiente; ?>&aÃ±o=<?php echo $aÃ±o_siguiente; ?>" 
+                        <a href="?id=<?php echo $empleado_id; ?>&mes=<?php echo $mes_siguiente; ?>&año=<?php echo $año_siguiente; ?>" 
                            class="calendar-nav-btn">
                             Siguiente
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -510,7 +510,7 @@ if ($mes_siguiente > 12) {
 
                     // DÃ­as del mes
                     for ($dia = 1; $dia <= $dias_en_mes; $dia++) {
-                        $fecha = sprintf('%04d-%02d-%02d', $aÃ±o, $mes, $dia);
+                        $fecha = sprintf('%04d-%02d-%02d', $año, $mes, $dia);
                         $tiene_marcacion = isset($marcaciones[$fecha]);
                         $tiene_ausencia = isset($ausencias[$fecha]);
                         $es_descanso = in_array($fecha, $dias_descanso);
@@ -536,8 +536,8 @@ if ($mes_siguiente > 12) {
                             $m = $marcaciones[$fecha];
                             if ($m['entrada'] && $m['salida']) {
                                 $horas = $m['horas_trabajadas'];
-                                $tamaÃ±o = 44 + min(($horas / 12) * 16, 16); // 44-60px
-                                echo '<div class="day-indicator indicator-trabajado" style="width: ' . $tamaÃ±o . 'px; height: ' . $tamaÃ±o . 'px;">';
+                                $tamaño = 44 + min(($horas / 12) * 16, 16); // 44-60px
+                                echo '<div class="day-indicator indicator-trabajado" style="width: ' . $tamaño . 'px; height: ' . $tamaño . 'px;">';
                                 echo number_format($horas, 1) . 'h';
                                 echo '</div>';
                             } else {
@@ -561,7 +561,7 @@ if ($mes_siguiente > 12) {
                     <?php
                     // Array DRY para la leyenda
                     $leyenda_items = [
-                        ['color' => 'linear-gradient(135deg, #4299e1, #3182ce)', 'texto' => 'DÃ­a Trabajado (tamaÃ±o segÃºn horas)'],
+                        ['color' => 'linear-gradient(135deg, #4299e1, #3182ce)', 'texto' => 'DÃ­a Trabajado (tamaño segÃºn horas)'],
                         ['color' => 'linear-gradient(135deg, #48bb78, #38a169)', 'texto' => 'DÃ­a Libre (Programado)'],
                         ['color' => 'linear-gradient(135deg, #f6ad55, #ecc94b)', 'texto' => 'Vacaciones'],
                         ['color' => 'linear-gradient(135deg, #ef4444, #dc2626)', 'texto' => 'Enfermedad'],

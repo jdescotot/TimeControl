@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 // 2. LÓGICA: Cuando el usuario pulsa "Aceptar y Continuar"
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Aquí redirigimos finalmente a su panel correspondiente
-    if ($_SESSION['rol'] === 'dueño' || (($_SESSION['rol'] ?? '') === 'empleado' && (int)($_SESSION['es_gerente'] ?? 0) === 1)) {
+    if ($_SESSION['rol'] === 'dueño') {
         header('Location: dueño.php');
     } else {
         header('Location: empleado.php');

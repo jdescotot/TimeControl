@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * VERIFICADOR: Comprueba si las columnas GPS estÃ¡n en la tabla marcaciones
  * Si NO existen, redirecciona al script de migraciÃ³n

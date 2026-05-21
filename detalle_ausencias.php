@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -7,7 +7,7 @@ require_dueno_o_gerente($pdo);
 // Obtener parÃ¡metros
 $tipo = isset($_GET['tipo']) ? $_GET['tipo'] : '';
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
-$aÃ±o = isset($_GET['aÃ±o']) ? (int)$_GET['aÃ±o'] : (int)date('Y');
+$año = isset($_GET['año']) ? (int)$_GET['año'] : (int)date('Y');
 
 // Validar tipo de ausencia
 $tipos_validos = ['vacaciones_ley', 'enfermedad', 'emergencia_familiar', 'fuerza_mayor'];
@@ -29,8 +29,8 @@ $tipo_legible = $tipo_labels[$tipo];
 $dueno_id = owner_scope_id($pdo);
 
 // Calcular primer y Ãºltimo dÃ­a del mes
-$primer_dia = "$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
-$ultimo_dia = date('Y-m-d', strtotime("$aÃ±o-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
+$primer_dia = "$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
+$ultimo_dia = date('Y-m-d', strtotime("$año-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01 +1 month -1 day"));
 
 // Obtener ausencias del tipo especÃ­fico
 $stmt = $pdo->prepare("
@@ -64,7 +64,7 @@ foreach ($ausencias as $ausencia) {
     $ausencias_por_empleado[$emp_id]['cantidad']++;
 }
 
-// Nombres de meses en espaÃ±ol
+// Nombres de meses en español
 $meses = [
     1 => 'Enero',
     2 => 'Febrero',
@@ -344,7 +344,7 @@ function agruparFechas($fechas) {
                 </div>
                 <div class="user-info">
                     <span class="welcome-text">Detalle de Ausencias</span>
-                    <a href="reporte_mensual.php?mes=<?php echo $mes; ?>&aÃ±o=<?php echo $aÃ±o; ?>" class="btn-back">
+                    <a href="reporte_mensual.php?mes=<?php echo $mes; ?>&año=<?php echo $año; ?>" class="btn-back">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5"></path>
                             <polyline points="12 19 5 12 12 5"></polyline>
@@ -367,7 +367,7 @@ function agruparFechas($fechas) {
                     </div>
                     <div class="detalle-info">
                         <h1><?php echo htmlspecialchars($tipo_legible); ?></h1>
-                        <p><?php echo $meses[$mes]; ?> <?php echo $aÃ±o; ?></p>
+                        <p><?php echo $meses[$mes]; ?> <?php echo $año; ?></p>
                     </div>
                 </div>
             </div>
@@ -405,7 +405,7 @@ function agruparFechas($fechas) {
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
                             </svg>
                             <h3>No hay registros</h3>
-                            <p>No se encontraron ausencias de tipo "<?php echo htmlspecialchars($tipo_legible); ?>" en <?php echo $meses[$mes]; ?> <?php echo $aÃ±o; ?></p>
+                            <p>No se encontraron ausencias de tipo "<?php echo htmlspecialchars($tipo_legible); ?>" en <?php echo $meses[$mes]; ?> <?php echo $año; ?></p>
                         </div>
                     </div>
                 </div>

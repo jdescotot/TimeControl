@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 require_once 'config_correos.php';
@@ -7,10 +7,10 @@ require_once 'config_correos.php';
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Verificar autenticaciÃ³n (solo dueÃ±o)
+// Verificar autenticaciÃ³n (solo dueño)
 require_dueno_o_gerente($pdo);
 
-// Obtener aÃ±o del filtro (por defecto el aÃ±o actual)
+// Obtener año del filtro (por defecto el año actual)
 $anio_filtro = isset($_GET['anio']) ? (int)$_GET['anio'] : date('Y');
 
 // Exportar a Excel si se solicita
@@ -90,7 +90,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     exit;
 }
 
-// Obtener aÃ±os disponibles
+// Obtener años disponibles
 $stmt_anios = $pdo_correos->query("SELECT DISTINCT YEAR(fechabaja) as anio FROM tb_cuentas WHERE fechabaja IS NOT NULL ORDER BY anio DESC");
 $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
 ?>
@@ -125,7 +125,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                     <span>Reporte de Bajas</span>
                 </div>
                 <div class="actions">
-                    <a href="dueÃ±o.php" class="btn btn-secondary">
+                    <a href="dueño.php" class="btn btn-secondary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                         </svg>
@@ -216,7 +216,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
                             </svg>
-                            <p>No hay registros de bajas para el aÃ±o <?php echo $anio_filtro; ?></p>
+                            <p>No hay registros de bajas para el año <?php echo $anio_filtro; ?></p>
                         </div>
                     <?php endif; ?>
                 </div>

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * exportar_empleados.php
  * Exporta los empleados de TimeControl como sentencias SQL INSERT
@@ -186,7 +186,7 @@ if ($formato === 'csv') {
     <div class="acciones">
         <a href="?formato=sql" class="btn btn-primary">Descargar SQL (.sql)</a>
         <a href="?formato=csv" class="btn btn-green">Descargar CSV (.csv)</a>
-        <a href="dueÃ±o.php"   class="btn btn-gray">Volver al panel</a>
+        <a href="dueño.php"   class="btn btn-gray">Volver al panel</a>
     </div>
 
     <p class="pin-nota">

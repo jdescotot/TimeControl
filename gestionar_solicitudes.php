@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -11,7 +11,7 @@ if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'procesado_ok') {
     $mensaje_exito = 'Solicitud procesada correctamente';
 }
 
-// Consulta para obtener solicitudes pendientes solo de empleados del dueÃ±o actual
+// Consulta para obtener solicitudes pendientes solo de empleados del dueño actual
 $dueno_id = owner_scope_id($pdo);
 $query = "
     SELECT 
@@ -76,7 +76,7 @@ try {
 
         <main class="main-content">
             <!-- BotÃ³n de regreso -->
-            <a href="dueÃ±o.php" class="back-button" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-bottom: 20px;">
+            <a href="dueño.php" class="back-button" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-bottom: 20px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5"></path>
                     <polyline points="12 19 5 12 12 5"></polyline>

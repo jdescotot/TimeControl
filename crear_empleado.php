@@ -1,11 +1,11 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
 // Solo el dueño puede crear empleados
 require_dueno();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: dueÃ±o.php');
+    header('Location: dueño.php');
     exit;
 }
 
@@ -44,9 +44,9 @@ if (strlen($username) > 50) {
     $errores[] = "El nombre de usuario no puede exceder 50 caracteres";
 }
 
-// Validar formato del username (solo letras y nÃºmeros despuÃ©s de procesar)
+// Validar formato del username (solo letras y números despuÃ©s de procesar)
 if (!preg_match('/^[a-z0-9]+$/', $username)) {
-    $errores[] = "El nombre de usuario solo puede contener letras y nÃºmeros";
+    $errores[] = "El nombre de usuario solo puede contener letras y números";
 }
 
 // Validar longitud de contraseÃ±a
@@ -67,7 +67,7 @@ if ($password !== $confirmar_password) {
 // Si hay errores, redirigir con mensaje
 if (!empty($errores)) {
     $mensaje_error = implode(". ", $errores);
-    header('Location: dueÃ±o.php?error=' . urlencode($mensaje_error));
+    header('Location: dueño.php?error=' . urlencode($mensaje_error));
     exit;
 }
 
@@ -77,7 +77,7 @@ try {
     $stmt->execute([$username]);
     
     if ($stmt->fetch()) {
-        header('Location: dueÃ±o.php?error=' . urlencode("El nombre de usuario '$username' ya estÃ¡ en uso"));
+        header('Location: dueño.php?error=' . urlencode("El nombre de usuario '$username' ya estÃ¡ en uso"));
         exit;
     }
 
@@ -97,12 +97,12 @@ try {
     }
 
     // Redirigir con Ã©xito
-    header('Location: dueÃ±o.php?mensaje=empleado_creado&username=' . urlencode($username));
+    header('Location: dueño.php?mensaje=empleado_creado&username=' . urlencode($username));
     exit;
 
 } catch (Exception $e) {
     error_log("Error al crear empleado: " . $e->getMessage());
-    header('Location: dueÃ±o.php?error=' . urlencode("Error al crear el empleado. Por favor, intenta de nuevo."));
+    header('Location: dueño.php?error=' . urlencode("Error al crear el empleado. Por favor, intenta de nuevo."));
     exit;
 }
 ?>

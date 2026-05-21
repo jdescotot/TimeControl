@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -6,7 +6,7 @@ $dueno_id = require_dueno_o_gerente($pdo);
 
 $empleado_id = $_GET['id'] ?? 0;
 
-// Validar que el empleado exista y pertenezca al dueÃ±o autenticado
+// Validar que el empleado exista y pertenezca al dueño autenticado
 $stmt = $pdo->prepare("SELECT username, nombre, created_at FROM usuarios WHERE id = ? AND rol = 'empleado' AND propietario_id = ?");
 $stmt->execute([$empleado_id, $dueno_id]);
 $empleado = $stmt->fetch();
@@ -25,13 +25,13 @@ if (!empty($empleado['created_at'])) {
     $fecha_actual = new DateTime();
     $diferencia = $fecha_inicio->diff($fecha_actual);
     
-    $aÃ±os = $diferencia->y;
+    $años = $diferencia->y;
     $meses = $diferencia->m;
     
-    if ($aÃ±os > 0 && $meses > 0) {
-        $antiguedad_texto = $aÃ±os . ' aÃ±o' . ($aÃ±os > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
-    } elseif ($aÃ±os > 0) {
-        $antiguedad_texto = $aÃ±os . ' aÃ±o' . ($aÃ±os > 1 ? 's' : '');
+    if ($años > 0 && $meses > 0) {
+        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '') . ' y ' . $meses . ' mes' . ($meses > 1 ? 'es' : '');
+    } elseif ($años > 0) {
+        $antiguedad_texto = $años . ' año' . ($años > 1 ? 's' : '');
     } else {
         $antiguedad_texto = $meses . ' mes' . ($meses > 1 ? 'es' : '');
     }
@@ -73,9 +73,9 @@ $marcaciones = $stmt->fetchAll();
                 <div class="user-info">
                     <?php 
                     $mes_param = $_GET['mes'] ?? null;
-                    $aÃ±o_param = $_GET['aÃ±o'] ?? null;
-                    $back_url = ($mes_param && $aÃ±o_param) ? "reporte_mensual.php?mes=$mes_param&aÃ±o=$aÃ±o_param" : "dueÃ±o.php";
-                    $back_text = ($mes_param && $aÃ±o_param) ? "Volver al Reporte" : "Volver al Panel";
+                    $año_param = $_GET['año'] ?? null;
+                    $back_url = ($mes_param && $año_param) ? "reporte_mensual.php?mes=$mes_param&año=$año_param" : "dueño.php";
+                    $back_text = ($mes_param && $año_param) ? "Volver al Reporte" : "Volver al Panel";
                     $pdf_query = http_build_query(['id' => (int)$empleado_id]);
                     ?>
                     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end;">

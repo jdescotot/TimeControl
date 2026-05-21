@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once 'config.php';
 
@@ -50,21 +50,21 @@ function calc_horas_dia($entradaBase, $salidaBase, $nuevaEntrada, $nuevaSalida, 
 
 $dueno_id = owner_scope_id($pdo);
 $mes = isset($_GET['mes']) ? (int)$_GET['mes'] : (int)date('m');
-$aÃ±o = isset($_GET['aÃ±o']) ? (int)$_GET['aÃ±o'] : (isset($_GET['anio']) ? (int)$_GET['anio'] : (int)date('Y'));
+$año = isset($_GET['año']) ? (int)$_GET['año'] : (isset($_GET['anio']) ? (int)$_GET['anio'] : (int)date('Y'));
 
 if ($mes < 1) {
     $mes = 12;
-    $aÃ±o--;
+    $año--;
 }
 if ($mes > 12) {
     $mes = 1;
-    $aÃ±o++;
+    $año++;
 }
 
-$primer_dia = sprintf('%04d-%02d-01', $aÃ±o, $mes);
+$primer_dia = sprintf('%04d-%02d-01', $año, $mes);
 $ultimo_dia = date('Y-m-d', strtotime($primer_dia . ' +1 month -1 day'));
 $empleado_id = isset($_GET['empleado_id']) ? (int)$_GET['empleado_id'] : null;
-$filename = $empleado_id ? "reporte_empleado_{$empleado_id}_{$aÃ±o}_{$mes}.pdf" : "reporte_mensual_{$aÃ±o}_{$mes}.pdf";
+$filename = $empleado_id ? "reporte_empleado_{$empleado_id}_{$año}_{$mes}.pdf" : "reporte_mensual_{$año}_{$mes}.pdf";
 
 ob_start();
 ?>
@@ -160,7 +160,7 @@ if ($empleado_id) {
     if (!$empleado) {
         ?>
         <div class="sheet-title">Exportacion no permitida</div>
-        <div class="summary">El empleado solicitado no pertenece al dueÃ±o autenticado.</div>
+        <div class="summary">El empleado solicitado no pertenece al dueño autenticado.</div>
         <?php
     } else {
         $stmt = $pdo->prepare("\n            SELECT DATE(m.entrada) AS fecha, m.entrada, m.salida,\n                   sc.nueva_hora_entrada, sc.nueva_hora_salida\n            FROM marcaciones m\n            LEFT JOIN solicitudes_cambio sc ON m.id = sc.marcacion_id AND sc.estado = 'aprobado'\n            WHERE m.empleado_id = ? AND DATE(m.entrada) BETWEEN ? AND ?\n            ORDER BY m.entrada ASC, m.id ASC\n        ");
@@ -170,7 +170,7 @@ if ($empleado_id) {
         $nombre_empleado = $empleado['nombre'] ?: $empleado['username'];
         ?>
         <div class="sheet-title">Reporte Individual de Empleado</div>
-        <div class="sheet-subtitle">Periodo: <?php echo esc($mes); ?>/<?php echo esc($aÃ±o); ?> | Empleado: <?php echo esc($nombre_empleado); ?></div>
+        <div class="sheet-subtitle">Periodo: <?php echo esc($mes); ?>/<?php echo esc($año); ?> | Empleado: <?php echo esc($nombre_empleado); ?></div>
 
         <div class="summary">
             <strong>Usuario:</strong> <?php echo esc($empleado['username']); ?><br>
@@ -263,7 +263,7 @@ if ($empleado_id) {
     $total_adj = 0;
     ?>
     <div class="sheet-title">Reporte Mensual por Empleado</div>
-    <div class="sheet-subtitle">Periodo: <?php echo esc($mes); ?>/<?php echo esc($aÃ±o); ?> | Dueño ID: <?php echo esc($dueno_id); ?></div>
+    <div class="sheet-subtitle">Periodo: <?php echo esc($mes); ?>/<?php echo esc($año); ?> | Dueño ID: <?php echo esc($dueno_id); ?></div>
 
     <div class="summary">
         <strong>Rango:</strong> <?php echo esc($primer_dia); ?> a <?php echo esc($ultimo_dia); ?><br>
@@ -286,7 +286,7 @@ if ($empleado_id) {
         </thead>
         <tbody>
         <?php if (empty($empleados)): ?>
-            <tr><td colspan="9" class="empty">No hay empleados registrados para este dueÃ±o.</td></tr>
+            <tr><td colspan="9" class="empty">No hay empleados registrados para este dueño.</td></tr>
         <?php else: ?>
             <?php foreach ($empleados as $emp): ?>
                 <?php

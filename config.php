@@ -47,8 +47,12 @@ function owner_scope_id(PDO $pdo): int {
         $stmt = $pdo->prepare("SELECT propietario_id FROM usuarios WHERE id = ? LIMIT 1");
         $stmt->execute([(int)$_SESSION['user_id']]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $propietario_id = (int)($row['propietario_id'] ?? 0);
-
+        
+        if (!$row || empty($row['propietario_id'])) {
+            return 0;
+        }
+        
+        $propietario_id = (int)$row['propietario_id'];
         $_SESSION['propietario_id'] = $propietario_id;
         return $propietario_id;
     }
