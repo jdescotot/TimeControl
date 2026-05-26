@@ -5,3 +5,23 @@ mail_uploads/
 mail_uploads/*
 worker_logs/
 config.php
+
+# Ignorar módulos locales solicitados
+cathedrals/
+Velazques/
+jugadores/
+cathedrals.php
+velazques.php
+
+# Ignorar imágenes
+*.jpg
+*.webp
+*.avif
+*.png
+
+# Ignorar archivos específicos solicitados
+velazques.css
+jugadores.php
+
+# Ignorar hojas de estilo
+*.css

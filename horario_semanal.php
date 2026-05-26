@@ -10,10 +10,10 @@ $hoy = date('Y-m-d');
 $dias_semana = [
     1 => 'Lunes',
     2 => 'Martes',
-    3 => 'MiÃ©rcoles',
+    3 => 'Mi&eacute;rcoles',
     4 => 'Jueves',
     5 => 'Viernes',
-    6 => 'SÃ¡bado',
+    6 => 'S&aacute;bado',
     7 => 'Domingo'
 ];
 
@@ -85,11 +85,12 @@ foreach ($ausencias_raw as $a) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horario Semanal - Control Horario</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="horario_semanal.css">
 </head>
-<body>
-    <div class="container">
+<body class="schedule-page">
+    <div class="container schedule-shell">
         <header class="header">
             <div class="header-content">
                 <div class="logo">
@@ -106,31 +107,37 @@ foreach ($ausencias_raw as $a) {
                             <path d="M19 12H5"></path>
                             <polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
-                        <span>Volver al Panel</span>
+                        <span>Volver al panel</span>
                     </a>
                 </div>
             </div>
         </header>
 
         <main class="main-content">
-            <div class="schedule-container">
+            <div class="schedule-container card">
                 <div class="week-navigation">
-                    <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana-1; ?>, <?php echo $año; ?>)">
+                    <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana-1; ?>, <?php echo $año; ?>)" type="button">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="15 18 9 12 15 6"></polyline>
                         </svg>
-                        Semana Anterior
+                        Semana anterior
                     </button>
                     <div class="current-week-title">
-                        Semana <?php echo $semana; ?> (<?php echo $inicio_semana->format('d/m'); ?> - <?php echo (clone $inicio_semana)->modify('+6 days')->format('d/m'); ?>, <?php echo $año; ?>)
-                        <span id="save-status" class="save-status">Guardando...</span>
+                        <span class="week-title-main">Semana <?php echo $semana; ?></span>
+                        <span class="week-title-range">
+                            <?php echo $inicio_semana->format('d/m'); ?> - <?php echo (clone $inicio_semana)->modify('+6 days')->format('d/m'); ?>, <?php echo $año; ?>
+                        </span>
                     </div>
-                    <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana+1; ?>, <?php echo $año; ?>)">
-                        Semana Siguiente
+                    <button class="btn-nav" onclick="cambiarSemana(<?php echo $semana+1; ?>, <?php echo $año; ?>)" type="button">
+                        Semana siguiente
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </button>
+                </div>
+
+                <div class="save-status-wrap">
+                    <span id="save-status" class="save-status" aria-live="polite">Guardando...</span>
                 </div>
 
                 <div class="table-responsive">
@@ -159,8 +166,8 @@ foreach ($ausencias_raw as $a) {
                                         $ausencia = $ausencias[$emp['id']][$fecha_dia] ?? null;
                                         $tipo_ausencia = $ausencia['tipo'] ?? 'observacion';
                                         $obs = $ausencia['obs'] ?? '';
-                                        $es_pasado_o_hoy = $fecha_dia <= $hoy;
-                                        $bloquear_descanso = $es_pasado_o_hoy || ($es_descanso && $fecha_dia >= $hoy);
+                                        $es_pasado = $fecha_dia < $hoy;
+                                        $bloquear_descanso = $es_pasado || ($es_descanso && $fecha_dia > $hoy);
                                         
                                         $cell_class = $es_descanso ? 'is-rest-day' : '';
                                         if ($ausencia && $tipo_ausencia !== 'observacion') $cell_class .= ' has-absence';
@@ -173,12 +180,12 @@ foreach ($ausencias_raw as $a) {
                                                        value="<?php echo $fecha_dia; ?>"
                                                        <?php echo $es_descanso ? 'checked' : ''; ?>
                                                        <?php echo $bloquear_descanso ? 'disabled' : ''; ?>
-                                                       title="<?php echo $bloquear_descanso ? 'No editable (fecha pasada/hoy o descanso ya asignado)' : 'Marcar descanso'; ?>"
+                                                       title="<?php echo $bloquear_descanso ? 'No editable (fecha pasada o descanso ya asignado)' : 'Marcar descanso'; ?>"
                                                        onchange="guardarDescanso(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', <?php echo $semana; ?>, <?php echo $año; ?>, this.checked)">
                                                 <span class="rest-day-label">Descanso</span>
                                             </div>
 
-                                                <select class="absence-select" 
+                                                <select class="absence-select form-select form-select-sm"
                                                     onchange="guardarAusencia(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', this.value, document.getElementById('obs-<?php echo $emp['id']; ?>-<?php echo $fecha_dia; ?>').value)">
                                                 <option value="observacion" <?php echo $tipo_ausencia === 'observacion' ? 'selected' : ''; ?>>Asistente / Obs.</option>
                                                 <option value="enfermedad" <?php echo $tipo_ausencia === 'enfermedad' ? 'selected' : ''; ?>>Enfermedad</option>
@@ -188,7 +195,7 @@ foreach ($ausencias_raw as $a) {
                                             </select>
 
                                             <textarea id="obs-<?php echo $emp['id']; ?>-<?php echo $fecha_dia; ?>" 
-                                                      class="observation-textarea" 
+                                                      class="observation-textarea form-control form-control-sm"
                                                       placeholder="Notas..."
                                                       onblur="guardarAusencia(<?php echo $emp['id']; ?>, '<?php echo $fecha_dia; ?>', this.previousElementSibling.value, this.value)"><?php echo htmlspecialchars($obs); ?></textarea>
                                         </td>
@@ -217,10 +224,10 @@ foreach ($ausencias_raw as $a) {
         }
 
         function guardarDescanso(empleadoId, fecha, semana, año, isChecked) {
-            // Validar que la fecha estÃ© dentro del rango de la semana actual
+            // Validar que la fecha este dentro del rango de la semana actual
             const fechasSemana = <?php echo json_encode(array_values($fechas_semana)); ?>;
             if (!fechasSemana.includes(fecha)) {
-                showStatus('Fecha invÃ¡lida', 'error');
+                showStatus('Fecha invalida', 'error');
                 return;
             }
 
@@ -253,7 +260,7 @@ foreach ($ausencias_raw as $a) {
                 }
             })
             .catch(error => {
-                showStatus('Error de conexiÃ³n', 'error');
+                showStatus('Error de conexion', 'error');
                 console.error('Error:', error);
             });
         }
@@ -288,6 +295,10 @@ foreach ($ausencias_raw as $a) {
                 } else {
                     showStatus('Error', 'error');
                 }
+            })
+            .catch(error => {
+                showStatus('Error de conexion', 'error');
+                console.error('Error:', error);
             });
         }
     </script>

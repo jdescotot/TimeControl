@@ -1,347 +1,624 @@
-/* ==================== ESTILOS ESPECÍFICOS DEL REPORTE MENSUAL ==================== */
-
-/* Selector de Mes */
-.month-selector {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    padding: 16px;
+:root {
+    --report-primary: #2563eb;
+    --report-primary-dark: #1d4ed8;
+    --report-success: #16a34a;
+    --report-warning: #d97706;
+    --report-danger: #dc2626;
+    --report-muted: #64748b;
+    --report-text: #0f172a;
+    --report-line: #e2e8f0;
+    --report-surface: #f8fafc;
 }
 
-.btn-nav-month {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    cursor: pointer;
+.report-page {
+    background:
+        radial-gradient(circle at 8% -20%, rgba(37, 99, 235, 0.2), transparent 38%),
+        radial-gradient(circle at 92% 120%, rgba(16, 185, 129, 0.14), transparent 36%),
+        var(--report-surface);
+    color: var(--report-text);
+    min-height: 100vh;
+    padding: 0;
+}
+
+.report-page .report-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 16px 24px;
+}
+
+.report-page .header {
+    margin: 14px 0 24px;
+    padding: 14px 20px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid var(--report-line);
+    border-radius: 16px;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+    position: sticky;
+    top: 10px;
+    z-index: 40;
+    backdrop-filter: blur(6px);
+}
+
+.report-page .header-content {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.report-page .logo {
+    color: var(--report-primary-dark);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.report-page .logo svg {
+    color: var(--report-primary);
+}
+
+.report-page .report-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.report-page .welcome-text {
+    color: var(--report-muted);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.report-page .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--report-primary) 0%, var(--report-primary-dark) 100%);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.26);
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.report-page .btn-back:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+}
+
+.report-page .main-content {
+    display: grid;
+    gap: 20px;
+}
+
+.report-page .card {
+    background: #ffffff;
+    border: 1px solid var(--report-line);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+}
+
+.report-page .card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--report-line);
+    background: linear-gradient(180deg, #fcfdff 0%, #f8fafc 100%);
+}
+
+.report-page .card-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.report-page .card-body {
+    padding: 22px;
+}
+
+.report-page .month-selector {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+}
+
+.report-page .btn-nav-month {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 16px;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--report-primary) 0%, var(--report-primary-dark) 100%);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.26);
+    transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-.btn-nav-month:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.report-page .btn-nav-month:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
 }
 
-.month-display {
+.report-page .month-display {
     text-align: center;
-    flex: 1;
 }
 
-.month-display h2 {
-    font-size: 28px;
-    color: #2d3748;
+.report-page .month-display h2 {
     margin: 0;
-    font-weight: 600;
+    font-size: clamp(1.3rem, 2vw, 1.75rem);
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
 }
 
-/* Grid de Resumen General */
-.summary-grid {
+.report-page .summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 16px 0;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
 }
 
-.summary-item {
+.report-page .summary-item {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: #f7fafc;
-    border-radius: 12px;
-    transition: all 0.3s ease;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid #e6edf6;
+    background: #ffffff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.summary-item:hover {
-    background: #edf2f7;
-    transform: translateY(-2px);
+.report-page .summary-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
 }
 
-.summary-icon {
-    width: 56px;
-    height: 56px;
+.report-page .summary-icon {
+    width: 52px;
+    height: 52px;
     border-radius: 12px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #2d3748;
     flex-shrink: 0;
 }
 
-.summary-text {
+.report-page .summary-icon--team {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.report-page .summary-icon--days {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.report-page .summary-icon--attendance {
+    color: #b45309;
+    background: #fef3c7;
+}
+
+.report-page .summary-text {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
-.summary-label {
-    font-size: 13px;
-    color: #718096;
-    font-weight: 500;
-}
-
-.summary-value {
-    font-size: 24px;
+.report-page .summary-label {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--report-muted);
     font-weight: 700;
-    color: #2d3748;
 }
 
-/* Tabla de Reporte */
-.reporte-table {
+.report-page .summary-value {
+    font-size: 1.5rem;
+    line-height: 1.15;
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.report-page .table-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.report-page .table-title {
+    margin: 0;
+}
+
+.report-page .table-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.report-page .btn-export-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(155, 44, 44, 0.22);
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.report-page .btn-export-pdf:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+}
+
+.report-page .table-container {
+    border: 1px solid #e8eef6;
+    border-radius: 12px;
+    overflow: auto;
+}
+
+.report-page .reporte-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 860px;
 }
 
-.reporte-table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+.report-page .reporte-table thead {
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--report-primary-dark);
 }
 
-.reporte-table th {
-    padding: 14px 12px;
+.report-page .reporte-table th {
+    padding: 12px 12px;
     text-align: left;
-    font-weight: 600;
-    font-size: 13px;
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-weight: 800;
     white-space: nowrap;
 }
 
-.reporte-table tbody tr {
-    border-bottom: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
+.report-page .reporte-table td {
+    padding: 12px;
+    color: #334155;
+    border-top: 1px solid #eef2f7;
+    vertical-align: middle;
 }
 
-.reporte-table tbody tr:hover {
-    background-color: #f7fafc;
+.report-page .reporte-table tbody tr:hover {
+    background: #f8fbff;
 }
 
-.reporte-table td {
-    padding: 14px 12px;
-    font-size: 14px;
-}
-
-.empleado-name {
-    font-weight: 600;
-    color: #2d3748;
-}
-
-/* Badges */
-.badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    min-width: 45px;
-}
-
-.badge-blue {
-    background-color: #bee3f8;
-    color: #2c5aa0;
-}
-
-.badge-green {
-    background-color: #c6f6d5;
-    color: #22543d;
-}
-
-.badge-yellow {
-    background-color: #feebc8;
-    color: #7c2d12;
-}
-
-.badge-orange {
-    background-color: #fed7d7;
-    color: #7c2d12;
-}
-
-.badge-purple {
-    background-color: #e9d8fd;
-    color: #6b46c1;
-}
-
-.badge-red {
-    background-color: #fed7d7;
-    color: #c53030;
-}
-
-/* Barra de Progreso */
-.progress-bar {
-    width: 100%;
-    height: 24px;
-    background-color: #e2e8f0;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 4px;
-}
-
-.progress-fill {
-    height: 100%;
-    transition: width 0.3s ease;
-    border-radius: 12px;
-}
-
-.progress-text {
-    font-size: 12px;
-    font-weight: 600;
-    color: #2d3748;
-}
-
-/* Resumen de Ausencias */
-.absence-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    padding: 8px 0;
-}
-
-.absence-item {
-    display: flex;
+.report-page .employee-cell-content {
+    display: inline-flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: #f7fafc;
-    border-radius: 12px;
-    transition: all 0.3s ease;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.absence-item:hover {
-    background: #edf2f7;
-    transform: translateY(-2px);
+.report-page .employee-link {
+    color: var(--report-primary-dark);
+    font-weight: 700;
+    text-decoration: none;
 }
 
-.absence-badge {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    display: flex;
+.report-page .employee-link:hover {
+    text-decoration: underline;
+}
+
+.report-page .employee-pdf-btn {
+    padding: 4px 8px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);
+}
+
+.report-page .metric-pill {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #2d3748;
+    min-width: 44px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.report-page .metric-pill:hover {
+    transform: scale(1.05);
+}
+
+.report-page .metric-pill--blue {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.report-page .metric-pill--green {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.report-page .metric-pill--yellow {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.report-page .metric-pill--orange {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.report-page .metric-pill--purple {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+.report-page .progress-wrap {
+    display: grid;
+    gap: 4px;
+    min-width: 112px;
+}
+
+.report-page .progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.report-page .progress-fill {
+    width: 0;
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.report-page .progress-fill--good {
+    background: var(--report-success);
+}
+
+.report-page .progress-fill--mid {
+    background: var(--report-warning);
+}
+
+.report-page .progress-fill--low {
+    background: var(--report-danger);
+}
+
+.report-page .progress-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.report-page .absence-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.report-page .absence-item {
+    border-radius: 14px;
+    border: 1px solid #e6edf6;
+    background: #ffffff;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.report-page .absence-item--static {
+    border-style: dashed;
+}
+
+.report-page .absence-link {
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-page .absence-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.report-page .absence-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
 }
 
-.absence-content {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+.report-page .absence-badge--justified {
+    background: #ede9fe;
+    color: #6d28d9;
 }
 
-.absence-label {
-    font-size: 13px;
-    color: #718096;
-    font-weight: 500;
+.report-page .absence-badge--vacation {
+    background: #fef3c7;
+    color: #b45309;
 }
 
-.absence-count {
-    font-size: 18px;
+.report-page .absence-badge--sick {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.report-page .absence-badge--emergency {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.report-page .absence-badge--force {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.report-page .absence-content {
+    display: grid;
+    gap: 2px;
+}
+
+.report-page .absence-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--report-muted);
     font-weight: 700;
-    color: #2d3748;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-    .reporte-table {
-        font-size: 12px;
-    }
-
-    .reporte-table th,
-    .reporte-table td {
-        padding: 10px 8px;
-    }
-
-    .summary-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .absence-summary {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.report-page .absence-count {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
 }
 
-@media (max-width: 768px) {
-    .month-selector {
+.report-page .absence-note {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.report-page .empty-state {
+    text-align: center;
+    color: #94a3b8;
+    padding: 38px 18px;
+}
+
+.report-page .empty-state svg {
+    margin-bottom: 10px;
+    opacity: 0.7;
+}
+
+@media (max-width: 900px) {
+    .report-page .report-container {
+        padding: 0 10px 20px;
+    }
+
+    .report-page .card-header,
+    .report-page .card-body {
+        padding: 16px;
+    }
+
+    .report-page .month-selector {
+        grid-template-columns: 1fr auto 1fr;
+    }
+
+    .report-page .month-display {
+        order: -1;
+        grid-column: 1 / 4;
+    }
+
+    .report-page .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-page .absence-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .report-page .reporte-table {
+        min-width: 0;
+    }
+
+    .report-page .reporte-table thead {
+        display: none;
+    }
+
+    .report-page .reporte-table tbody tr {
+        display: block;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 8px 0;
+    }
+
+    .report-page .reporte-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         gap: 12px;
-        padding: 12px;
+        border-top: none;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 10px 12px;
     }
 
-    .month-display h2 {
-        font-size: 20px;
+    .report-page .reporte-table td:last-child {
+        border-bottom: none;
     }
 
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .summary-item {
-        padding: 12px;
-    }
-
-    .absence-summary {
-        grid-template-columns: 1fr;
-    }
-
-    .absence-item {
-        padding: 12px;
-    }
-
-    .reporte-table {
+    .report-page .reporte-table td::before {
+        content: attr(data-label);
         font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #475569;
+        flex-shrink: 0;
     }
 
-    .reporte-table th,
-    .reporte-table td {
-        padding: 8px 4px;
+    .report-page .reporte-table td[data-label="Empleado"] {
+        display: block;
     }
 
-    .badge {
-        padding: 4px 8px;
-        font-size: 11px;
-    }
-
-    .empleado-name {
-        font-size: 13px;
-    }
-
-    /* Mostrar las etiquetas de columna en móvil */
-    .table-container {
-        overflow-x: auto;
+    .report-page .reporte-table td[data-label="Empleado"]::before {
+        display: block;
+        margin-bottom: 8px;
     }
 }
 
-@media (max-width: 480px) {
-    .month-selector {
-        flex-direction: column;
-        gap: 8px;
+@media (max-width: 640px) {
+    .report-page .header {
+        padding: 12px;
     }
 
-    .btn-nav-month {
+    .report-page .report-header-actions {
         width: 100%;
+        justify-content: space-between;
     }
 
-    .summary-item {
+    .report-page .btn-back {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .report-page .table-header-row {
+        align-items: stretch;
+    }
+
+    .report-page .table-actions,
+    .report-page .btn-export-pdf {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .report-page .summary-item {
         flex-direction: column;
         text-align: center;
     }
 
-    .absence-item {
+    .report-page .absence-item {
         flex-direction: column;
         text-align: center;
-    }
-
-    .reporte-table {
-        font-size: 10px;
-    }
-
-    .reporte-table th,
-    .reporte-table td {
-        padding: 6px 2px;
     }
 }

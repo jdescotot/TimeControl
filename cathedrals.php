@@ -32,22 +32,31 @@ function buildTimelineLayout(array $timeline, int $currentYear): array
     $endYear = !empty($anchors) ? max(max($anchors), $currentYear) : $currentYear;
     $span = max(1, $endYear - $startYear);
 
+    $itemCount = count($anchors);
+    $edgePadding = 6.0;
+    $usableRange = max(1.0, 100 - ($edgePadding * 2));
+
     $positions = [];
     foreach ($anchors as $year) {
-        $positions[] = (($year - $startYear) / $span) * 100;
+        $normalized = (($year - $startYear) / $span) * $usableRange;
+        $positions[] = $edgePadding + $normalized;
     }
 
-    $minGap = 8.0;
+    $minGap = 12.0;
+    if ($itemCount > 1) {
+        $minGap = min($minGap, $usableRange / ($itemCount - 1));
+    }
+
     for ($i = 1; $i < count($positions); $i++) {
         if (($positions[$i] - $positions[$i - 1]) < $minGap) {
             $positions[$i] = $positions[$i - 1] + $minGap;
         }
     }
 
-    if (!empty($positions) && end($positions) > 100) {
-        $overflow = end($positions) - 100;
+    if (!empty($positions) && end($positions) > (100 - $edgePadding)) {
+        $overflow = end($positions) - (100 - $edgePadding);
         foreach ($positions as $i => $pos) {
-            $positions[$i] = max(0, $pos - $overflow);
+            $positions[$i] = max($edgePadding, $pos - $overflow);
         }
     }
 
@@ -76,11 +85,12 @@ $cathedrals = [
         "construction" => "Mainly 18th Century.",
         "styles" => "Late Gothic, Renaissance, and Baroque.",
         "note" => "Built over the ancient Great Mosque, it stands out for its monumental staircase and theatrical Baroque facade.",
-        "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Jerez_de_la_Frontera_01.jpg?width=600",
-        "map_url" => "https://maps.app.goo.gl/krkJUHP4ooH5Xd1H8",
-        "map_embed" => "https://www.google.com/maps?q=Catedral+de+Jerez+de+la+Frontera&output=embed",
+        "image" => "vendor/catedrales/jerez%201.webp",
         "extra_images" => [
-            "http://googleusercontent.com/image_collection/image_retrieval/15549194740894862683"
+            "vendor/catedrales/jerez%202.webp",
+            "vendor/catedrales/jerez%203.webp",
+            "vendor/catedrales/jerez%20adentro%201.jpg",
+            "vendor/catedrales/jerez%20adentro%202.jpg"
         ],
         "keywords" => ["Keywords coming soon", "Historical continuity", "Baroque transformation"],
         "timeline" => [
@@ -99,9 +109,10 @@ $cathedrals = [
         "construction" => "8th-10th C. (Islamic) and 16th C. (Christian).",
         "styles" => "Umayyad, Mudéjar, and Renaissance.",
         "note" => "A masterpiece of historical superposition, inserting Renaissance vaults within an Islamic forest of arches.",
-        "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Gran_Mezquita_de_Córdoba_-_España.jpg?width=600",
+        "image" => "vendor/catedrales/cordoba1.jpg",
         "extra_images" => [
-            "http://googleusercontent.com/image_collection/image_retrieval/1148901468158272317"
+            "vendor/catedrales/cordoba%202.jpg",
+            "vendor/catedrales/cordoba%203.jpg"
         ],
         "keywords" => ["Keywords coming soon", "Layered heritage", "Many patrons"],
         "timeline" => [
@@ -122,9 +133,12 @@ $cathedrals = [
         "construction" => "Started in 1523.",
         "styles" => "Renaissance and Baroque.",
         "note" => "Features Diego de Siloé's revolutionary circular floor plan and Alonso Cano's spectacular tripartite facade.",
-        "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Granada_frontal_y_torre_vertical.jpg?width=600",
+        "image" => "vendor/catedrales/Granada%201.jpg",
         "extra_images" => [
-            "http://googleusercontent.com/image_collection/image_retrieval/17542407163589895706"
+            "vendor/catedrales/granada%202.jpg",
+            "vendor/catedrales/granada%203.jpg",
+            "vendor/catedrales/granada%204.jpg",
+            "vendor/catedrales/granada%205.jpg"
         ],
         "keywords" => ["Keywords coming soon", "Renaissance project", "Royal symbolism"],
         "timeline" => [
@@ -144,9 +158,13 @@ $cathedrals = [
         "construction" => "16th to 18th Centuries.",
         "styles" => "Renaissance and Classicist Baroque.",
         "note" => "Popularly known as \"La Manquita\" (The One-Armed Lady) due to its unfinished south tower.",
-        "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Málaga.jpg?width=600",
+        "image" => "vendor/catedrales/malaga%201.webp",
         "extra_images" => [
-            "http://googleusercontent.com/image_collection/image_retrieval/11823727683971010523"
+            "vendor/catedrales/malaga%202.jpg",
+            "vendor/catedrales/malaga%202.png",
+            "vendor/catedrales/malaga%203.jpg",
+            "vendor/catedrales/malaga%204.jpg",
+            "vendor/catedrales/malaga%205.jpg"
         ],
         "keywords" => ["Keywords coming soon", "Unfinished tower", "Urban icon"],
         "timeline" => [
@@ -160,9 +178,9 @@ $cathedrals = [
         "construction" => "16th to 17th Centuries.",
         "styles" => "Pure Renaissance and Baroque.",
         "note" => "Andrés de Vandelvira's masterpiece and an architectural model for many Latin American cathedrals.",
-        "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Jaén_-_Vista_General.jpg?width=600",
+        "image" => "vendor/catedrales/jaen1.jpg",
         "extra_images" => [
-            "http://googleusercontent.com/image_collection/image_retrieval/617200277061308974"
+            "vendor/catedrales/jaen%202.jpg"
         ],
         "keywords" => ["Keywords coming soon", "Vandelvira", "Renaissance model"],
         "timeline" => [
@@ -183,7 +201,10 @@ $cathedrals = [
         "construction" => "16th Century (over an older temple).",
         "styles" => "Gothic, Plateresque, and Renaissance.",
         "note" => "A sober and elegant space where Vandelvira masterfully adapted Gothic pillars to support Renaissance vaults.",
-        "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Catedral_de_Baeza.jpg?width=600",
+        "image" => "vendor/catedrales/baeza%201.jpg",
+        "extra_images" => [
+            "vendor/catedrales/baeza%202.jpg"
+        ],
         "keywords" => ["Keywords coming soon", "UNESCO setting", "Structural adaptation"],
         "timeline" => [
             ["period" => "Timeline pending", "event" => "Detailed milestones will be added soon."]
@@ -196,9 +217,9 @@ $cathedrals = [
         "construction" => "15th Century and 20th Century.",
         "styles" => "Neo-Gothic (Valencian Gothic style).",
         "note" => "A sober contemporary reconstruction accompanied by the historic freestanding bell tower, \"El Fadrí\".",
-        "image" => "https://commons.wikimedia.org/wiki/Special:FilePath/Concatedral_y_Fadrí_de_Castellón.jpg?width=600",
+        "image" => "vendor/catedrales/castellon%201.avif",
         "extra_images" => [
-            "http://googleusercontent.com/image_collection/image_retrieval/14189546867147014510"
+            "vendor/catedrales/castellon%202.avif"
         ],
         "keywords" => ["Keywords coming soon", "Reconstruction", "El Fadri"],
         "timeline" => [
@@ -277,7 +298,7 @@ $cathedrals = [
         }
         .timeline-wrap {
             position: relative;
-            min-height: 460px;
+            min-height: max(460px, calc(170px + (var(--timeline-events, 6) * 74px)));
             padding: 1.25rem 0 1.25rem 9.5rem;
         }
         .timeline-axis {
@@ -312,6 +333,11 @@ $cathedrals = [
             left: 0;
             right: 0;
             transform: translateY(-50%);
+            z-index: 1;
+        }
+        .timeline-event:hover,
+        .timeline-event:focus-within {
+            z-index: 30;
         }
         .timeline-dot {
             position: absolute;
@@ -338,6 +364,7 @@ $cathedrals = [
             line-height: 1;
         }
         .timeline-card {
+            position: relative;
             margin-left: 1.35rem;
             background: #fff;
             border: 1px solid #f2c9cb;
@@ -345,6 +372,12 @@ $cathedrals = [
             border-radius: 10px;
             padding: .55rem .75rem;
             box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+            transition: box-shadow .18s ease, transform .18s ease;
+        }
+        .timeline-event:hover .timeline-card,
+        .timeline-event:focus-within .timeline-card {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.16);
         }
         .timeline-period {
             font-size: .8rem;
@@ -384,7 +417,7 @@ $cathedrals = [
         @media (max-width: 767.98px) {
             .timeline-wrap {
                 padding-left: 8.4rem;
-                min-height: 500px;
+                min-height: max(500px, calc(220px + (var(--timeline-events, 6) * 78px)));
             }
             .timeline-axis,
             .timeline-dot {
@@ -535,7 +568,7 @@ $cathedrals = [
                         </div>
 
                         <h6 class="fw-bold mb-3">Timeline</h6>
-                        <div class="timeline-wrap">
+                        <div class="timeline-wrap" style="--timeline-events: <?= (int) count($timelineLayout['items']) ?>;">
                             <div class="timeline-axis"></div>
                             <div class="timeline-label top">Start <?= htmlspecialchars((string) $timelineLayout['startYear']) ?></div>
                             <div class="timeline-label bottom">Today <?= htmlspecialchars((string) $timelineLayout['currentYear']) ?></div>
@@ -565,6 +598,7 @@ $cathedrals = [
         <div class="container">
             <h5 class="text-white mb-3">End of the Tour</h5>
             <p class="mb-0">Thank you for joining us on this journey through the history of art and architecture.</p>
+            <a href="jugadores.php" class="btn btn-outline-light btn-sm mt-3">Ir a Jugadores</a>
         </div>
     </footer>
 
