@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $empleado_id = (int)($_POST['empleado_id'] ?? 0);
-$es_gerente = isset($_POST['es_gerente']) ? 1 : 0;
+$es_gerente = (int)($_POST['es_gerente'] ?? 0) === 1 ? 1 : 0;
 $dueno_id = (int)$_SESSION['user_id'];
 
 if ($empleado_id <= 0) {
