@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ? 'completar_perfil.php'
                         : 'empleado.php';
                 } elseif ($es_gerente_session) {
-                    $destino = 'empleado.php';
+                    $destino = 'gerente.php';
                 } elseif ($_SESSION['rol'] === 'dueño' || $_SESSION['rol'] === 'dueno') {
                     $destino = rawurlencode('dueño.php');
                 } elseif ($_SESSION['rol'] === 'hacienda') {

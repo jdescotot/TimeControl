@@ -81,4 +81,24 @@ function require_dueno(): void {
         exit;
     }
 }
+
+function panel_home_url(): string {
+    if (es_dueno()) {
+        return 'dueño.php';
+    }
+
+    if (es_gerente()) {
+        return 'gerente.php';
+    }
+
+    if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'empleado') {
+        return 'empleado.php';
+    }
+
+    if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'hacienda') {
+        return 'hacienda.php';
+    }
+
+    return 'index.php';
+}
 ?>

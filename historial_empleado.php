@@ -74,7 +74,7 @@ $marcaciones = $stmt->fetchAll();
                     <?php 
                     $mes_param = $_GET['mes'] ?? null;
                     $año_param = $_GET['año'] ?? null;
-                    $back_url = ($mes_param && $año_param) ? "reporte_mensual.php?mes=$mes_param&año=$año_param" : "dueño.php";
+                    $back_url = ($mes_param && $año_param) ? "reporte_mensual.php?mes=$mes_param&año=$año_param" : panel_home_url();
                     $back_text = ($mes_param && $año_param) ? "Volver al Reporte" : "Volver al Panel";
                     $pdf_query = http_build_query(['id' => (int)$empleado_id]);
                     ?>

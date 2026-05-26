@@ -1,8 +1,18 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 require_once 'config.php';
 
 $dueno_id = require_dueno_o_gerente($pdo);
+$is_gerente_view = defined('TC_GERENTE_VIEW');
+
+if (es_gerente() && !$is_gerente_view) {
+    header('Location: gerente.php');
+    exit;
+}
+
+$mostrar_panel_gerente = es_gerente();
 
 $hoy = date('Y-m-d');
 $mes_actual = (int)date('n');
@@ -125,6 +135,42 @@ if (!empty($empleados)) {
 
 // Restar empleados con descanso del total de pendientes y evitar números negativos
 $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_descanso));
+
+$tiene_registro_hoy = false;
+$jornada_abierta = false;
+$estado_solicitud_pendiente = null;
+$tiene_solicitud_pendiente = false;
+$bloqueo_salida_pendiente = false;
+$registro_hoy = null;
+
+if ($mostrar_panel_gerente) {
+    $empleado_id_gerente = (int)$_SESSION['user_id'];
+
+    $stmt_registro = $pdo->prepare("SELECT id, entrada, salida FROM marcaciones WHERE empleado_id = ? ORDER BY entrada DESC LIMIT 1");
+    $stmt_registro->execute([$empleado_id_gerente]);
+    $registro_hoy = $stmt_registro->fetch(PDO::FETCH_ASSOC);
+
+    $tiene_registro_hoy = $registro_hoy && date('Y-m-d', strtotime($registro_hoy['entrada'])) === $hoy;
+    $jornada_abierta = $registro_hoy && !empty($registro_hoy['entrada']) && empty($registro_hoy['salida']);
+    $entrada_fecha = $registro_hoy && !empty($registro_hoy['entrada']) ? date('Y-m-d', strtotime($registro_hoy['entrada'])) : null;
+    $entrada_es_hoy = $entrada_fecha === $hoy;
+    $entrada_es_ayer = $entrada_fecha === date('Y-m-d', strtotime('-1 day'));
+    $bloqueo_flag = isset($_GET['bloqueo']) && $_GET['bloqueo'] === 'salida_pendiente';
+
+    if ($jornada_abierta && !empty($registro_hoy['id'])) {
+        $stmt_pendiente = $pdo->prepare("SELECT estado FROM solicitudes_cambio WHERE marcacion_id = ? AND estado IN ('pendiente', 'pendiente_empleado', 'rechazado_empleado') ORDER BY id DESC LIMIT 1");
+        $stmt_pendiente->execute([$registro_hoy['id']]);
+        $solicitud_pendiente = $stmt_pendiente->fetch(PDO::FETCH_ASSOC);
+        if ($solicitud_pendiente) {
+            $tiene_solicitud_pendiente = true;
+            $estado_solicitud_pendiente = $solicitud_pendiente['estado'];
+        }
+    }
+
+    $bloqueo_salida_pendiente = $jornada_abierta && ((!$entrada_es_hoy && !$entrada_es_ayer) || $bloqueo_flag) && !$tiene_solicitud_pendiente;
+}
+
+$titulo_panel = $mostrar_panel_gerente ? 'Panel de Gerente - Control Horario' : 'Panel del Dueño - Control Horario';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -132,7 +178,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del Dueño - Control Horario</title>
+    <title><?php echo $titulo_panel; ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-utilities.min.css">
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="solicitudes_cambio.css">
@@ -190,6 +236,10 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
 
         <!-- Main Content -->
         <main class="main-content">
+            <?php if ($mostrar_panel_gerente): ?>
+                <?php include __DIR__ . '/partials/empleado_marcacion_card.php'; ?>
+            <?php endif; ?>
+
             <!-- Mensaje de Ã©xito al crear empleado -->
             <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'empleado_creado'): ?>
                 <div class="status-message success">
@@ -287,16 +337,18 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                             </svg>
                             PDF del Mes
                         </a>
-                        <a href="nuevo_empleado.php" class="btn btn-add-employee">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="8.5" cy="7" r="4"></circle>
-                                <line x1="20" y1="8" x2="20" y2="14"></line>
-                                <line x1="23" y1="11" x2="17" y2="11"></line>
-                            </svg>
-                            Agregar Empleado
-                        </a>
+                        <?php if (es_dueno()): ?>
+                            <a href="nuevo_empleado.php" class="btn btn-add-employee">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="8.5" cy="7" r="4"></circle>
+                                    <line x1="20" y1="8" x2="20" y2="14"></line>
+                                    <line x1="23" y1="11" x2="17" y2="11"></line>
+                                </svg>
+                                Agregar Empleado
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="card-body">
@@ -463,6 +515,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
             </div>
         </main>
 
+        <?php if (es_dueno()): ?>
         <!-- Modal para crear empleado -->
         <div id="modalEmpleado" class="modal">
             <div class="modal-content">
@@ -544,6 +597,7 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
                 </form>
             </div>
         </div>
+        <?php endif; ?>
 
         <!-- Footer -->
         <footer class="footer">
@@ -672,6 +726,76 @@ $pendientes = max(0, $total_empleados - $entraron_hoy - count($empleados_con_des
 
         // Disparar sugerencia cuando el usuario salga del campo
         document.getElementById('username')?.addEventListener('blur', sugerirUsername);
+
+        // GPS para formularios de marcación (solo aplica cuando el bloque existe, ej. gerente)
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('form[action="marcar.php"]').forEach(function (form) {
+                var latInput = document.createElement('input');
+                latInput.type = 'hidden';
+                latInput.name = 'lat';
+
+                var lngInput = document.createElement('input');
+                lngInput.type = 'hidden';
+                lngInput.name = 'lng';
+
+                form.appendChild(latInput);
+                form.appendChild(lngInput);
+
+                form.addEventListener('submit', function (e) {
+                    if (!navigator.geolocation) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    var btn = form.querySelector('button[type="submit"]');
+                    var htmlOriginal = btn ? btn.innerHTML : null;
+
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/></svg> Obteniendo ubicación...';
+                    }
+
+                    var timeoutHandle = setTimeout(function () {
+                        if (btn && htmlOriginal) {
+                            btn.disabled = false;
+                            btn.innerHTML = htmlOriginal;
+                        }
+                        form.submit();
+                    }, 8000);
+
+                    navigator.geolocation.getCurrentPosition(
+                        function (pos) {
+                            clearTimeout(timeoutHandle);
+                            latInput.value = pos.coords.latitude.toFixed(8);
+                            lngInput.value = pos.coords.longitude.toFixed(8);
+
+                            if (btn) {
+                                btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Ubicación confirmada';
+                                setTimeout(function () {
+                                    form.submit();
+                                }, 300);
+                            } else {
+                                form.submit();
+                            }
+                        },
+                        function () {
+                            clearTimeout(timeoutHandle);
+                            if (btn && htmlOriginal) {
+                                btn.disabled = false;
+                                btn.innerHTML = htmlOriginal;
+                            }
+                            form.submit();
+                        },
+                        {
+                            timeout: 8000,
+                            maximumAge: 30000,
+                            enableHighAccuracy: true
+                        }
+                    );
+                });
+            });
+        });
     </script>
 </body>
 

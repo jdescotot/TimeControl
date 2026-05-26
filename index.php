@@ -44,7 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: hacienda.php');
                 exit;
             } else {
-                header('Location: empleado.php');
+                $destino_empleado = ((int)($user['es_gerente'] ?? 0) === 1)
+                    ? 'gerente.php'
+                    : 'empleado.php';
+                header('Location: ' . $destino_empleado);
                 exit;
             }
         } else {

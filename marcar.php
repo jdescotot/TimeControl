@@ -11,6 +11,7 @@ $empleado_id = $_SESSION['user_id'];
 $hoy = date('Y-m-d');
 $ahora = date('Y-m-d H:i:s');
 $accion = $_POST['accion'] ?? '';
+$panel_destino = es_gerente() ? 'gerente.php' : 'empleado.php';
 
 // Leer y validar coordenadas GPS (opcionales — NULL si no se envían o son inválidas)
 function gps_coord(string $raw, float $min, float $max): ?string {
@@ -58,7 +59,7 @@ try {
             $solicitud_pendiente = $stmt_pendiente->fetch(PDO::FETCH_ASSOC);
 
             if (!$solicitud_pendiente) {
-                $redirect = 'empleado.php?bloqueo=salida_pendiente';
+                $redirect = $panel_destino . '?bloqueo=salida_pendiente';
                 if (!empty($ultimo['id'])) {
                     $redirect .= '&marcacion_id=' . urlencode((string) $ultimo['id']);
                 }
@@ -95,7 +96,7 @@ try {
         $dia_salida            = $_POST['dia_salida'] ?? '';
 
         if (!$marcacion_id_anterior || !preg_match('/^\d{2}:\d{2}$/', $hora_salida) || !in_array($dia_salida, ['mismo', 'siguiente'])) {
-            header('Location: empleado.php?bloqueo=salida_pendiente&error=datos_invalidos');
+            header('Location: ' . $panel_destino . '?bloqueo=salida_pendiente&error=datos_invalidos');
             exit;
         }
 
@@ -108,7 +109,7 @@ try {
         $marcacion_anterior = $stmt->fetch();
 
         if (!$marcacion_anterior) {
-            header('Location: empleado.php?bloqueo=salida_pendiente&error=datos_invalidos');
+            header('Location: ' . $panel_destino . '?bloqueo=salida_pendiente&error=datos_invalidos');
             exit;
         }
 
@@ -123,12 +124,12 @@ try {
         $ahora_dt   = new DateTime($ahora);
 
         if ($salida_dt <= $entrada_dt) {
-            header('Location: empleado.php?bloqueo=salida_pendiente&marcacion_id=' . $marcacion_id_anterior . '&error=salida_anterior_entrada');
+            header('Location: ' . $panel_destino . '?bloqueo=salida_pendiente&marcacion_id=' . $marcacion_id_anterior . '&error=salida_anterior_entrada');
             exit;
         }
 
         if ($salida_dt > $ahora_dt) {
-            header('Location: empleado.php?bloqueo=salida_pendiente&marcacion_id=' . $marcacion_id_anterior . '&error=salida_futuro');
+            header('Location: ' . $panel_destino . '?bloqueo=salida_pendiente&marcacion_id=' . $marcacion_id_anterior . '&error=salida_futuro');
             exit;
         }
 
@@ -141,7 +142,7 @@ try {
         $stmt->execute([$empleado_id, $ahora, $lat, $lng]);
     }
 
-    header('Location: empleado.php?mensaje=success');
+    header('Location: ' . $panel_destino . '?mensaje=success');
     exit;
 } catch (Exception $e) {
     die('Error: ' . $e->getMessage());
