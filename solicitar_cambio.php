@@ -9,7 +9,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $empleado_id = $_SESSION['user_id'];
-    $dias_correccion_horario = 5;
+    $dias_correccion_horario = 7;
     $marcacion_id = $_POST['marcacion_id'] ?? 0;
     $nueva_entrada = trim($_POST['nueva_entrada'] ?? '');
     $nueva_salida = trim($_POST['nueva_salida'] ?? '');

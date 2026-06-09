@@ -6,7 +6,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
     exit;
 }
 $empleado_id = $_SESSION['user_id'];
-$dias_correccion_horario = 5;
+$dias_correccion_horario = 7;
 
 // Obtener el nombre del empleado si existe
 $stmt_nombre = $pdo->prepare("SELECT nombre FROM usuarios WHERE id = ?");
