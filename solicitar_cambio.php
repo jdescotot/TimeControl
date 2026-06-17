@@ -2,32 +2,47 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
-    header('Location: index.php');
+function redirect_to(string $url): never
+{
+    header('Location: ' . $url);
     exit;
 }
 
+function redirect_to_modificacion(int $marcacion_id, string $error): never
+{
+    $query = http_build_query([
+        'id' => $marcacion_id,
+        'error' => $error,
+    ]);
+
+    redirect_to('modificar_horario.php?' . $query);
+}
+
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'empleado') {
+    redirect_to('index.php');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $empleado_id = $_SESSION['user_id'];
+    $empleado_id = (int)($_SESSION['user_id'] ?? 0);
     $dias_correccion_horario = 7;
-    $marcacion_id = $_POST['marcacion_id'] ?? 0;
+    $marcacion_id = (int)($_POST['marcacion_id'] ?? 0);
     $nueva_entrada = trim($_POST['nueva_entrada'] ?? '');
     $nueva_salida = trim($_POST['nueva_salida'] ?? '');
     $motivo = trim($_POST['motivo'] ?? '');
     $solo_salida = ($_POST['solo_salida'] ?? '0') === '1';
 
-    if (empty($marcacion_id) || empty($motivo)) {
-        die('Datos insuficientes para la solicitud.');
+    if ($empleado_id <= 0 || $marcacion_id <= 0 || $motivo === '') {
+        redirect_to_modificacion($marcacion_id, 'datos_insuficientes');
     }
 
     if ($solo_salida) {
-        if (empty($nueva_salida)) {
-            die('Datos insuficientes para la solicitud.');
+        if ($nueva_salida === '') {
+            redirect_to_modificacion($marcacion_id, 'datos_insuficientes');
         }
         $nueva_entrada = '';
     } else {
-        if (empty($nueva_entrada) || empty($nueva_salida)) {
-            die('Datos insuficientes para la solicitud.');
+        if ($nueva_entrada === '' || $nueva_salida === '') {
+            redirect_to_modificacion($marcacion_id, 'datos_insuficientes');
         }
     }
 
@@ -37,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $marcacion = $check->fetch(PDO::FETCH_ASSOC);
         
         if (!$marcacion) {
-            die('Operación no permitida.');
+            redirect_to_modificacion($marcacion_id, 'marcacion_invalida');
         }
 
         $fecha_base = date('Y-m-d', strtotime($marcacion['entrada']));
@@ -47,7 +62,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fecha_maxima_correccion = new DateTime('today');
 
         if ($fecha_marcacion < $fecha_minima_correccion || $fecha_marcacion > $fecha_maxima_correccion) {
-            die('Solo puedes solicitar correcciones dentro del rango permitido de fechas.');
+            redirect_to_modificacion($marcacion_id, 'fuera_de_rango');
+        }
+
+        $stmt_pendiente = $pdo->prepare(
+            "SELECT id FROM solicitudes_cambio
+             WHERE marcacion_id = ?
+               AND empleado_id = ?
+               AND estado IN ('pendiente', 'pendiente_empleado')
+             ORDER BY id DESC
+             LIMIT 1"
+        );
+        $stmt_pendiente->execute([$marcacion_id, $empleado_id]);
+        if ($stmt_pendiente->fetch(PDO::FETCH_ASSOC)) {
+            redirect_to_modificacion($marcacion_id, 'solicitud_en_revision');
         }
 
         if ($solo_salida) {
@@ -59,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $limite_dt = clone $entrada_dt;
             $limite_dt->modify('+19 hours');
             if ($salida_dt > $limite_dt) {
-                die('La hora de salida no puede exceder 19 horas desde la entrada.');
+                redirect_to_modificacion($marcacion_id, 'salida_limite');
             }
         } else {
             $entrada_dt = new DateTime($fecha_base . ' ' . $nueva_entrada);
@@ -70,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $limite_dt = clone $entrada_dt;
             $limite_dt->modify('+19 hours');
             if ($salida_dt > $limite_dt) {
-                die('La hora de salida no puede exceder 19 horas desde la entrada.');
+                redirect_to_modificacion($marcacion_id, 'salida_limite');
             }
         }
 
@@ -80,13 +108,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ");
         $stmt->execute([$marcacion_id, $empleado_id, $nueva_entrada, $nueva_salida, $motivo]);
 
-        header('Location: empleado.php?mensaje=solicitud_ok');
-        exit;
+        redirect_to('principal.php?mensaje=solicitud_ok');
     } catch (Exception $e) {
-        die('Error al guardar la solicitud: ' . $e->getMessage());
+        error_log('Error al guardar la solicitud: ' . $e->getMessage());
+        redirect_to_modificacion($marcacion_id, 'error_guardado');
     }
 } else {
-    header('Location: empleado.php');
-    exit;
+    redirect_to('principal.php');
 }
 ?>

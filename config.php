@@ -17,7 +17,13 @@ try {
 }
 
 function es_dueno(): bool {
-    return isset($_SESSION['rol']) && $_SESSION['rol'] === 'dueño';
+    return rol_es_dueno($_SESSION['rol'] ?? null);
+}
+
+function rol_es_dueno(mixed $rol): bool {
+    $rol_normalizado = strtolower(trim((string)$rol));
+
+    return in_array($rol_normalizado, ['dueño', 'dueno'], true);
 }
 
 function es_gerente(): bool {

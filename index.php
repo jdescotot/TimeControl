@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Si no requiere cambio, ir a su panel normal según el rol
-            if ($user['rol'] === 'dueño') {
+            if ($user['rol'] === 'dueño' || $user['rol'] === 'dueno') {
                 header('Location: dueño.php');
                 exit;
             } elseif ($user['rol'] === 'hacienda') {

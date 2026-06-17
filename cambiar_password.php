@@ -51,7 +51,7 @@ function perfil_incompleto(PDO $pdo, int $usuario_id): bool {
 
 // Permitir acceso a dueños, empleados y gerentes (empleado con es_gerente = 1)
 $es_gerente_session = (($_SESSION['rol'] ?? '') === 'empleado' && (int)($_SESSION['es_gerente'] ?? 0) === 1);
-if (!isset($_SESSION['user_id']) || (!in_array($_SESSION['rol'], ['empleado', 'dueño']) && $_SESSION['rol'] !== 'hacienda')) {
+if (!isset($_SESSION['user_id']) || (!in_array($_SESSION['rol'], ['empleado', 'dueño', 'dueno']) && $_SESSION['rol'] !== 'hacienda')) {
     header('Location: index.php');
     exit;
 }
