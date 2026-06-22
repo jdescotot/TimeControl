@@ -171,447 +171,424 @@ if ($mostrar_panel_gerente) {
 }
 
 $titulo_panel = $mostrar_panel_gerente ? 'Panel de Gerente - Control Horario' : 'Panel del Dueño - Control Horario';
+
+
+if (!function_exists('duenop_e')) {
+    function duenop_e($value): string
+    {
+        return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+if (!function_exists('duenop_iniciales')) {
+    function duenop_iniciales(string $nombre): string
+    {
+        $partes = preg_split('/\s+/', trim($nombre)) ?: [];
+        $iniciales = '';
+
+        foreach ($partes as $parte) {
+            if ($parte === '') {
+                continue;
+            }
+            $iniciales .= strtoupper(substr($parte, 0, 1));
+            if (strlen($iniciales) >= 2) {
+                break;
+            }
+        }
+
+        if ($iniciales === '') {
+            $limpio = preg_replace('/\s+/', '', $nombre) ?? '';
+            $iniciales = strtoupper(substr($limpio, 0, 2));
+        }
+
+        return $iniciales !== '' ? $iniciales : 'US';
+    }
+}
+
+if (!function_exists('duenop_fecha_chip')) {
+    function duenop_fecha_chip(): string
+    {
+        $meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+        $mes = $meses[(int)date('n') - 1] ?? strtoupper(date('M'));
+        return date('d') . ' ' . $mes . ' ' . date('Y');
+    }
+}
+
+$nombre_header = trim((string)($_SESSION['username'] ?? 'Usuario'));
+$iniciales_header = duenop_iniciales($nombre_header);
+$panel_label = $mostrar_panel_gerente ? 'Panel de gerente' : 'Panel del dueño';
+$porcentaje_entraron = $total_empleados > 0 ? (int)min(100, round(($entraron_hoy / $total_empleados) * 100)) : 0;
+$porcentaje_jornada = $total_empleados > 0 ? (int)min(100, round(($en_jornada / $total_empleados) * 100)) : 0;
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $titulo_panel; ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#064b3d">
+    <title><?php echo duenop_e($titulo_panel); ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-utilities.min.css">
     <link rel="stylesheet" href="empleado.css">
     <link rel="stylesheet" href="solicitudes_cambio.css">
     <link rel="stylesheet" href="dueño.css">
+    <link rel="stylesheet" href="dueñop.css">
 </head>
 
 <body class="owner-dashboard">
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="logo">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>Control Horario</span>
-                </div>
-                <div class="user-info">
-                    <div class="header-actions">
-                        <a href="horario_semanal.php" class="btn top-nav-btn top-nav-btn--schedule">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                            </svg>
-                            Horario Semanal
-                        </a>
-                        <a href="reporte_mensual.php" class="btn top-nav-btn top-nav-btn--report">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                            </svg>
-                            Reporte Mensual
-                        </a>
-                        <a href="mapa_marcaciones.php" class="btn top-nav-btn" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            Mapa de Marcaciones
-                        </a>
-                        <div class="welcome-block">
-                            <span class="welcome-text">Bienvenido,</span>
-                            <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                        </div>
-                    </div>
-                </div>
+    <main class="owner-shell">
+        <header class="owner-topbar">
+            <a class="owner-brand" href="dueñop.php" aria-label="Control Horario">
+                <span class="owner-brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5v5l3.2 2"></path></svg>
+                </span>
+                <span class="owner-brand-copy">
+                    <span class="owner-brand-title">Control Horario</span>
+                    <span class="owner-brand-kicker"><?php echo duenop_e($panel_label); ?></span>
+                </span>
+            </a>
+
+            <div class="owner-profile" aria-label="Perfil de <?php echo duenop_e($nombre_header); ?>">
+                <span class="owner-profile-copy">
+                    <small>Sesión activa</small>
+                    <strong><?php echo duenop_e($nombre_header); ?></strong>
+                </span>
+                <span class="owner-avatar" aria-hidden="true"><?php echo duenop_e($iniciales_header); ?></span>
+                <a class="owner-logout-chip" href="logout.php" aria-label="Cerrar sesión">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
+                    <span>Salir</span>
+                </a>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <?php if ($mostrar_panel_gerente): ?>
-                <?php include __DIR__ . '/partials/empleado_marcacion_card.php'; ?>
-            <?php endif; ?>
-
-            <!-- Mensaje de Ã©xito al crear empleado -->
+        <section class="owner-alerts" aria-label="Mensajes del sistema">
             <?php if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'empleado_creado'): ?>
-                <div class="status-message success">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    <span>Empleado "<?php echo htmlspecialchars($_GET['username'] ?? 'nuevo empleado'); ?>" creado
-                        exitosamente</span>
-                </div>
+                <article class="owner-status success">
+                    <span class="owner-status-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4 12 14.01 9 11.01"></path></svg>
+                    </span>
+                    <p>Empleado "<?php echo duenop_e($_GET['username'] ?? 'nuevo empleado'); ?>" creado exitosamente.</p>
+                </article>
             <?php endif; ?>
 
-            <!-- Mensaje de error al crear empleado -->
             <?php if (isset($_GET['error'])): ?>
-                <div class="status-message error">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    <span><?php echo htmlspecialchars($_GET['error']); ?></span>
-                </div>
+                <article class="owner-status error">
+                    <span class="owner-status-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                    </span>
+                    <p><?php echo duenop_e($_GET['error']); ?></p>
+                </article>
             <?php endif; ?>
+        </section>
 
-            <!-- NotificaciÃ³n de Solicitudes Pendientes -->
-            <?php if ($num_solicitudes > 0): ?>
-                <div class="card notification-card">
-                    <div class="card-body">
-                        <div class="notification-content">
-                            <div class="notification-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                                </svg>
-                                <span class="notification-badge"><?php echo $num_solicitudes; ?></span>
-                            </div>
-                            <div class="notification-text">
-                                <strong>Solicitudes Pendientes</strong>
-                                <p>Tienes <?php echo $num_solicitudes; ?>
-                                    <?php echo $num_solicitudes === 1 ? 'solicitud' : 'solicitudes'; ?> de cambio de horario
-                                    pendiente<?php echo $num_solicitudes === 1 ? '' : 's'; ?> de revisiÃ³n.</p>
-                            </div>
-                            <a href="gestionar_solicitudes.php" class="btn btn-notification">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M9 11l3 3L22 4"></path>
-                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                                </svg>
-                                Gestionar Solicitudes
-                            </a>
+        <?php if ($mostrar_panel_gerente): ?>
+            <section class="manager-clock-card">
+                <?php include __DIR__ . '/partials/empleado_marcacion_card.php'; ?>
+            </section>
+        <?php endif; ?>
+
+        <section class="owner-hero-grid" aria-label="Resumen general">
+            <article class="owner-hero">
+                <div>
+                    <div class="owner-hero-top">
+                        <div>
+                            <p class="owner-eyebrow"><span class="owner-status-dot"></span> Supervisión en tiempo real</p>
+                            <h1>Tu equipo,<br>todo bajo control.</h1>
                         </div>
+                        <span class="owner-date-chip"><?php echo duenop_e(duenop_fecha_chip()); ?></span>
+                    </div>
+
+                    <p class="owner-hero-copy">
+                        Consulta entradas, salidas, ausencias, permisos y reportes desde un panel más claro y coherente con la experiencia del empleado.
+                    </p>
+
+                    <div class="owner-hero-meta">
+                        <span><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> <?php echo (int)$total_empleados; ?> empleados registrados</span>
+                        <span><svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"></path><circle cx="12" cy="12" r="9"></circle></svg> <?php echo (int)$en_jornada; ?> en jornada ahora</span>
+                        <span><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg> <?php echo (int)$num_solicitudes; ?> solicitudes pendientes</span>
                     </div>
                 </div>
-            <?php endif; ?>
 
-            <!-- Resumen del dÃ­a -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Actividad de Hoy</h2>
-                    <div class="date-badge"><?php echo date('d/m/Y'); ?></div>
+                <div class="owner-hero-actions" aria-label="Accesos rápidos">
+                    <a href="horario_semanal.php" class="owner-btn owner-btn--primary">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+                        Horario semanal
+                    </a>
+                    <a href="reporte_mensual.php" class="owner-btn owner-btn--ghost">
+                        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M8 17V9"></path><path d="M13 17V5"></path><path d="M18 17v-3"></path></svg>
+                        Reporte mensual
+                    </a>
+                    <a href="mapa_marcaciones.php" class="owner-btn owner-btn--ghost">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        Mapa
+                    </a>
                 </div>
-                <div class="card-body">
-                    <div class="summary-grid">
-                        <div class="info-item info-item--success">
-                            <span class="label">Total Empleados</span>
-                            <span class="value"><?php echo $total_empleados; ?></span>
-                        </div>
-                        <div class="info-item info-item--primary">
-                            <span class="label">Ya Entraron</span>
-                            <span class="value"><?php echo $entraron_hoy; ?></span>
-                        </div>
-                        <div class="info-item info-item--warning">
-                            <span class="label">En Jornada</span>
-                            <span class="value"><?php echo $en_jornada; ?></span>
-                        </div>
-                        <div class="info-item info-item--danger">
-                            <span class="label">Pendientes</span>
-                            <span class="value"><?php echo $pendientes; ?></span>
-                        </div>
-                    </div>
+            </article>
+
+            <aside class="owner-metrics" aria-label="Indicadores rápidos">
+                <article class="owner-metric">
+                    <p class="owner-metric-label">Total empleados</p>
+                    <p class="owner-metric-value"><?php echo (int)$total_empleados; ?></p>
+                    <p class="owner-metric-note">Plantilla activa asignada a tu cuenta.</p>
+                </article>
+
+                <article class="owner-metric">
+                    <p class="owner-metric-label">Ya entraron</p>
+                    <p class="owner-metric-value"><?php echo (int)$entraron_hoy; ?></p>
+                    <div class="owner-progress" aria-label="<?php echo (int)$porcentaje_entraron; ?>% con entrada registrada"><span style="width: <?php echo (int)$porcentaje_entraron; ?>%"></span></div>
+                    <p class="owner-metric-note"><?php echo (int)$porcentaje_entraron; ?>% del equipo con entrada registrada.</p>
+                </article>
+
+                <article class="owner-metric">
+                    <p class="owner-metric-label">En jornada</p>
+                    <p class="owner-metric-value"><?php echo (int)$en_jornada; ?></p>
+                    <div class="owner-progress" aria-label="<?php echo (int)$porcentaje_jornada; ?>% en jornada"><span style="width: <?php echo (int)$porcentaje_jornada; ?>%"></span></div>
+                    <p class="owner-metric-note">Personas trabajando en este momento.</p>
+                </article>
+
+                <article class="owner-metric owner-metric--attention">
+                    <p class="owner-metric-label">Pendientes</p>
+                    <p class="owner-metric-value"><?php echo (int)$pendientes; ?></p>
+                    <p class="owner-metric-note">Sin entrada registrada hoy, excluyendo descansos.</p>
+                </article>
+            </aside>
+        </section>
+
+        <?php if ($num_solicitudes > 0): ?>
+            <section class="owner-notice owner-notice--warning" aria-label="Solicitudes pendientes">
+                <span class="owner-notice-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span><?php echo (int)$num_solicitudes; ?></span>
+                </span>
+                <div>
+                    <strong>Solicitudes pendientes</strong>
+                    <p>Tienes <?php echo (int)$num_solicitudes; ?> <?php echo $num_solicitudes === 1 ? 'solicitud' : 'solicitudes'; ?> de cambio de horario pendiente<?php echo $num_solicitudes === 1 ? '' : 's'; ?> de revisión.</p>
+                </div>
+                <a href="gestionar_solicitudes.php" class="owner-btn owner-btn--warning">Gestionar</a>
+            </section>
+        <?php endif; ?>
+
+        <section class="owner-panel" aria-labelledby="employees-title">
+            <div class="owner-section-head">
+                <div>
+                    <p class="owner-section-kicker">Actividad de hoy</p>
+                    <h2 id="employees-title">Empleados</h2>
+                    <p>Estado actual, horas trabajadas y acciones rápidas por empleado.</p>
+                </div>
+
+                <div class="owner-panel-actions">
+                    <a href="export_reporte_mensual_pdf.php?<?php echo duenop_e($pdf_mes_query); ?>" class="owner-btn owner-btn--danger">
+                        <svg viewBox="0 0 24 24"><path d="M7 2h8l5 5v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path><path d="M14 2v6h6"></path></svg>
+                        PDF del mes
+                    </a>
+                    <?php if (es_dueno()): ?>
+                        <button type="button" class="owner-btn owner-btn--primary" onclick="abrirModalEmpleado()">
+                            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></svg>
+                            Agregar empleado
+                        </button>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <!-- Lista de empleados -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Empleados</h2>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="export_reporte_mensual_pdf.php?<?php echo htmlspecialchars($pdf_mes_query, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-add-employee" style="background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M7 2h8l5 5v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
-                                <path d="M14 2v6h6"></path>
-                            </svg>
-                            PDF del Mes
-                        </a>
-                        <?php if (es_dueno()): ?>
-                            <a href="nuevo_empleado.php" class="btn btn-add-employee">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="8.5" cy="7" r="4"></circle>
-                                    <line x1="20" y1="8" x2="20" y2="14"></line>
-                                    <line x1="23" y1="11" x2="17" y2="11"></line>
-                                </svg>
-                                Agregar Empleado
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
+            <div class="owner-table-wrap">
+                <table class="owner-table">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Estado hoy</th>
+                            <th>Horas</th>
+                            <th>Permiso</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($empleados)): ?>
+                            <tr>
+                                <td colspan="5">
+                                    <div class="owner-empty">
+                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                                        <p>No hay empleados registrados.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($empleados as $emp): ?>
+                                <?php
+                                    $nombre_mostrar_emp = !empty($emp['nombre']) ? $emp['nombre'] : $emp['username'];
+                                    $iniciales_emp = duenop_iniciales((string)$nombre_mostrar_emp);
+                                ?>
                                 <tr>
-                                    <th>Empleado</th>
-                                    <th>Estado Hoy</th>
-                                    <th>Horas Trabajadas</th>
-                                    <th>Permiso</th>
-                                    <th>Acci&oacute;n</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($empleados)): ?>
-                                    <tr>
-                                        <td colspan="5" class="empty-state">
-                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                                <line x1="12" y1="8" x2="12" y2="12"></line>
-                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                            </svg>
-                                            <p>No hay empleados registrados</p>
-                                        </td>
-                                    </tr>
-                                <?php else: ?>
-                                    <?php foreach ($empleados as $emp): ?>
-                                        <tr>
-                                            <td data-label="Empleado">
-                                                <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="employee-link">
-                                                    <?php 
-                                                    $nombre_mostrar = !empty($emp['nombre']) ? $emp['nombre'] : $emp['username'];
-                                                    echo htmlspecialchars($nombre_mostrar); 
-                                                    ?>
+                                    <td data-label="Empleado">
+                                        <div class="owner-employee-cell">
+                                            <span class="owner-employee-avatar" aria-hidden="true"><?php echo duenop_e($iniciales_emp); ?></span>
+                                            <span class="owner-employee-copy">
+                                                <a href="historial_empleado.php?id=<?php echo (int)$emp['id']; ?>" class="owner-employee-link">
+                                                    <?php echo duenop_e($nombre_mostrar_emp); ?>
                                                 </a>
                                                 <?php if (!empty($emp['es_gerente'])): ?>
-                                                    <span class="badge-adjusted" style="margin-left:8px;">Gerente</span>
+                                                    <span class="owner-mini-badge">Gerente</span>
                                                 <?php endif; ?>
-                                                <!-- DEBUG: ID = <?php echo $emp['id']; ?> -->
-                                            </td>
-                                            <td data-label="Estado">
-                                                <?php if ($emp['tiene_descanso']): ?>
-                                                    <span class="status-inline status-inline--success">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="status-icon">
-                                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                                                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                                                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                                                        </svg>
-                                                        D&iacute;a libre
-                                                    </span>
-                                                <?php elseif ($emp['ausencia_hoy']): ?>
-                                                    <?php
-                                                        $tipo = $emp['ausencia_hoy'];
-                                                        $map = [
-                                                            'vacaciones_ley' => ['clase' => 'status-inline--warning', 'texto' => 'Vacaciones Ley'],
-                                                            'enfermedad' => ['clase' => 'status-inline--danger', 'texto' => 'Enfermedad'],
-                                                            'emergencia_familiar' => ['clase' => 'status-inline--accent', 'texto' => 'Falta Justificada (Emerg. Fam.)'],
-                                                            'fuerza_mayor' => ['clase' => 'status-inline--accent', 'texto' => 'Falta Justificada (Fuerza Mayor)'],
-                                                        ];
-                                                        $info = $map[$tipo] ?? ['clase' => 'status-inline--danger', 'texto' => 'Ausencia'];
-                                                    ?>
-                                                    <span class="status-inline <?php echo htmlspecialchars($info['clase']); ?>">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="status-icon">
-                                                            <circle cx="12" cy="12" r="10"></circle>
-                                                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                                                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                                        </svg>
-                                                        <?php echo htmlspecialchars($info['texto']); ?>
-                                                    </span>
-                                                <?php elseif (!$emp['entrada']): ?>
-                                                    <span class="status-inline status-inline--danger">Sin marcar</span>
-                                                <?php elseif ($emp['entrada'] && !$emp['salida']): ?>
-                                                    <?php if ($emp['tiene_ajuste']): ?>
-                                                        <span class="status-inline status-inline--warning">En jornada (desde
-                                                            <span class="time-original"><?php echo $emp['entrada_hora'] ?? '&mdash;'; ?></span>
-                                                            <strong class="time-adjusted"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong>
-                                                            <span class="badge-adjusted">Ajustado</span>)
-                                                        </span>
-                                                    <?php else: ?>
-                                                        <span class="status-inline status-inline--warning">En jornada (desde
-                                                            <?php echo $emp['entrada_hora'] ?? '&mdash;'; ?>)</span>
-                                                    <?php endif; ?>
-                                                <?php else: ?>
-                                                    <span class="status-inline status-inline--success">Completado</span><br>
-                                                    <?php if ($emp['tiene_ajuste']): ?>
-                                                        <small class="status-detail">
-                                                            Entrada: <span class="time-original"><?php echo $emp['entrada_hora'] ?? '&mdash;'; ?></span>
-                                                            <strong class="time-adjusted"><?php echo substr($emp['hora_entrada_ajustada'], 0, 5); ?></strong> |
-                                                            Salida: <span class="time-original"><?php echo $emp['salida_hora'] ?? '&mdash;'; ?></span>
-                                                            <strong class="time-adjusted"><?php echo substr($emp['hora_salida_ajustada'], 0, 5); ?></strong>
-                                                            <span class="badge-adjusted badge-adjusted--sm">Ajustado</span>
-                                                        </small>
-                                                    <?php else: ?>
-                                                        <small class="status-detail">Entrada: <?php echo $emp['entrada_hora'] ?? '&mdash;'; ?> | Salida:
-                                                            <?php echo $emp['salida_hora'] ?? '&mdash;'; ?></small>
-                                                    <?php endif; ?>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td data-label="Horas" class="hours-cell">
-                                                <?php
-                                                // Usar horas ajustadas si existen, de lo contrario usar originales (dÃ­a de inicio)
-                                                $fecha_base = $emp['entrada'] ? date('Y-m-d', strtotime($emp['entrada'])) : $hoy;
-                                                $entrada_usar_dt = $emp['hora_entrada_ajustada'] ? new DateTime($fecha_base . ' ' . $emp['hora_entrada_ajustada']) : ($emp['entrada'] ? new DateTime($emp['entrada']) : null);
-                                                if ($emp['hora_salida_ajustada']) {
-                                                    $salida_usar_dt = new DateTime($fecha_base . ' ' . $emp['hora_salida_ajustada']);
-                                                } else {
-                                                    $salida_usar_dt = $emp['salida'] ? new DateTime($emp['salida']) : null;
-                                                }
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td data-label="Estado hoy">
+                                        <?php if ($emp['tiene_descanso']): ?>
+                                            <span class="owner-status-pill success">
+                                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+                                                Día libre
+                                            </span>
+                                        <?php elseif ($emp['ausencia_hoy']): ?>
+                                            <?php
+                                                $tipo = $emp['ausencia_hoy'];
+                                                $map = [
+                                                    'vacaciones_ley' => ['clase' => 'warning', 'texto' => 'Vacaciones Ley'],
+                                                    'enfermedad' => ['clase' => 'danger', 'texto' => 'Enfermedad'],
+                                                    'emergencia_familiar' => ['clase' => 'accent', 'texto' => 'Falta Justificada'],
+                                                    'fuerza_mayor' => ['clase' => 'accent', 'texto' => 'Fuerza Mayor'],
+                                                ];
+                                                $info = $map[$tipo] ?? ['clase' => 'danger', 'texto' => 'Ausencia'];
+                                            ?>
+                                            <span class="owner-status-pill <?php echo duenop_e($info['clase']); ?>">
+                                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                                                <?php echo duenop_e($info['texto']); ?>
+                                            </span>
+                                        <?php elseif (!$emp['entrada']): ?>
+                                            <span class="owner-status-pill danger">Sin marcar</span>
+                                        <?php elseif ($emp['entrada'] && !$emp['salida']): ?>
+                                            <?php if ($emp['tiene_ajuste']): ?>
+                                                <span class="owner-status-pill warning">En jornada</span>
+                                                <small class="owner-status-detail">Desde <span class="time-original"><?php echo duenop_e($emp['entrada_hora'] ?? '—'); ?></span> <strong class="time-adjusted"><?php echo duenop_e(substr((string)$emp['hora_entrada_ajustada'], 0, 5)); ?></strong> <span class="owner-mini-badge">Ajustado</span></small>
+                                            <?php else: ?>
+                                                <span class="owner-status-pill warning">En jornada</span>
+                                                <small class="owner-status-detail">Desde <?php echo duenop_e($emp['entrada_hora'] ?? '—'); ?></small>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="owner-status-pill success">Completado</span>
+                                            <?php if ($emp['tiene_ajuste']): ?>
+                                                <small class="owner-status-detail">
+                                                    Entrada <span class="time-original"><?php echo duenop_e($emp['entrada_hora'] ?? '—'); ?></span>
+                                                    <strong class="time-adjusted"><?php echo duenop_e(substr((string)$emp['hora_entrada_ajustada'], 0, 5)); ?></strong> ·
+                                                    Salida <span class="time-original"><?php echo duenop_e($emp['salida_hora'] ?? '—'); ?></span>
+                                                    <strong class="time-adjusted"><?php echo duenop_e(substr((string)$emp['hora_salida_ajustada'], 0, 5)); ?></strong>
+                                                    <span class="owner-mini-badge">Ajustado</span>
+                                                </small>
+                                            <?php else: ?>
+                                                <small class="owner-status-detail">Entrada <?php echo duenop_e($emp['entrada_hora'] ?? '—'); ?> · Salida <?php echo duenop_e($emp['salida_hora'] ?? '—'); ?></small>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td data-label="Horas" class="owner-hours-cell">
+                                        <?php
+                                        $fecha_base = $emp['entrada'] ? date('Y-m-d', strtotime($emp['entrada'])) : $hoy;
+                                        $entrada_usar_dt = $emp['hora_entrada_ajustada'] ? new DateTime($fecha_base . ' ' . $emp['hora_entrada_ajustada']) : ($emp['entrada'] ? new DateTime($emp['entrada']) : null);
+                                        if ($emp['hora_salida_ajustada']) {
+                                            $salida_usar_dt = new DateTime($fecha_base . ' ' . $emp['hora_salida_ajustada']);
+                                        } else {
+                                            $salida_usar_dt = $emp['salida'] ? new DateTime($emp['salida']) : null;
+                                        }
 
-                                                if ($entrada_usar_dt && $salida_usar_dt) {
-                                                    try {
-                                                        if ($salida_usar_dt < $entrada_usar_dt) {
-                                                            $salida_usar_dt->modify('+1 day');
-                                                        }
-                                                        $intervalo = $entrada_usar_dt->diff($salida_usar_dt);
-                                                        echo $intervalo->format('%h:%i');
-                                                        if ($emp['tiene_ajuste']) {
-                                                            echo ' <span class="hours-adjusted-mark">*</span>';
-                                                        }
-                                                    } catch (Exception $e) {
-                                                        echo '&mdash;';
-                                                    }
-                                                } else {
-                                                    echo '&mdash;';
+                                        if ($entrada_usar_dt && $salida_usar_dt) {
+                                            try {
+                                                if ($salida_usar_dt < $entrada_usar_dt) {
+                                                    $salida_usar_dt->modify('+1 day');
                                                 }
-                                                ?>
-                                            </td>
-                                            <td data-label="Permiso">
-                                                <?php if (!empty($emp['es_gerente'])): ?>
-                                                    <span class="status-inline status-inline--success">Con permisos</span>
-                                                <?php else: ?>
-                                                    <span class="status-inline status-inline--danger">Empleado</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td data-label="Acci&oacute;n" class="action-cell">
-                                                <div class="action-buttons">
-                                                    <a href="historial_empleado.php?id=<?php echo $emp['id']; ?>" class="btn btn-history">
-                                                        Ver Historial
-                                                    </a>
-                                                    <a href="historial_empleado_pdf.php?id=<?php echo $emp['id']; ?>" class="btn btn-history btn-history--pdf">
-                                                        PDF
-                                                    </a>
-                                                    <?php if (es_dueno()): ?>
-                                                        <form action="actualizar_gerente.php" method="POST" class="manager-form">
-                                                            <input type="hidden" name="empleado_id" value="<?php echo $emp['id']; ?>">
-                                                            <input type="hidden" name="es_gerente" value="<?php echo empty($emp['es_gerente']) ? 1 : 0; ?>">
-                                                            <button type="submit" class="btn btn-history btn-history--manager">
-                                                                <?php echo empty($emp['es_gerente']) ? 'Hacer gerente' : 'Quitar gerente'; ?>
-                                                            </button>
-                                                        </form>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                                $intervalo = $entrada_usar_dt->diff($salida_usar_dt);
+                                                echo duenop_e($intervalo->format('%h:%i'));
+                                                if ($emp['tiene_ajuste']) {
+                                                    echo ' <span class="hours-adjusted-mark">*</span>';
+                                                }
+                                            } catch (Exception $e) {
+                                                echo '&mdash;';
+                                            }
+                                        } else {
+                                            echo '&mdash;';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td data-label="Permiso">
+                                        <?php if (!empty($emp['es_gerente'])): ?>
+                                            <span class="owner-role-badge success">Con permisos</span>
+                                        <?php else: ?>
+                                            <span class="owner-role-badge neutral">Empleado</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td data-label="Acción" class="owner-action-cell">
+                                        <div class="owner-table-actions">
+                                            <a href="historial_empleado.php?id=<?php echo (int)$emp['id']; ?>" class="owner-action-btn">Historial</a>
+                                            <a href="historial_empleado_pdf.php?id=<?php echo (int)$emp['id']; ?>" class="owner-action-btn danger">PDF</a>
+                                            <?php if (es_dueno()): ?>
+                                                <form action="actualizar_gerente.php" method="POST" class="owner-manager-form">
+                                                    <input type="hidden" name="empleado_id" value="<?php echo (int)$emp['id']; ?>">
+                                                    <input type="hidden" name="es_gerente" value="<?php echo empty($emp['es_gerente']) ? 1 : 0; ?>">
+                                                    <button type="submit" class="owner-action-btn dark">
+                                                        <?php echo empty($emp['es_gerente']) ? 'Hacer gerente' : 'Quitar gerente'; ?>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
-        </main>
+        </section>
 
         <?php if (es_dueno()): ?>
-        <!-- Modal para crear empleado -->
-        <div id="modalEmpleado" class="modal">
+        <div id="modalEmpleado" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-empleado-title">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Crear Nuevo Empleado</h3>
+                    <p class="owner-section-kicker">Nuevo acceso</p>
+                    <h3 id="modal-empleado-title">Crear nuevo empleado</h3>
                 </div>
                 <form action="crear_empleado.php" method="POST">
                     <div class="form-group">
-                        <label for="nombre">Nombre del Empleado:</label>
-                        <input type="text" name="nombre" id="nombre" required minlength="2" maxlength="100"
-                            placeholder="Ej: Juan PÃ©rez GarcÃ­a" autocomplete="off">
+                        <label for="nombre">Nombre del empleado</label>
+                        <input type="text" name="nombre" id="nombre" required minlength="2" maxlength="100" placeholder="Ej: Juan Pérez García" autocomplete="off">
                     </div>
                     <div class="form-group">
-                        <label for="username">DNI / NIE / NIF / Pasaporte:</label>
-                        <input type="text" name="username" id="username" required minlength="3" maxlength="50"
-                            placeholder="Ej: X1234567L" autocomplete="off">
-                        <small class="form-help">
-                            Se convertirÃ¡ automÃ¡ticamente a minÃºsculas sin espacios
-                        </small>
+                        <label for="username">DNI / NIE / NIF / Pasaporte</label>
+                        <input type="text" name="username" id="username" required minlength="3" maxlength="50" placeholder="Ej: X1234567L" autocomplete="off">
+                        <small class="form-help">Se convertirá automáticamente a minúsculas sin espacios.</small>
                     </div>
                     <div class="form-group">
-                        <label for="fecha_inicio">Fecha de Inicio:</label>
-                        <input type="date" name="fecha_inicio" id="fecha_inicio" required
-                            value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
-                        <small class="form-help">
-                            Fecha en que el empleado comenzÃ³ a trabajar
-                        </small>
+                        <label for="fecha_inicio">Fecha de inicio</label>
+                        <input type="date" name="fecha_inicio" id="fecha_inicio" required value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
+                        <small class="form-help">Fecha en que el empleado comenzó a trabajar.</small>
                     </div>
                     <div class="form-group">
-                        <label for="password">ContraseÃ±a Temporal:</label>
+                        <label for="password">Contraseña temporal</label>
                         <div class="password-wrapper">
-                            <input type="password" name="password" id="password" required minlength="6"
-                                placeholder="MÃ­nimo 6 caracteres sin espacios" autocomplete="new-password"
-                                class="input-with-eye">
-                            <button type="button" onclick="togglePassword('password', this)" 
-                                class="btn-eye"
-                                aria-label="Mostrar contraseÃ±a">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
+                            <input type="password" name="password" id="password" required minlength="6" placeholder="Mínimo 6 caracteres sin espacios" autocomplete="new-password" class="input-with-eye">
+                            <button type="button" onclick="togglePassword('password', this)" class="btn-eye" aria-label="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                         </div>
-                        <small class="form-help">
-                            No se permiten espacios. El empleado deberÃ¡ cambiarla en su primer inicio de sesiÃ³n
-                        </small>
+                        <small class="form-help">No se permiten espacios. El empleado deberá cambiarla en su primer inicio de sesión.</small>
                     </div>
                     <div class="form-group">
-                        <label for="confirmar_password">Confirmar ContraseÃ±a:</label>
+                        <label for="confirmar_password">Confirmar contraseña</label>
                         <div class="password-wrapper">
-                            <input type="password" name="confirmar_password" id="confirmar_password" required minlength="6"
-                                placeholder="Repite la contraseÃ±a" autocomplete="new-password"
-                                class="input-with-eye">
-                            <button type="button" onclick="togglePassword('confirmar_password', this)" 
-                                class="btn-eye"
-                                aria-label="Mostrar contraseÃ±a">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
+                            <input type="password" name="confirmar_password" id="confirmar_password" required minlength="6" placeholder="Repite la contraseña" autocomplete="new-password" class="input-with-eye">
+                            <button type="button" onclick="togglePassword('confirmar_password', this)" class="btn-eye" aria-label="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="8.5" cy="7" r="4"></circle>
-                                <line x1="20" y1="8" x2="20" y2="14"></line>
-                                <line x1="23" y1="11" x2="17" y2="11"></line>
-                            </svg>
-                            Crear Empleado
+                        <button type="submit" class="owner-btn owner-btn--primary">
+                            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></svg>
+                            Crear empleado
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="cerrarModalEmpleado()">
-                            Cancelar
-                        </button>
+                        <button type="button" class="owner-btn owner-btn--muted" onclick="cerrarModalEmpleado()">Cancelar</button>
                     </div>
                 </form>
             </div>
         </div>
         <?php endif; ?>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <a href="logout.php" class="logout-link">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                Cerrar sesi&oacute;n
-            </a>
-        </footer>
-    </div>
-
+    </main>
     <script>
         function togglePassword(inputId, button) {
             const input = document.getElementById(inputId);
@@ -691,7 +668,7 @@ $titulo_panel = $mostrar_panel_gerente ? 'Panel de Gerente - Control Horario' : 
         }
 
         function abrirModalEmpleado() {
-            document.getElementById('modalEmpleado').style.display = 'block';
+            document.getElementById('modalEmpleado').style.display = 'grid';
             // Limpiar el formulario
             document.getElementById('nombre').value = '';
             document.getElementById('username').value = '';

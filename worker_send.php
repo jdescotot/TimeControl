@@ -24,7 +24,7 @@ try {
     die('No se pudo conectar a la base de datos: ' . $e->getMessage());
 }
 
-require 'vendor/autoload.php'; // PHPMailer si está instalado via Composer
+require 'vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
